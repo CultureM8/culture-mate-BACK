@@ -2,7 +2,7 @@ spring:
   application:
     name: "CultureMate API"
   datasource:
-    url: jdbc:h2:tcp://localhost/~/\CULTURE-MATE\culture-mate-BACK\H2
+    url: jdbc:h2:tcp://localhost/~/CULTURE-MATE/culture-mate-BACK/testDB
     username: sa
     password:
     driver-class-name: org.h2.Driver
