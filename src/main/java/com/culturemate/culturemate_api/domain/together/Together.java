@@ -2,12 +2,15 @@ package com.culturemate.culturemate_api.domain.together;
 
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
+import com.culturemate.culturemate_api.domain.member.InterestEvents;
+import com.culturemate.culturemate_api.domain.member.InterestTogethers;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -28,7 +31,7 @@ public class Together {
   private Member host;
 
   // OneToMany는 실제 저장되는 속성이 아니고, 관계 매핑용
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "together")
   private List<Participants> participants;
 
   @Column(nullable = false)
@@ -72,5 +75,8 @@ public class Together {
   public int getCurrentParticipants() {
     return participants.size();
   }
+
+  @OneToMany(mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
 }
