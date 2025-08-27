@@ -36,4 +36,12 @@ public class Member {
 
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<MemberDetail> memberDetails = new ArrayList<>();
+
+  public void changePassword(String newPassword) {
+    this.password = newPassword;
+  }
+
+  public void changeRole(Role newRole) {
+    this.role = newRole;
+  }
 }
