@@ -16,7 +16,7 @@ public class TicketPrice {
   @Column(name = "ticket_price_id")
   private Long id;
 
-  private String ticket_type;   // 티켓타입
+  private String ticketType;   // 티켓타입
   private Integer price;        // 가격
 
   @ManyToOne(fetch = FetchType.LAZY)

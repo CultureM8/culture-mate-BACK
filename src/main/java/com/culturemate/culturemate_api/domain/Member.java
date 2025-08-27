@@ -16,14 +16,14 @@ public class Member {
   private Long id;
 
   @Column(unique = true)
-  private String login_id;
+  private String loginId;
 
   private String password;
 
   @Enumerated(EnumType.STRING)
   private Role role = Role.MEMBER;
 
-  private Instant joined_at;
+  private Instant joinedAt;
 
   @Enumerated(EnumType.STRING)
   private MemberStatus status = MemberStatus.ACTIVE;
