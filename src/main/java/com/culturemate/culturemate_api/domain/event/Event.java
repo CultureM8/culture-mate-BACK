@@ -1,6 +1,8 @@
 package com.culturemate.culturemate_api.domain.event;
 
 import com.culturemate.culturemate_api.domain.Region;
+import com.culturemate.culturemate_api.domain.community.Board;
+import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,10 +25,11 @@ public class Event {
 
   @Column(nullable = false)
   private EventType eventType;     // 이벤트 유형
+
   @Column(nullable = false)
   private String title;            // 이벤트 이름
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "region_id", nullable = false)
   private Region region;           // 지역ID
   @Column(nullable = false)
@@ -54,6 +57,10 @@ public class Event {
 
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<EventReview> eventReview = new ArrayList<>();
+  @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Board> board = new ArrayList<>();
+  @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<InterestEvents> interestEvents = new ArrayList<>();
 
 
   //=== 메서드 ===//
@@ -61,19 +68,19 @@ public class Event {
     this.avgRating = newAvgRating != null ? newAvgRating : BigDecimal.ZERO;
     this.reviewCount = newReviewCount != null ? newReviewCount : 0;
   }
-  
+
   public void recalculateAvgRating() {
     if (eventReview.isEmpty()) {
       this.avgRating = BigDecimal.ZERO;
       this.reviewCount = 0;
       return;
     }
-    
+
     BigDecimal sum = eventReview.stream()
         .map(EventReview::getRating)
         .map(BigDecimal::valueOf)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
-    
+
     this.avgRating = sum.divide(BigDecimal.valueOf(eventReview.size()), 2, java.math.RoundingMode.HALF_UP);
     this.reviewCount = eventReview.size();
   }

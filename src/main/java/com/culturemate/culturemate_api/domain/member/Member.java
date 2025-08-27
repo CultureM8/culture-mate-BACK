@@ -1,5 +1,6 @@
 package com.culturemate.culturemate_api.domain.member;
 
+import com.culturemate.culturemate_api.domain.community.Board;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -29,13 +30,22 @@ public class Member {
   @Enumerated(EnumType.STRING)
   private MemberStatus status = MemberStatus.ACTIVE;
 
-  //=== 메서드 ===//
-  public void changeStatus() {
-    //TODO : 회원 제재 상태 변경
-  }
+  @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private MemberDetail memberDetail;
+
+  @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<Board> boards = new ArrayList<>();
 
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<MemberDetail> memberDetails = new ArrayList<>();
+  private List<InterestEvents> interestEvents = new ArrayList<>();
+
+  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<InterestTogethers> interestTogethers = new ArrayList<>();
+
+  //=== 메서드 ===//
+  public void changeStatus(MemberStatus newstatus) {
+    this.status = newstatus;
+  }
 
   public void changePassword(String newPassword) {
     this.password = newPassword;
