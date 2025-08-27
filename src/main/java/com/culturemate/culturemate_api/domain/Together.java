@@ -33,24 +33,24 @@ public class Together {
   @JoinColumn(name = "region_id")
   private Region region;
 
-  private String meeting_location;  // 모임 장소명
+  private String meetingLocation;  // 모임 장소명
   private String address;           // 기본 주소 (도로명 주소)
-  private String address_detail;    // 상세 주소
+  private String addressDetail;    // 상세 주소
 
-  private LocalDate meeting_date;
+  private LocalDate meetingDate;
 
-  private int max_participants;
-  private int current_participants;
+  private int maxParticipants;
+  private int currentParticipants;
 
   @Column(length = 2000)
   private String content;
 
-  private boolean is_recruiting = true;
+  private boolean isRecruiting = true;
 
-  private int interest_count = 0;
+  private int interestCount = 0;
 
-  private Instant created_at;
+  private Instant createdAt;
 
-  private Instant modified_at;
+  private Instant modifiedAt;
 
 }
