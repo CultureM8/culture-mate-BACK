@@ -10,6 +10,7 @@ import java.time.Instant;
 @Getter
 public class Member {
 
+  //=== 필드 ===//
   @Id @GeneratedValue
   @Column(name = "member_id")
   private Long id;
@@ -27,6 +28,7 @@ public class Member {
   @Enumerated(EnumType.STRING)
   private MemberStatus status = MemberStatus.ACTIVE;
 
+  //=== 메서드 ===//
   public void changeStatus() {
     //TODO : 회원 제재 상태 변경
   }

@@ -11,13 +11,14 @@ import java.util.List;
 @Getter
 public class Together {
 
+  //=== 필드 ===//
   @Id @GeneratedValue
   @Column(name = "together_id")
   private long id;
 
-//  @ManyToOne
-//  @JoinColumn(name = "event_id")
-//  private Event event;
+  @ManyToOne
+  @JoinColumn(name = "event_id", nullable = false)
+  private Event event;
 
   @ManyToOne
   @JoinColumn(name = "host_id")
@@ -27,30 +28,46 @@ public class Together {
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "together")
   private List<Participants> participants;
 
+  @Column(nullable = false)
   private String title;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "region_id")
+  @JoinColumn(name = "region_id", nullable = false)
   private Region region;
 
-  private String meeting_location;  // 모임 장소명
-  private String address;           // 기본 주소 (도로명 주소)
-  private String address_detail;    // 상세 주소
+  @Column(nullable = false)
+  private String address;          // 기본 주소 (도로명 주소)
+  @Column(nullable = false)
+  private String addressDetail;    // 상세 주소
 
-  private LocalDate meeting_date;
+  private LocalDate meetingDate;
 
-  private int max_participants;
-  private int current_participants;
+  private int maxParticipants;
+  private int currentParticipants;
 
   @Column(length = 2000)
   private String content;
 
-  private boolean is_recruiting = true;
+  private boolean isRecruiting = true;
 
-  private int interest_count = 0;
+  private int interestCount = 0;
 
-  private Instant created_at;
+  private Instant createdAt;
+  private Instant updatedAt;
 
-  private Instant modified_at;
+  //=== 메서드 ===//
+  @PrePersist
+  public void onCreate() {
+    this.createdAt = Instant.now();
+  }
+
+  @PreUpdate
+  public void onUpdate() {
+    this.updatedAt = Instant.now();
+  }
+
+  public int getCurrentParticipants() {
+    return participants.size();
+  }
 
 }

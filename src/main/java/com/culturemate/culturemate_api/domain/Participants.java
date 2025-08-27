@@ -8,6 +8,7 @@ import lombok.Setter;
 @Getter
 public class Participants {
 
+  //=== 필드 ===//
   @Id @GeneratedValue
   @Column(name = "participant_id")
   private Long id;

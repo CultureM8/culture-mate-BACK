@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter @Setter
 public class Region {
 
+  //=== 필드 ===//
   @Id @GeneratedValue
   private long id;
 
