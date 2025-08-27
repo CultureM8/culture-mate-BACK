@@ -30,17 +30,28 @@ public class Member {
   @Enumerated(EnumType.STRING)
   private MemberStatus status = MemberStatus.ACTIVE;
 
+  @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private MemberDetail memberDetail;
+
+  @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<Board> boards = new ArrayList<>();
+
+  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<InterestEvents> interestEvents = new ArrayList<>();
+
+  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<InterestTogethers> interestTogethers = new ArrayList<>();
+
   //=== 메서드 ===//
   public void changeStatus(MemberStatus newstatus) {
     this.status = newstatus;
   }
 
-  @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private MemberDetail memberDetail;
-  @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<Board> boards = new ArrayList<>();
-  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<InterestEvents> interestEvents = new ArrayList<>();
-  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<InterestTogethers> interestTogethers = new ArrayList<>();
+  public void changePassword(String newPassword) {
+    this.password = newPassword;
+  }
+
+  public void changeRole(Role newRole) {
+    this.role = newRole;
+  }
 }

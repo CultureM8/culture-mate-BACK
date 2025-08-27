@@ -31,7 +31,7 @@ public class Together {
   private Member host;
 
   // OneToMany는 실제 저장되는 속성이 아니고, 관계 매핑용
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "together")
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Participants> participants;
 
   @Column(nullable = false)
