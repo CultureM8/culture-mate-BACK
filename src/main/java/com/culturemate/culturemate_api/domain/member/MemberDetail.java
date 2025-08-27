@@ -10,11 +10,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="memberDetail")
+@Table(name="MEMBER_DETAIL")
 public class MemberDetail {
   @Id
-  @GeneratedValue
-  @Column(name="member_detail_id")
+  @Column(name = "member_detail_id")
   private Long id;
 
   private String user_name;
@@ -28,7 +27,8 @@ public class MemberDetail {
   @Enumerated(EnumType.STRING)
   private VisibleType visibility;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id") // FK 이름
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "member_id")
   private Member member;
 }
+

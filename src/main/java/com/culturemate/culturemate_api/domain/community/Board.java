@@ -22,10 +22,12 @@ public class Board {
   private EventType eventType;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name="event_id")
   private Event event;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  private Member authorId;
+  @JoinColumn(name="member_id")
+  private Member author;
 
   private String title;
 
@@ -35,12 +37,11 @@ public class Board {
   private Instant createdAt;
   private Instant updatedAt;
 
-  @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "board")
   private List<Comment> comments;
 
   private int likeCount = 0;
   private int dislikeCount = 0;
-
 
   //=== 메서드 ===//
   @PrePersist
