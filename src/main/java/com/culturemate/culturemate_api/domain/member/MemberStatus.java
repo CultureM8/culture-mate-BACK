@@ -1,4 +1,4 @@
-package com.culturemate.culturemate_api.domain;
+package com.culturemate.culturemate_api.domain.member;
 
 public enum MemberStatus {
   ACTIVE,       // 정상

@@ -1,8 +1,7 @@
-package com.culturemate.culturemate_api.domain;
+package com.culturemate.culturemate_api.domain.member;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.Instant;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.culturemate.culturemate_api.domain;
+package com.culturemate.culturemate_api.domain.event;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

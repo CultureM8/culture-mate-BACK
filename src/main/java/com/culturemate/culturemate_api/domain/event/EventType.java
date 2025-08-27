@@ -1,4 +1,4 @@
-package com.culturemate.culturemate_api.domain;
+package com.culturemate.culturemate_api.domain.event;
 
 public enum EventType {
     MUSICAL,        // 뮤지컬

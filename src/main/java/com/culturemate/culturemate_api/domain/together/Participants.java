@@ -1,5 +1,6 @@
-package com.culturemate.culturemate_api.domain;
+package com.culturemate.culturemate_api.domain.together;
 
+import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

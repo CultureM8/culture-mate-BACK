@@ -1,10 +1,9 @@
-package com.culturemate.culturemate_api.domain;
+package com.culturemate.culturemate_api.domain.community;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.Instant;
-import java.util.List;
 
 @Entity
 @Getter

@@ -40,3 +40,8 @@ out/
 *.mv.db
 *.trace.db
 *.lock.db
+
+### Claude ###
+CLAUDE.md
+DEVELOPMENT_STATUS.md
+PROJECT_OVERVIEW.md

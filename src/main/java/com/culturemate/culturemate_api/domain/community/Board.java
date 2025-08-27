@@ -1,5 +1,8 @@
-package com.culturemate.culturemate_api.domain;
+package com.culturemate.culturemate_api.domain.community;
 
+import com.culturemate.culturemate_api.domain.event.Event;
+import com.culturemate.culturemate_api.domain.event.EventType;
+import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 
