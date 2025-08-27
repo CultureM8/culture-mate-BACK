@@ -42,6 +42,6 @@ public class Member {
   }
 
   public void changeRole(Role newRole) {
-
+    this.role = newRole;
   }
 }
