@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -31,4 +33,6 @@ public class Member {
     //TODO : 회원 제재 상태 변경
   }
 
+  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<MemberDetail> memberDetails = new ArrayList<>();
 }
