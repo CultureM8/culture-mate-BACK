@@ -20,7 +20,7 @@ public class EventReview {
   @JoinColumn(name = "event_id" ,nullable = false)
   private Event event;
 
-  private Long author_id;
+  private Long authorId;
 
   private Integer rating;
   private String content;
