@@ -1,5 +1,6 @@
 package com.culturemate.culturemate_api.domain.event;
 
+import com.culturemate.culturemate_api.domain.Region;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,29 +15,66 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "Event")
 public class Event {
   @Id
   @GeneratedValue
   @Column(name = "event_id")
   private Long id;
 
+  @Column(nullable = false)
   private EventType eventType;     // 이벤트 유형
-  private String eventName;        // 이벤트 이름
-  private Long regionId;           // 지역ID
+  @Column(nullable = false)
+  private String title;            // 이벤트 이름
+
+  @ManyToOne
+  @JoinColumn(name = "region_id", nullable = false)
+  private Region region;           // 지역ID
+  @Column(nullable = false)
   private String eventLocation;    // 장소명
-  private String address;           // 도로명주소
+  // 정확한 주소는 영화관 같은건 없을 수 있음
+  private String address;          // 도로명주소
   private String addressDetail;    // 상세주소
+
+  @Column(nullable = false)
   private LocalDate startDate;     // 시작일
+  @Column(nullable = false)
   private LocalDate endDate;       // 종료일
+
   private Integer durationMin;     // 예상 소요시간
-  private Integer minAge;          // 최소 연령
-  private String content;           // 내용
-  private BigDecimal avgRating;    // 별점
-  private Integer interestCount;   // 관심수
+  private Integer minAge = 0;      // 최소 연령
+  @Column(nullable = false)
+  private String description;      // 요약설명
+
+  private BigDecimal avgRating = BigDecimal.ZERO;    // 평균 별점
+  private Integer reviewCount = 0;                   // 리뷰 수
+  private Integer interestCount = 0;                 // 관심수
 
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TicketPrice> ticketPrice = new ArrayList<>();
+
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<EventReview> eventReview = new ArrayList<>();
+
+
+  //=== 메서드 ===//
+  public void updateAvgRating(BigDecimal newAvgRating, Integer newReviewCount) {
+    this.avgRating = newAvgRating != null ? newAvgRating : BigDecimal.ZERO;
+    this.reviewCount = newReviewCount != null ? newReviewCount : 0;
+  }
+  
+  public void recalculateAvgRating() {
+    if (eventReview.isEmpty()) {
+      this.avgRating = BigDecimal.ZERO;
+      this.reviewCount = 0;
+      return;
+    }
+    
+    BigDecimal sum = eventReview.stream()
+        .map(EventReview::getRating)
+        .map(BigDecimal::valueOf)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    
+    this.avgRating = sum.divide(BigDecimal.valueOf(eventReview.size()), 2, java.math.RoundingMode.HALF_UP);
+    this.reviewCount = eventReview.size();
+  }
 }
