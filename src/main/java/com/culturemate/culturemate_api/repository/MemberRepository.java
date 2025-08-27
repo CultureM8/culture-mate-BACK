@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.repository;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -19,28 +20,24 @@ public class MemberRepository {
     em.persist(member);
   }
 
-  public Member findById(Long id) {
-    return em.find(Member.class, id);
-  }
-
-  public Optional<Member> findOptionalById(Long id) {
+  public Optional<Member> findById(Long id) {
     return Optional.ofNullable(em.find(Member.class, id));
   }
 
   public Optional<Member> findByLoginId(String loginId) {
-    List<Member> result = em.createQuery(
-        "select m from Member m where m.loginId = :loginId", Member.class)
-        .setParameter("loginId", loginId)
-        .getResultList();
-    return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    try {
+      Member result = em.createQuery(
+          "select m from Member m where m.loginId = :loginId", Member.class)
+          .setParameter("loginId", loginId)
+          .getSingleResult();
+      return Optional.of(result);
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
   }
 
   public boolean existsByLoginId(String loginId) {
-    Long count = em.createQuery(
-        "select count(m) from Member m where m.loginId = :loginId", Long.class)
-        .setParameter("loginId", loginId)
-        .getSingleResult();
-    return count > 0;
+    return findByLoginId(loginId).isPresent();
   }
 
   public List<Member> findAll() {
@@ -54,17 +51,13 @@ public class MemberRepository {
         .getResultList();
   }
 
-  public List<Member> findActiveMembers() {
-    return findByStatus(MemberStatus.ACTIVE);
-  }
-
   public void delete(Member member) {
     em.remove(member);
   }
 
   public void deleteById(Long id) {
-    Member member = findById(id);
-    if (member != null) {
+    Optional<Member> member = findById(id);
+    if (member.isPresent()) {
       em.remove(member);
     }
   }
