@@ -2,7 +2,7 @@ package com.culturemate.culturemate_api.contoller;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
-import com.culturemate.culturemate_api.repository.MemberRepository;
+import com.culturemate.culturemate_api.service.MemberService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,54 +10,46 @@ import java.util.List;
 @RestController
 @RequestMapping("/members")
 public class MemberContoller {
-  private final MemberRepository memberRepository;
+  private final MemberService memberService;
 
-  public MemberContoller(MemberRepository memberRepository){
-    this.memberRepository = memberRepository;
-  }
-  // 회원 전체 데이터 조회하기
-  @GetMapping
-  public List<Member> getAllMember(){
-    return memberRepository.findAll();
+  public MemberContoller(MemberService memberService){
+    this.memberService = memberService;
   }
 
-  // ID로 회원 데이터 조회하기
-  @GetMapping("/{id}")
-  public Member getMemberById(@PathVariable Long id) {
-    return memberRepository.findById(id)
-      .orElseThrow(() -> new RuntimeException("Member not found"));
-  }
-
-  // loginId로 회원 데이터 조회하기
-  @GetMapping("/login/{loginId}")
-  public Member getMemberByLoginId(@PathVariable String loginId) {
-    return memberRepository.findByLoginId(loginId)
-      .orElseThrow(() -> new RuntimeException("Member not found"));
-  }
-
-  // 회원 저장
+  // 회원 가입
   @PostMapping
-  public Member createMember(@RequestBody Member member) {
-    memberRepository.save(member);
-    return member;
+  public Member create(@RequestBody Member member) {
+    return memberService.create(member);
   }
 
   // 회원 삭제
-  @DeleteMapping("/{id}")
-  public String deleteMember(@PathVariable Long id) {
-    memberRepository.deleteById(id);
-    return "Member deleted: " + id;
+  @DeleteMapping
+  public void delete(@PathVariable Long memberId) {
+    memberService.delete(memberId);
   }
 
-  // 상태별(정상인 회원들, 휴면인 회원들, 일시 정지인 회원들, 영구 정지인 회원들) 회원 조회
+  // 전체 회원 조회
+  @GetMapping
+  public List<Member> getAllMembers() {
+    return memberService.getAllMembers();
+  }
+
+  // id로 회원 조회
+  @GetMapping("/{id}")
+  public Member getById(@PathVariable Long id) {
+    return memberService.getById(id);
+  }
+
+  // 로그인 아이디로 회원 조회
+  @GetMapping("/{loginId}")
+  public Member findByLoginId(@PathVariable String loginId) {
+    return memberService.findByLoginId(loginId);
+  }
+
+  // 상태별 회원 목록 조회
   @GetMapping("/status/{status}")
-  public List<Member> getMembersByStatus(@PathVariable MemberStatus status) {
-    return memberRepository.findByStatus(status);
+  public List<Member> findByStatus(@PathVariable MemberStatus status) {
+    return memberService.findByStatus(status);
   }
 
-  // 로그인 ID 존재 여부 체크(있으면 로그인으로 넘어갈 수 있음, 혹은 현재 로그인 상태임을 인지시킴)
-  @GetMapping("/exists/{loginId}")
-  public boolean existsByLoginId(@PathVariable String loginId) {
-    return memberRepository.existsByLoginId(loginId);
-  }
 }
