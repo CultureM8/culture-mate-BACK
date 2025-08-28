@@ -2,15 +2,13 @@ package com.culturemate.culturemate_api.domain.event;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
+import java.time.Instant;
+
 @Entity
-@Table(name = "EVENT_REVIEW")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EventReview {
   @Id
   @GeneratedValue
@@ -30,7 +28,11 @@ public class EventReview {
 
   private String content;
 
-  //=== 검증 로직 ===//
+  @Column(nullable = false)
+  private Instant createdAt;
+  private Instant updatedAt;
+
+  //=== 생성/수정 로직 ===//
   public void setRating(Integer rating) {
     if(rating > 5) {
       this.rating = 5;
@@ -39,6 +41,20 @@ public class EventReview {
     } else {
       this.rating = rating;
     }
+  }
+
+  @PrePersist
+  public void onCreate() {
+    this.createdAt = Instant.now();
+  }
+
+  @PreUpdate
+  public void onUpdate() {
+    this.updatedAt = Instant.now();
+  }
+
+  public void setContent(String content) {
+    this.content = content;
   }
 
 }

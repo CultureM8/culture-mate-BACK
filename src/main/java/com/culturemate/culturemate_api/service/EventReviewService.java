@@ -20,13 +20,19 @@ public class EventReviewService {
   private final EventRepository eventRepository;
 
   @Transactional
-  public void createReview(EventReview eventReview) {
-    eventReviewRepository.save(eventReview);
+  public void create(EventReview eventReview) {
+    // 리뷰 저장 후 즉시 DB 반영 (평균별점 계산 시 새 리뷰가 포함되어야 함)
+    eventReviewRepository.saveAndFlush(eventReview);
     updateEventAverageRating(eventReview.getEvent().getId());
   }
 
   @Transactional
-  public void updateReview(Long reviewId, EventReview updatedReview) {
+  public List<EventReview> readAll() {
+    return eventReviewRepository.findAll();
+  }
+
+  @Transactional
+  public void update(Long reviewId, EventReview updatedReview) {
     EventReview existingReview = eventReviewRepository.findById(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
     
@@ -37,7 +43,7 @@ public class EventReviewService {
   }
 
   @Transactional
-  public void deleteReview(Long reviewId) {
+  public void delete(Long reviewId) {
     EventReview eventReview = eventReviewRepository.findById(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
     

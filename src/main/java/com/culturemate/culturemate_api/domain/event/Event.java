@@ -4,19 +4,16 @@ import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Event {
   @Id
   @GeneratedValue
@@ -63,7 +60,7 @@ public class Event {
   private List<InterestEvents> interestEvents = new ArrayList<>();
 
 
-  //=== 메서드 ===//
+  //=== 생성/수정 로직 ===//
   public void updateAvgRating(BigDecimal newAvgRating, Integer newReviewCount) {
     this.avgRating = newAvgRating != null ? newAvgRating : BigDecimal.ZERO;
     this.reviewCount = newReviewCount != null ? newReviewCount : 0;

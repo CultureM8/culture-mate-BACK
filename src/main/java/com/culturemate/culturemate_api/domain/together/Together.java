@@ -48,20 +48,28 @@ public class Together {
 
   private LocalDate meetingDate;
 
-  private int maxParticipants;
-  private int currentParticipants;
+  private Integer maxParticipants;
+  private Integer currentParticipants;
 
   @Column(length = 2000)
   private String content;
 
   private boolean isRecruiting = true;
 
-  private int interestCount = 0;
+  private Integer interestCount = 0;
 
   private Instant createdAt;
   private Instant updatedAt;
 
-  //=== 메서드 ===//
+  @OneToMany(mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<InterestTogethers> interestTogethers = new ArrayList<>();
+
+  //=== 조회 로직 ===//
+  public Integer getCurrentParticipants() {
+    return participants.size();
+  }
+
+  //=== 생성/수정 로직 ===//
   @PrePersist
   public void onCreate() {
     this.createdAt = Instant.now();
@@ -72,11 +80,9 @@ public class Together {
     this.updatedAt = Instant.now();
   }
 
-  public int getCurrentParticipants() {
-    return participants.size();
+  public void setIsRecruiting(boolean isRecruiting) {
+    this.isRecruiting = isRecruiting;
   }
 
-  @OneToMany(mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
 }

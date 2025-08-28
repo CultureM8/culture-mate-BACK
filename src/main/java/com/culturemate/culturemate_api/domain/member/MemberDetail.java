@@ -2,15 +2,11 @@ package com.culturemate.culturemate_api.domain.member;
 
 import com.culturemate.culturemate_api.domain.together.VisibleType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Table(name="MEMBER_DETAIL")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberDetail {
   @Id
   @Column(name = "member_detail_id")

@@ -1,12 +1,15 @@
 package com.culturemate.culturemate_api.domain.community;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment {
 
   //=== 필드 ===//
@@ -24,10 +27,10 @@ public class Comment {
 
   private String content;
 
-  private int likeCount;
-  private int dislikeCount;
+  private Integer likeCount;
+  private Integer dislikeCount;
 
-  //=== 메서드 ===//
+  //=== 생성/수정 로직 ===//
   @PrePersist
   public void onCreate() {
     this.createdAt = Instant.now();

@@ -2,7 +2,9 @@ package com.culturemate.culturemate_api.domain.member;
 
 import com.culturemate.culturemate_api.domain.community.Board;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
   //=== 필드 ===//
@@ -42,7 +45,7 @@ public class Member {
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
-  //=== 메서드 ===//
+  //=== 생성/수정 로직 ===//
   public void changeStatus(MemberStatus newstatus) {
     this.status = newstatus;
   }
