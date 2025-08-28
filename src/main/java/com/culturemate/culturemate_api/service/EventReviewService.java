@@ -28,6 +28,10 @@ public class EventReviewService {
     return savedReview;
   }
 
+  public EventReview read(Long reviewId) {
+    return reviewRepository.findById(reviewId).orElse(null);
+  }
+
   @Transactional
   public List<EventReview> readAll() {
     return reviewRepository.findAll();

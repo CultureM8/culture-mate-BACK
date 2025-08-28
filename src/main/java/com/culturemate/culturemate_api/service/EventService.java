@@ -5,8 +5,6 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.dto.EventSearchFilter;
 import com.culturemate.culturemate_api.repository.EventRepository;
-import com.culturemate.culturemate_api.repository.EventReviewRepository;
-import com.culturemate.culturemate_api.repository.RegionRepository;
 import jakarta.persistence.EntityManager;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,7 @@ import java.util.List;
 public class EventService {
 
   private final EventRepository eventRepository;
-  private final RegionRepository regionRepository;
+  private final RegionService regionService;
 
   public Event create(Event event) {
     return eventRepository.save(event);
@@ -38,10 +36,17 @@ public class EventService {
     return eventRepository.findAll();
   }
 
+  // OverRide 객체기반 검색
   @Transactional(readOnly = true)
   public List<Event> readByRegion(Region region) {
     List<Region> regionList
-      = regionRepository.findRegionsByCondition(region.getLevel1(), region.getLevel2(), region.getLevel3());
+      = regionService.readByCondition(region.getLevel1(), region.getLevel2(), region.getLevel3());
+    return eventRepository.findByRegion(regionList);
+  }
+  // OverRide 문자기반 검색
+  @Transactional(readOnly = true)
+  public List<Event> readByRegion(String level1, String level2, String level3) {
+    List<Region> regionList = regionService.readByCondition(level1, level2, level3);
     return eventRepository.findByRegion(regionList);
   }
 
@@ -64,7 +69,7 @@ public class EventService {
   public List<Event> readByFilters(EventSearchFilter filter) {
     List<Region> regions = null;
     if (filter.hasRegion()) {
-      regions = regionRepository.findRegionsByCondition(
+      regions = regionService.readByCondition(
         filter.getLevel1(),
         filter.getLevel2(),
         filter.getLevel3()

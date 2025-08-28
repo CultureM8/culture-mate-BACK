@@ -2,10 +2,8 @@ package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
-import com.culturemate.culturemate_api.domain.event.EventReview;
 import com.culturemate.culturemate_api.dto.EventSearchFilter;
 import com.culturemate.culturemate_api.service.EventService;
-import com.culturemate.culturemate_api.service.EventReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,28 +16,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventController {
   private final EventService eventService;
-  private final EventReviewService eventReviewService;
 
   // 이벤트 전체 데이터 조회하기
   @GetMapping
-  public ResponseEntity<List<Event>> getAllEvents() {
+  public ResponseEntity<List<Event>> getAll() {
     return ResponseEntity.ok(eventService.readAll());
   }
 
   // 이벤트 ID로 데이터 조회
   @GetMapping("/{id}")
-  public ResponseEntity<?> getEventById(@PathVariable Long id) {
+  public ResponseEntity<?> get(@PathVariable Long id) {
     try {
-      Event event = findEventById(id);
+      Event event = eventService.read(id);
+      if (event == null) {
+        return ResponseEntity.notFound().build();
+      }
       return ResponseEntity.ok().body(event);
-    } catch (RuntimeException e) {
-      return ResponseEntity.notFound().build();
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body("이벤트 조회 중 오류가 발생했습니다: " + e.getMessage());
     }
   }
 
   // 제목으로 이벤트 검색
   @GetMapping("/search")
-  public ResponseEntity<?> searchEventsByTitle(@RequestParam String title) {
+  public ResponseEntity<?> getByTitle(@RequestParam String title) {
     if (title == null || title.trim().isEmpty()) {
       return ResponseEntity.badRequest().body("검색할 제목을 입력해주세요.");
     }
@@ -53,15 +53,14 @@ public class EventController {
 
   // 지역으로 이벤트 검색
   @GetMapping("/region")
-  public ResponseEntity<?> getEventsByRegion(@RequestParam String level1,
+  public ResponseEntity<?> getByRegion(@RequestParam String level1,
                                              @RequestParam(required = false) String level2,
                                              @RequestParam(required = false) String level3) {
     if (level1 == null || level1.trim().isEmpty()) {
       return ResponseEntity.badRequest().body("지역 정보(level1)는 필수입니다.");
     }
     try {
-      Region region = createRegion(level1, level2, level3);
-      List<Event> events = eventService.readByRegion(region);
+      List<Event> events = eventService.readByRegion(level1, level2, level3);
       return ResponseEntity.ok().body(events);
     } catch (Exception e) {
       return ResponseEntity.badRequest().body("지역 검색 중 오류가 발생했습니다: " + e.getMessage());
@@ -70,7 +69,7 @@ public class EventController {
 
   // 복합 필터로 이벤트 검색
   @GetMapping("/filter")
-  public ResponseEntity<?> searchEventsByFilter(
+  public ResponseEntity<?> getByFilter(
       @RequestParam(required = false) String level1,
       @RequestParam(required = false) String level2,
       @RequestParam(required = false) String level3,
@@ -113,7 +112,7 @@ public class EventController {
 
   // 이벤트 등록
   @PostMapping
-  public ResponseEntity<?> createEvent(@RequestBody Event event) {
+  public ResponseEntity<?> create(@RequestBody Event event) {
     if (event == null) {
       return ResponseEntity.badRequest().body("이벤트 정보가 필요합니다.");
     }
@@ -128,69 +127,6 @@ public class EventController {
     }
   }
 
-  // 이벤트 리뷰 데이터 조회
-  @GetMapping("/{id}/reviews")
-  public ResponseEntity<?> getEventReviews(@PathVariable Long id) {
-    try {
-      Event event = findEventById(id);
-      List<EventReview> reviews = eventReviewService.readByEvent(event);
-      return ResponseEntity.ok().body(reviews);
-    } catch (RuntimeException e) {
-      return ResponseEntity.notFound().build();
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body("리뷰 조회 중 오류가 발생했습니다: " + e.getMessage());
-    }
-  }
 
-  // 이벤트 리뷰 등록
-  @PostMapping("/{id}/reviews")
-  public ResponseEntity<?> addEventReview(@PathVariable Long id, @RequestBody EventReview review) {
-    if (review == null) {
-      return ResponseEntity.badRequest().body("리뷰 정보가 필요합니다.");
-    }
-    if (review.getContent() == null || review.getContent().trim().isEmpty()) {
-      return ResponseEntity.badRequest().body("리뷰 내용은 필수입니다.");
-    }
-    try {
-      Event event = findEventById(id);
-      review.setEvent(event);
-      EventReview createdReview = eventReviewService.create(review);
-      return ResponseEntity.ok().body(createdReview);
-    } catch (RuntimeException e) {
-      if (e.getMessage().contains("not found")) {
-        return ResponseEntity.notFound().build();
-      }
-      return ResponseEntity.badRequest().body("리뷰 생성 중 오류가 발생했습니다: " + e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body("리뷰 생성 중 오류가 발생했습니다: " + e.getMessage());
-    }
-  }
 
-  // 이벤트 리뷰 ID로 삭제
-  @DeleteMapping("/reviews/{id}")
-  public ResponseEntity<?> deleteReview(@PathVariable Long id) {
-    try {
-      eventReviewService.delete(id);
-      return ResponseEntity.noContent().build();
-    } catch (Exception e) {
-      return ResponseEntity.notFound().build();
-    }
-  }
-
-  // Private helper methods
-  private Event findEventById(Long id) {
-    Event event = eventService.read(id);
-    if (event == null) {
-      throw new RuntimeException("Event not found: " + id);
-    }
-    return event;
-  }
-
-  private Region createRegion(String level1, String level2, String level3) {
-    Region region = new Region();
-    region.setLevel1(level1);
-    region.setLevel2(level2 != null ? level2 : "");
-    region.setLevel3(level3 != null ? level3 : "");
-    return region;
-  }
 }
