@@ -2,10 +2,14 @@ package com.culturemate.culturemate_api.domain.member;
 
 import com.culturemate.culturemate_api.domain.event.Event;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InterestEvents {
   @Id
   @GeneratedValue
@@ -13,16 +17,11 @@ public class InterestEvents {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "event_id")
+  @JoinColumn(name = "event_id", nullable = false)
   private Event event;
-
-  public InterestEvents(Member member, Event event){
-    this.member = member;
-    this.event = event;
-  }
 
 }

@@ -1,15 +1,13 @@
 package com.culturemate.culturemate_api.domain.event;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
 @Entity
-@Table(name = "TICKET_PRICE")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TicketPrice {
   @Id
   @GeneratedValue

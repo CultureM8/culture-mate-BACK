@@ -4,13 +4,16 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Board {
 
   //=== 필드 ===//
@@ -34,16 +37,22 @@ public class Board {
   @Column(length = 2000)
   private String content;
 
+  @Column(nullable = false)
   private Instant createdAt;
   private Instant updatedAt;
 
   @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Comment> comments;
 
-  private int likeCount = 0;
-  private int dislikeCount = 0;
+  private Integer likeCount = 0;
+  private Integer dislikeCount = 0;
 
-  //=== 메서드 ===//
+  //=== 조회 로직 ===//
+  public Integer getCommentCount() {
+    return comments.size();
+  }
+
+  //=== 생성/수정 로직 ===//
   @PrePersist
   public void onCreate() {
     this.createdAt = Instant.now();
@@ -52,10 +61,6 @@ public class Board {
   @PreUpdate
   public void onUpdate() {
     this.updatedAt = Instant.now();
-  }
-
-  public int getCommentCount() {
-    return comments.size();
   }
 
 }
