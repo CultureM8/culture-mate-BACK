@@ -34,11 +34,11 @@ import java.util.List;
 @Repository
 public interface RegionRepository extends JpaRepository<Region, Long> {
 
-  List<Region> findByLevel1(String level1);
+//  List<Region> findByLevel1(String level1);
   
-  List<Region> findByLevel1AndLevel2(String level1, String level2);
+//  List<Region> findByLevel1AndLevel2(String level1, String level2);
   
-  List<Region> findByLevel1AndLevel2AndLevel3(String level1, String level2, String level3);
+//  List<Region> findByLevel1AndLevel2AndLevel3(String level1, String level2, String level3);
   
   /**
    * 지역 조건에 따른 동적 검색

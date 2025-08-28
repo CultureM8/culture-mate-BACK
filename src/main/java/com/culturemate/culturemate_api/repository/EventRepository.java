@@ -2,11 +2,13 @@ package com.culturemate.culturemate_api.repository;
 
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
+import com.culturemate.culturemate_api.domain.event.EventType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -44,4 +46,29 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   @Query("SELECT e FROM Event e WHERE e.region IN :regions")
   List<Event> findByRegion(@Param("regions") List<Region> regions);
 
+  List<Event> findByEventType(EventType eventType);
+
+  /**
+   * 검색 기간과 겹치는 이벤트 조회 (startDate, endDate 필드 기반)
+   * 조건: 이벤트 시작일 <= 검색 종료일 AND 이벤트 종료일 >= 검색 시작일
+   */
+  @Query("SELECT e FROM Event e WHERE e.startDate <= :endDate AND e.endDate >= :startDate")
+  List<Event> findByPeriodBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+  /**
+   * 복합 조건으로 이벤트 검색
+   * - regions: null이면 지역 조건 무시
+   * - startDate: null이면 시작일 조건 무시  
+   * - endDate: null이면 종료일 조건 무시
+   * - eventType: null이면 타입 조건 무시
+   */
+  @Query("SELECT e FROM Event e WHERE " +
+         "(:regions IS NULL OR e.region IN :regions) AND " +
+         "(:startDate IS NULL OR e.endDate >= :startDate) AND " +
+         "(:endDate IS NULL OR e.startDate <= :endDate) AND " +
+         "(:eventType IS NULL OR e.eventType = :eventType)")
+  List<Event> findByFilters(@Param("regions") List<Region> regions,
+                           @Param("startDate") LocalDate startDate,
+                           @Param("endDate") LocalDate endDate,
+                           @Param("eventType") EventType eventType);
 }

@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,8 +60,22 @@ public class Event {
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<InterestEvents> interestEvents = new ArrayList<>();
 
+  // 관리용 필드
+  private Instant createdAt;
+  private Instant updatedAt;
+
 
   //=== 생성/수정 로직 ===//
+  @PrePersist
+  public void onCreate() {
+    this.createdAt = Instant.now();
+  }
+
+  @PreUpdate
+  public void onUpdate() {
+    this.updatedAt = Instant.now();
+  }
+
   public void updateAvgRating(BigDecimal newAvgRating, Integer newReviewCount) {
     this.avgRating = newAvgRating != null ? newAvgRating : BigDecimal.ZERO;
     this.reviewCount = newReviewCount != null ? newReviewCount : 0;
@@ -81,4 +96,5 @@ public class Event {
     this.avgRating = sum.divide(BigDecimal.valueOf(eventReview.size()), 2, java.math.RoundingMode.HALF_UP);
     this.reviewCount = eventReview.size();
   }
+
 }
