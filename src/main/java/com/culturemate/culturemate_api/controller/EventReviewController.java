@@ -1,11 +1,10 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.domain.Member;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventReview;
+import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.service.EventService;
 import com.culturemate.culturemate_api.service.EventReviewService;
-import com.culturemate.culturemate_api.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +17,7 @@ import java.util.List;
 public class EventReviewController {
   private final EventReviewService eventReviewService;
   private final EventService eventService;
-  private final MemberService memberService;
+//  private final MemberService memberService;
 
   // 특정 이벤트의 리뷰 데이터 조회
   @GetMapping
@@ -36,19 +35,19 @@ public class EventReviewController {
   }
 
   // 특정 회원이 작성한 리뷰 데이터 조회
-  @GetMapping("/member")
-  public ResponseEntity<?> getByMember(@RequestParam Long memberId) {
-    try {
-      Member member = memberService.read(memberId);
-      if (member == null) {
-        return ResponseEntity.notFound().build();
-      }
-      List<EventReview> reviews = eventReviewService.readByMember(member);
-      return ResponseEntity.ok().body(reviews);
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body("회원 리뷰 조회 중 오류가 발생했습니다: " + e.getMessage());
-    }
-  }
+//  @GetMapping("/member")
+//  public ResponseEntity<?> getByMember(@RequestParam Long memberId) {
+//    try {
+//      Member member = memberService.read(memberId);
+//      if (member == null) {
+//        return ResponseEntity.notFound().build();
+//      }
+//      List<EventReview> reviews = eventReviewService.readByMember(member);
+//      return ResponseEntity.ok().body(reviews);
+//    } catch (Exception e) {
+//      return ResponseEntity.badRequest().body("회원 리뷰 조회 중 오류가 발생했습니다: " + e.getMessage());
+//    }
+//  }
 
   // 이벤트 리뷰 등록
   @PostMapping

@@ -11,14 +11,14 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventSearchFilter {
+public class TogetherSearchFilter {
   private String level1;
   private String level2;
   private String level3;
   private LocalDate startDate;
   private LocalDate endDate;
   private String eventType;
-  
+
   public boolean hasRegion() {
     return level1 != null && 
            !level1.trim().isEmpty() && 
