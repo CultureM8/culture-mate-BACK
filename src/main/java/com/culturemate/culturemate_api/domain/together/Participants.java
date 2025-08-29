@@ -2,11 +2,17 @@ package com.culturemate.culturemate_api.domain.together;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Participants {
 
   //=== 필드 ===//
@@ -14,12 +20,10 @@ public class Participants {
   @Column(name = "participant_id")
   private Long id;
 
-  @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "together_id")
   private Together together;
 
-  @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "member_id")
   private Member participant;
