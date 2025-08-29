@@ -65,8 +65,8 @@ public class Together {
   private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
   //=== 조회 로직 ===//
-  public Integer getCurrentParticipants() {
-    return participants.size();
+  public void setIsRecruiting(boolean isRecruiting) {
+    this.isRecruiting = isRecruiting;
   }
 
   //=== 생성/수정 로직 ===//
@@ -79,10 +79,5 @@ public class Together {
   public void onUpdate() {
     this.updatedAt = Instant.now();
   }
-
-  public void setIsRecruiting(boolean isRecruiting) {
-    this.isRecruiting = isRecruiting;
-  }
-
 
 }

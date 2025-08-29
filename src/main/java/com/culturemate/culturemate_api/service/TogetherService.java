@@ -7,7 +7,6 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Participants;
 import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
-import com.culturemate.culturemate_api.repository.MemberRepository;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import com.culturemate.culturemate_api.repository.TogetherRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,7 @@ public class TogetherService {
 
   private final TogetherRepository togetherRepository;
   private final ParticipantsRepository participantsRepository;
-  private final MemberRepository memberRepository;
+  private final MemberService memberService;
   private final RegionService regionService;
 
   @Transactional
@@ -111,8 +110,7 @@ public class TogetherService {
     }
 
     // Member 조회
-    Member member = memberRepository.findById(memberId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+    Member member = memberService.getById(memberId);
 
     // 참여자 추가
     Participants participation = Participants.builder()

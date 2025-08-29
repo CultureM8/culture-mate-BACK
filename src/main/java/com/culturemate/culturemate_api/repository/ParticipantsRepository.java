@@ -42,12 +42,12 @@ public interface ParticipantsRepository extends JpaRepository<Participants, Long
    * 특정 Together의 참여자 수 조회
    */
   @Query("SELECT COUNT(p) FROM Participants p WHERE p.together.id = :togetherId")
-  long countByTogetherId(@Param("togetherId") Long togetherId);
+  long countParticipantsByTogetherId(@Param("togetherId") Long togetherId);
 
   /**
    * 특정 Member가 참여한 Together 개수 조회
    */
   @Query("SELECT COUNT(p) FROM Participants p WHERE p.participant.id = :participantId")
-  long countByParticipantId(@Param("participantId") Long participantId);
+  long countTogethersByParticipantId(@Param("participantId") Long participantId);
 
 }
