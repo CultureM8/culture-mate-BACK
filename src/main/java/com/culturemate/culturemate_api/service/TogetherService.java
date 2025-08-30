@@ -53,6 +53,15 @@ public class TogetherService {
     return togetherRepository.findByParticipant(member);
   }
 
+  public List<Together> readActiveTogether() {
+    return togetherRepository.findByIsRecruiting(true);
+  }
+
+  public List<Together> readByRegion(List<Region> regions) {
+    return togetherRepository.findByRegion(regions);
+  }
+
+  // 통합 검색 기능
   public List<Together> search(TogetherSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
@@ -92,37 +101,61 @@ public class TogetherService {
     togetherRepository.deleteById(togetherId);
   }
 
-  // ===== 참여자 관리 메서드 =====
-
-  /**
-   * 동행 참여 신청
-   */
-  @Transactional
-  public void joinTogether(Long togetherId, Long memberId) {
+  // 검증 로직
+  public Together readIfAvailable(Long togetherId) {
     Together together = read(togetherId);
     if (together == null) {
       throw new IllegalArgumentException("해당 모집글이 존재하지 않습니다.");
     }
+    if (together.getMeetingDate().isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("이미 기한이 지난 모집입니다.");
+    }
+    Integer currentParticipants = getParticipants(togetherId).size();
+    if (together.getMaxParticipants() <= currentParticipants) {
+      throw new IllegalArgumentException("인원을 모두 모집했습니다.");
+    }
+    return together;
+  }
 
-    // 이미 참여 중인지 확인
+  // ===== 참여자 관리 메서드 =====
+  // 참여 여부 확인
+  public boolean isParticipating(Long togetherId, Long memberId) {
+    return participantsRepository.existsByTogetherIdAndParticipantId(togetherId, memberId);
+  }
+
+  // 참여자 목록 조회
+  public List<Member> getParticipants(Long togetherId) {
+    List<Participants> participantsList = participantsRepository.findByTogetherId(togetherId);
+    return participantsList.stream()
+      .map(Participants::getParticipant) //Participants 객체에서 Member객체를 호출
+      .collect(Collectors.toList());
+  }
+
+  // 동행 참여 신청
+  @Transactional
+  public void joinTogether(Long togetherId, Long memberId) {
+    Together together = readIfAvailable(togetherId);
+
+    if (!together.isRecruiting()) {
+      throw new IllegalArgumentException("마감된 모집입니다.");
+    }
     if (isParticipating(togetherId, memberId)) {
       throw new IllegalStateException("이미 참여 중인 동행입니다.");
     }
 
-    // Member 조회
     Member member = memberService.getById(memberId);
-
-    // 참여자 추가
     Participants participation = Participants.builder()
         .together(together)
         .participant(member)
         .build();
     participantsRepository.save(participation);
+
+    if(together.getMaxParticipants() <= getParticipants(togetherId).size()) {
+      together.setIsRecruiting(false);
+    }
   }
 
-  /**
-   * 동행 참여 취소
-   */
+  // 동행 참여 취소
   @Transactional
   public void leaveTogether(Long togetherId, Long memberId) {
     Participants participation = participantsRepository
@@ -131,99 +164,30 @@ public class TogetherService {
     if (participation == null) {
       throw new IllegalArgumentException("참여하지 않은 동행입니다.");
     }
-
-    participantsRepository.delete(participation);
-  }
-
-  /**
-   * 참여자 목록 조회
-   */
-  public List<Member> getParticipants(Long togetherId) {
-    List<Participants> participantsList = participantsRepository.findByTogetherId(togetherId);
-    return participantsList.stream()
-        .map(Participants::getParticipant) //Participants 객체에서 Member객체를 호출
-        .collect(Collectors.toList());
-  }
-
-  /**
-   * 참여 가능 여부 확인
-   */
-  public boolean canJoin(Long togetherId, Long memberId) {
+    // meetingDate가 지났다면 동행한 것으로 간주, 삭제 불가.
     Together together = read(togetherId);
-    if (together == null) return false;
-    
-    // 이미 참여 중인지 확인
-    if (isParticipating(togetherId, memberId)) return false;
-    
-    // TODO: 추가 조건들 (정원 초과, 마감일 등)
-    return true;
-  }
+    if(together.getMeetingDate().isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("종료된 모집입니다.");
+    }
+    participantsRepository.delete(participation);
 
-  /**
-   * 참여 여부 확인
-   */
-  public boolean isParticipating(Long togetherId, Long memberId) {
-    return participantsRepository.existsByTogetherIdAndParticipantId(togetherId, memberId);
+    if(together.getMaxParticipants() > getParticipants(togetherId).size()) {
+      together.setIsRecruiting(true);
+    }
   }
 
   // ===== 상태 관리 메서드 =====
 
-  /**
-   * 모집 마감
-   */
   @Transactional
   public void closeTogether(Long togetherId) {
-    Together together = read(togetherId);
-    if (together == null) {
-      throw new IllegalArgumentException("해당 모집글이 존재하지 않습니다.");
-    }
-    // TODO: Together 엔티티에 상태 필드 추가 필요
-    // together.setStatus(TogetherStatus.CLOSED);
-    togetherRepository.save(together);
+    Together together = readIfAvailable(togetherId);
+    together.setIsRecruiting(false);
   }
 
-  /**
-   * 모집 재개
-   */
   @Transactional
   public void reopenTogether(Long togetherId) {
-    Together together = read(togetherId);
-    if (together == null) {
-      throw new IllegalArgumentException("해당 모집글이 존재하지 않습니다.");
-    }
-    // TODO: Together 엔티티에 상태 필드 추가 필요
-    // together.setStatus(TogetherStatus.ACTIVE);
-    togetherRepository.save(together);
-  }
-
-  /**
-   * 활성 모집글만 조회 (상태 필드 추가 후 구현)
-   */
-  public List<Together> readActiveTogether() {
-    // TODO: Together 엔티티에 상태 필드 추가 후 구현
-    return readAll(); // 임시로 전체 조회
-  }
-
-  // ===== 비즈니스 로직 메서드 =====
-
-  /**
-   * 지역별 모집글 조회
-   */
-  public List<Together> readByRegion(List<Region> regions) {
-    return togetherRepository.findByRegion(regions);
-  }
-
-  /**
-   * 마감 임박 모집글 (며칠 내)
-   */
-  public List<Together> readByDeadlineSoon(int days) {
-    LocalDate deadline = LocalDate.now().plusDays(days);
-    // TODO: Repository에 마감일 기준 쿼리 메서드 추가 필요
-    return togetherRepository.findAll().stream()
-        .filter(t -> t.getMeetingDate() != null && 
-                    t.getMeetingDate().isBefore(deadline.plusDays(1)) && 
-                    t.getMeetingDate().isAfter(LocalDate.now().minusDays(1)))
-        .collect(Collectors.toList());
+    Together together = readIfAvailable(togetherId);
+    together.setIsRecruiting(true);
   }
 
 }

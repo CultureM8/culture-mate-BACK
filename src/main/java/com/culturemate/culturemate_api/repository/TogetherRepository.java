@@ -82,4 +82,5 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
                               @Param("eventType") EventType eventType,
                               @Param("eventId") Long eventId);
 
+  List<Together> findByIsRecruiting(boolean isRecruiting);
 }
