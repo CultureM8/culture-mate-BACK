@@ -10,6 +10,7 @@ import java.time.Instant;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "comments")
 public class Comment {
 
   //=== 필드 ===//

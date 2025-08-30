@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Tag {
   @Id
+  @GeneratedValue
   private String tag;
 
   private Integer count;
