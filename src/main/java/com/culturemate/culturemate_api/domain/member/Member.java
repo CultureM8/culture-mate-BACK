@@ -2,9 +2,7 @@ package com.culturemate.culturemate_api.domain.member;
 
 import com.culturemate.culturemate_api.domain.community.Board;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -12,7 +10,9 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Member {
 
   //=== 필드 ===//
