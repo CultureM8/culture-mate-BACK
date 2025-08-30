@@ -4,18 +4,16 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.List;
 
 @Entity
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Board {
 
   //=== 필드 ===//
@@ -34,9 +32,11 @@ public class Board {
   @JoinColumn(name="member_id")
   private Member author;
 
+  @Setter
   private String title;
 
   @Column(length = 2000)
+  @Setter
   private String content;
 
   @Column(nullable = false)
