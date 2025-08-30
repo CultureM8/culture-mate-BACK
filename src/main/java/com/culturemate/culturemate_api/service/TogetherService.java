@@ -110,7 +110,7 @@ public class TogetherService {
     if (together.getMeetingDate().isBefore(LocalDate.now())) {
       throw new IllegalArgumentException("이미 기한이 지난 모집입니다.");
     }
-    Integer currentParticipants = getParticipants(togetherId).size();
+    Integer currentParticipants = participantsRepository.countParticipantsByTogetherId(togetherId);
     if (together.getMaxParticipants() <= currentParticipants) {
       throw new IllegalArgumentException("인원을 모두 모집했습니다.");
     }
@@ -150,7 +150,7 @@ public class TogetherService {
         .build();
     participantsRepository.save(participation);
 
-    if(together.getMaxParticipants() <= getParticipants(togetherId).size()) {
+    if(together.getMaxParticipants() <= participantsRepository.countParticipantsByTogetherId(togetherId)) {
       together.setIsRecruiting(false);
     }
   }
@@ -171,7 +171,7 @@ public class TogetherService {
     }
     participantsRepository.delete(participation);
 
-    if(together.getMaxParticipants() > getParticipants(togetherId).size()) {
+    if(together.getMaxParticipants() > participantsRepository.countParticipantsByTogetherId(togetherId)) {
       together.setIsRecruiting(true);
     }
   }
