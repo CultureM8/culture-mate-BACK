@@ -53,7 +53,7 @@ public class EventService {
     
     // 새로운 통합 검색 Repository 메서드 사용
     return eventRepository.findBySearch(
-      searchDto.hasTitle() ? searchDto.getTitle() : null,
+      searchDto.hasKeyword() ? searchDto.getKeyword() : null,
       regions,
       searchDto.getStartDate(),
       searchDto.getEndDate(),

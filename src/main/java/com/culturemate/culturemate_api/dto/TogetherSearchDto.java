@@ -12,10 +12,10 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventSearchDto {
-  
+public class TogetherSearchDto {
+
   // 검색어
-  private String keyword ;
+  private String keyword;
   
   // 지역 검색
   private String level1;
@@ -31,10 +31,13 @@ public class EventSearchDto {
   
   // 이벤트 타입 검색
   private String eventType;
-  
+
+  // 특정 이벤트 검색
+  private Long eventId;
+
   // 검증 및 유틸리티 메서드들
   public boolean hasKeyword() {
-    return keyword  != null && !keyword .trim().isEmpty();
+    return keyword != null && !keyword.trim().isEmpty();
   }
   
   public boolean hasRegion() {
@@ -46,22 +49,31 @@ public class EventSearchDto {
   public boolean hasDateRange() {
     return startDate != null || endDate != null;
   }
-  
+
+  public boolean hasEventId() {
+    return eventId != null;
+  }
+
   public boolean hasEventType() {
+    // 특정 이벤트를 지정하면 이벤트 타입에 대한 필터는 안함.
+    if (this.hasEventId()) {
+      return false;
+    }
     return eventType != null && !eventType.trim().isEmpty();
   }
-  
+
   public boolean isEmpty() {
-    return !hasKeyword() && !hasRegion() && !hasDateRange() && !hasEventType();
+    return !hasKeyword() && !hasRegion() && !hasDateRange() && !hasEventType() && !hasEventId();
   }
   
   // 검색 조건 문자열 생성 (로깅용)
   public String getSearchConditions() {
     StringBuilder sb = new StringBuilder();
-    if (hasKeyword()) sb.append("keyword :").append(keyword ).append(" ");
+    if (hasKeyword()) sb.append("keyword:").append(keyword).append(" ");
     if (hasRegion()) sb.append("region:").append(level1).append(" ");
     if (hasDateRange()) sb.append("dates:").append(startDate).append("~").append(endDate).append(" ");
     if (hasEventType()) sb.append("type:").append(eventType).append(" ");
+    if (hasEventId()) sb.append("eventId:").append(eventId).append(" ");
     return sb.toString().trim();
   }
 }

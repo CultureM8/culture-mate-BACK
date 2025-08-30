@@ -48,12 +48,12 @@ public interface EventRepository extends JpaRepository<Event, Long> {
    * - eventType: null이면 타입 조건 무시
    */
   @Query("SELECT e FROM Event e WHERE " +
-         "(:title IS NULL OR :title = '' OR e.title LIKE %:title%) AND " +
+         "(:title IS NULL OR :keyword = '' OR e.title LIKE %:keyword%) AND " +
          "(:regions IS NULL OR e.region IN :regions) AND " +
          "(:startDate IS NULL OR e.endDate >= :startDate) AND " +
          "(:endDate IS NULL OR e.startDate <= :endDate) AND " +
          "(:eventType IS NULL OR e.eventType = :eventType)")
-  List<Event> findBySearch(@Param("title") String title,
+  List<Event> findBySearch(@Param("keyword") String keyword,
                           @Param("regions") List<Region> regions,
                           @Param("startDate") LocalDate startDate,
                           @Param("endDate") LocalDate endDate,
