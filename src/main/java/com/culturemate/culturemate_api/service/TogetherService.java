@@ -7,6 +7,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Participants;
 import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
+import com.culturemate.culturemate_api.exceptions.together.*;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import com.culturemate.culturemate_api.repository.TogetherRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,8 @@ public class TogetherService {
   }
 
   public Together read(Long togetherId) {
-    return togetherRepository.findById(togetherId).orElse(null);
+    return togetherRepository.findById(togetherId)
+        .orElseThrow(() -> new TogetherNotFoundException(togetherId));
   }
 
   public List<Together> readAll() {
@@ -65,11 +67,7 @@ public class TogetherService {
   public List<Together> search(TogetherSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.readByCondition(
-        searchDto.getLevel1(),
-        searchDto.getLevel2(),
-        searchDto.getLevel3()
-      );
+      regions = regionService.readByCondition(searchDto.getRegionDto());
     }
 
     EventType eventType = null;
@@ -90,9 +88,6 @@ public class TogetherService {
   @Transactional
   public void update(Together newTogether) {
     Together together = read(newTogether.getId());
-    if(together == null){
-      throw new IllegalArgumentException("해당 모집글이 존재하지 않습니다.");
-    }
     togetherRepository.save(newTogether);
   }
 
@@ -104,16 +99,16 @@ public class TogetherService {
   // 검증 로직
   public Together readIfAvailable(Long togetherId) {
     Together together = read(togetherId);
-    if (together == null) {
-      throw new IllegalArgumentException("해당 모집글이 존재하지 않습니다.");
-    }
+    
     if (together.getMeetingDate().isBefore(LocalDate.now())) {
-      throw new IllegalArgumentException("이미 기한이 지난 모집입니다.");
+      throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
+    
     Integer currentParticipants = participantsRepository.countParticipantsByTogetherId(togetherId);
     if (together.getMaxParticipants() <= currentParticipants) {
-      throw new IllegalArgumentException("인원을 모두 모집했습니다.");
+      throw new TogetherFullException(togetherId, together.getMaxParticipants());
     }
+    
     return together;
   }
 
@@ -137,10 +132,10 @@ public class TogetherService {
     Together together = readIfAvailable(togetherId);
 
     if (!together.isRecruiting()) {
-      throw new IllegalArgumentException("마감된 모집입니다.");
+      throw new TogetherClosedException(togetherId);
     }
     if (isParticipating(togetherId, memberId)) {
-      throw new IllegalStateException("이미 참여 중인 동행입니다.");
+      throw new TogetherAlreadyJoinedException(togetherId, memberId);
     }
 
     Member member = memberService.getById(memberId);
@@ -162,12 +157,12 @@ public class TogetherService {
         .findByTogetherIdAndParticipantId(togetherId, memberId);
     
     if (participation == null) {
-      throw new IllegalArgumentException("참여하지 않은 동행입니다.");
+      throw new TogetherNotJoinedException(togetherId, memberId);
     }
-    // meetingDate가 지났다면 동행한 것으로 간주, 삭제 불가.
+    
     Together together = read(togetherId);
     if(together.getMeetingDate().isBefore(LocalDate.now())) {
-      throw new IllegalArgumentException("종료된 모집입니다.");
+      throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
     participantsRepository.delete(participation);
 

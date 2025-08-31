@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.service;
 
 import com.culturemate.culturemate_api.domain.Region;
+import com.culturemate.culturemate_api.dto.RegionDto;
 import com.culturemate.culturemate_api.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,8 @@ public class RegionService {
     return regionRepository.findAll();
   }
 
-  public List<Region> readByCondition(String level1, String level2, String level3) {
-    return regionRepository.findRegionsByCondition(level1, level2, level3);
+  public List<Region> readByCondition(RegionDto regionDto) {
+    return regionRepository.findRegionsByCondition(regionDto.getLevel1(), regionDto.getLevel2(), regionDto.getLevel3());
   }
 
   @Transactional
