@@ -5,8 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Data
 @Builder
@@ -17,7 +20,8 @@ public class CommentDto {
   private Long boardId;
   private Long parentId;
   private String content;
-  private Instant createdAt;
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  private LocalDate createdAt;
   private Integer likeCount;
   private Integer dislikeCount;
 
@@ -27,7 +31,7 @@ public class CommentDto {
       .boardId(comment.getBoard().getId())
       .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
       .content(comment.getContent())
-      .createdAt(comment.getCreatedAt())
+      .createdAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
       .likeCount(comment.getLikeCount())
       .dislikeCount(comment.getDislikeCount())
       .build();

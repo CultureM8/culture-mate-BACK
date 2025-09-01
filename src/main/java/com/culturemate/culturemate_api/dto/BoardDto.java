@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -18,6 +22,9 @@ public class BoardDto {
   private String authorLoginId;
   private Long eventId;
   private EventType eventType;
-
-
+  private Integer likeCount;
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  private LocalDate createdAt;
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  private LocalDate updatedAt;
 }
