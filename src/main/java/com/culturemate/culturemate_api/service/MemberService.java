@@ -19,9 +19,30 @@ import java.util.stream.Collectors;
 public class MemberService {
   private final MemberRepository memberRepository;
 
+  // Entity를 DTO로 변환하는 내부 메서드
+  private MemberDto toDto(Member member) {
+    return MemberDto.builder()
+      .id(member.getId())
+      .loginId(member.getLoginId())
+      .role(member.getRole())
+      .status(member.getStatus())
+      .build();
+  }
+
+  // Entity를 DTO로 변환하는 내부 메서드 (관리자용 - 비밀번호 포함)
+  private MemberDto toDtoWithPassword(Member member) {
+    return MemberDto.builder()
+      .id(member.getId())
+      .loginId(member.getLoginId())
+      .password(member.getPassword())
+      .role(member.getRole())
+      .status(member.getStatus())
+      .build();
+  }
+
   // 회원 가입
   @Transactional
-  public MemberDto create(MemberDto memberDto) {
+  public Member create(MemberDto memberDto) {
     if (memberRepository.existsByLoginId(memberDto.getLoginId())) {
       throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
     }
@@ -34,14 +55,7 @@ public class MemberService {
       .joinedAt(Instant.now())
       .build();
 
-    Member saved = memberRepository.save(member);
-
-    return MemberDto.builder()
-      .id(saved.getId())
-      .loginId(saved.getLoginId())
-      .role(saved.getRole())
-      .status(saved.getStatus())
-      .build();
+    return memberRepository.save(member);
   }
 
   // 회원 삭제
@@ -50,78 +64,72 @@ public class MemberService {
     memberRepository.deleteById(memberId);
   }
 
-  // 전체 회원 조회
-  public List<MemberDto> getAllMembers(boolean isAdmin) {
-    return memberRepository.findAll()
+  // 전체 회원 조회 (엔티티 반환)
+  public List<Member> findAll() {
+    return memberRepository.findAll();
+  }
+
+  // 전체 회원 DTO 조회 (외부 API용)
+  public List<MemberDto> findAllDto(boolean isAdmin) {
+    return findAll()
       .stream()
-      .map(member -> MemberDto.builder()
-        .id(member.getId())
-        .loginId(member.getLoginId())
-        .role(member.getRole())
-        .status(member.getStatus())
-        .password(isAdmin ? member.getPassword() : null) // 관리자일 경우 비밀번호 보여줌
-        .build())
+      .map(member -> isAdmin ? toDtoWithPassword(member) : toDto(member))
       .collect(Collectors.toList());
   }
 
-  // ID로 회원 조회
-  public MemberDto getById(Long id) {
-    Member member = memberRepository.findById(id)
+  // ID로 회원 조회 (엔티티 반환)
+  public Member findById(Long id) {
+    return memberRepository.findById(id)
       .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
-    return MemberDto.builder()
-      .id(member.getId())
-      .loginId(member.getLoginId())
-      .role(member.getRole())
-      .status(member.getStatus())
-      .build();
   }
 
-  // 로그인 아이디로 회원 조회
-  public MemberDto findByLoginId(String loginId) {
-    Member member = memberRepository.findByLoginId(loginId)
+  // ID로 회원 DTO 조회 (외부 API용)
+  public MemberDto findByIdDto(Long id) {
+    return toDto(findById(id));
+  }
+
+  // 로그인 아이디로 회원 조회 (엔티티 반환)
+  public Member findByLoginId(String loginId) {
+    return memberRepository.findByLoginId(loginId)
       .orElseThrow(() -> new IllegalArgumentException("해당 아이디의 회원이 없습니다."));
-    return MemberDto.builder()
-      .id(member.getId())
-      .loginId(member.getLoginId())
-      .role(member.getRole())
-      .status(member.getStatus())
-      .build();
   }
 
-  // 상태별 회원 목록 조회
-  public List<MemberDto> findByStatus(MemberStatus status) {
-    return memberRepository.findByStatus(status)
+  // 로그인 아이디로 회원 DTO 조회 (외부 API용)
+  public MemberDto findByLoginIdDto(String loginId) {
+    return toDto(findByLoginId(loginId));
+  }
+
+  // 상태별 회원 조회 (엔티티 반환)
+  public List<Member> findByStatus(MemberStatus status) {
+    return memberRepository.findByStatus(status);
+  }
+
+  // 상태별 회원 DTO 목록 조회 (외부 API용)
+  public List<MemberDto> findByStatusDto(MemberStatus status) {
+    return findByStatus(status)
       .stream()
-      .map(member -> MemberDto.builder()
-        .id(member.getId())
-        .loginId(member.getLoginId())
-        .role(member.getRole())
-        .status(member.getStatus())
-        .build())
+      .map(this::toDto)
       .collect(Collectors.toList());
   }
 
   // 회원 상태 변경
   @Transactional
   public void updateStatus(Long memberId, MemberStatus newStatus) {
-    Member member = memberRepository.findById(memberId)
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+    Member member = findById(memberId);
     member.changeStatus(newStatus);
   }
 
   // 비밀번호 변경
   @Transactional
   public void updatePassword(Long memberId, String newPassword) {
-    Member member = memberRepository.findById(memberId)
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+    Member member = findById(memberId);
     member.changePassword(newPassword);
   }
 
   // 권한 변경
   @Transactional
   public void updateRole(Long memberId, Role newRole) {
-    Member member = memberRepository.findById(memberId)
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+    Member member = findById(memberId);
     member.changeRole(newRole);
   }
 }

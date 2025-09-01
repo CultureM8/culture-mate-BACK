@@ -26,35 +26,35 @@ public class TogetherController {
   @GetMapping
   public ResponseEntity<List<TogetherResponseDto>> getAll() {
     return ResponseEntity.ok().body(
-      togetherService.readAll().stream().map(TogetherResponseDto::from).collect(Collectors.toList())
+      togetherService.findAll().stream().map(TogetherResponseDto::from).collect(Collectors.toList())
     );
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<TogetherResponseDto> getById(@PathVariable Long id) {
-    Together together = togetherService.read(id);
+    Together together = togetherService.findById(id);
     return ResponseEntity.ok().body(TogetherResponseDto.from(together));
   }
 
   // 특정 회원이 호스트인 모집글 조회
   @GetMapping("/hosted-by/{hostId}")
   public ResponseEntity<List<TogetherResponseDto>> getByHostId(@PathVariable Long hostId) {
-    Member host = memberService.getById(hostId);
-    List<Together> togethers = togetherService.readByHost(host);
+    Member host = memberService.findById(hostId);
+    List<Together> togethers = togetherService.findByHost(host);
     return ResponseEntity.ok().body(togethers.stream().map(TogetherResponseDto::from).collect(Collectors.toList()));
   }
   // 특정 회원이 참여하는 모집글 조회
   @GetMapping("/with/{memberId}")
   public ResponseEntity<List<TogetherResponseDto>> getByMemberId(@PathVariable Long memberId) {
-    Member member = memberService.getById(memberId);
-    List<Together> togethers = togetherService.readByMember(member);
+    Member member = memberService.findById(memberId);
+    List<Together> togethers = togetherService.findByMember(member);
     return ResponseEntity.ok().body(togethers.stream().map(TogetherResponseDto::from).collect(Collectors.toList()));
   }
   // 모집글 통합 검색
   @GetMapping("/search")
   public ResponseEntity<List<TogetherResponseDto>> search(@RequestParam TogetherSearchDto searchDto) {
     if (searchDto.isEmpty()) {
-      List<Together> togethers = togetherService.readAll();
+      List<Together> togethers = togetherService.findAll();
       return ResponseEntity.ok().body(togethers.stream().map(TogetherResponseDto::from).collect(Collectors.toList()));
     }
 
