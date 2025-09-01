@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.repository;
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,13 +41,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
 
   /**
-   * 통합 검색: 제목 + 복합 조건으로 이벤트 검색
+   * 통합 검색: 제목 + 복합 조건으로 이벤트 검색 (N+1 해결: ManyToOne 관계만 포함)
    * - title: null이면 제목 조건 무시, 값이 있으면 LIKE 검색
    * - regions: null이면 지역 조건 무시
    * - startDate: null이면 시작일 조건 무시  
    * - endDate: null이면 종료일 조건 무시
    * - eventType: null이면 타입 조건 무시
    */
+  @EntityGraph(attributePaths = {"region"})
   @Query("SELECT e FROM Event e WHERE " +
          "(:title IS NULL OR :keyword = '' OR e.title LIKE %:keyword%) AND " +
          "(:regions IS NULL OR e.region IN :regions) AND " +

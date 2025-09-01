@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Together;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,18 +41,23 @@ import java.util.List;
 @Repository
 public interface TogetherRepository extends JpaRepository<Together, Long> {
 
-  // search가 있어서 필요없긴함..
+  // search가 있어서 필요없긴함.. (N+1 해결: ManyToOne 관계만 포함)
+  @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByTitleContaining(String title);
   
 
-//  RegionRepository의 findRegionsByCondition()을 함께 사용
+//  RegionRepository의 findRegionsByCondition()을 함께 사용 (N+1 해결)
+  @EntityGraph(attributePaths = {"event", "host", "region"})
   @Query("SELECT t FROM Together t WHERE t.region IN :regions")
   List<Together> findByRegion(@Param("regions") List<Region> regions);
   
+  @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByHost(Member host);
   
+  @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByEvent(Event event);
   
+  @EntityGraph(attributePaths = {"event", "host", "region"})
   @Query("SELECT t FROM Together t " +
          "JOIN t.participants p " +
          "WHERE p.participant = :member " +
@@ -68,6 +74,7 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
    * - eventId: null이면 특정 이벤트 조건 무시
    * - isRecruiting: null이면 모집상태 조건 무시
    */
+  @EntityGraph(attributePaths = {"event", "host", "region"})
   @Query("SELECT t FROM Together t " +
          "JOIN t.event e " +
          "WHERE (:keyword IS NULL OR :keyword = '' OR t.title LIKE %:keyword%) AND " +
@@ -85,5 +92,6 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
                               @Param("eventId") Long eventId,
                               @Param("isRecruiting") Boolean isRecruiting);
 
+  @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByIsRecruiting(boolean isRecruiting);
 }

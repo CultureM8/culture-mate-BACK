@@ -4,6 +4,7 @@ import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,22 +13,28 @@ import java.util.List;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
 
-  // 작성자로 조회
+  // 작성자로 조회 (N+1 해결: ManyToOne 관계만 포함)
+  @EntityGraph(attributePaths = {"author", "event"})
   List<Board> findByAuthor(Member author);
 
-  // 이벤트로 조회
+  // 이벤트로 조회 (N+1 해결)
+  @EntityGraph(attributePaths = {"author", "event"})
   List<Board> findByEvent(Event event);
 
-  // 이벤트 타입으로 조회
+  // 이벤트 타입으로 조회 (N+1 해결)
+  @EntityGraph(attributePaths = {"author", "event"})
   List<Board> findByEventType(EventType eventType);
 
-  // Title로 조회
+  // Title로 조회 (N+1 해결)
+  @EntityGraph(attributePaths = {"author", "event"})
   List<Board> findByTitleContaining(String keyword);
 
-  // 이벤트 + 제목 키워드 조건으로 조회
+  // 이벤트 + 제목 키워드 조건으로 조회 (N+1 해결)
+  @EntityGraph(attributePaths = {"author", "event"})
   List<Board> findByEventAndTitleContaining(Event event, String keyword);
 
-  // 통합 검색 메서드
+  // 통합 검색 메서드 (N+1 해결)
+  @EntityGraph(attributePaths = {"author", "event"})
   @Query("SELECT b FROM Board b " +
          "WHERE (:keyword IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
          "AND (:author IS NULL OR b.author = :author) " +

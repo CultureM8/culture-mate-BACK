@@ -1,7 +1,7 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.community.Comment;
-import com.culturemate.culturemate_api.dto.CommentDto;
+import com.culturemate.culturemate_api.dto.CommentResponseDto;
 import com.culturemate.culturemate_api.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,38 +18,38 @@ public class CommentController {
   private final CommentService commentService;
 
   // 댓글 생성
-  @PostMapping
-  public ResponseEntity<CommentDto> add(@RequestParam Long boardId,
+  @PostMapping("/board/{boardId}")
+  public ResponseEntity<CommentResponseDto> add(@PathVariable Long boardId,
                                                   @RequestParam(required = false) Long parentId,
                                                   @RequestParam String content) {
     Comment created = commentService.create(boardId, parentId, content);
-    return ResponseEntity.status(201).body(CommentDto.fromEntity(created)); // 201 Created
+    return ResponseEntity.status(201).body(CommentResponseDto.fromEntity(created)); // 201 Created
   }
 
   // 댓글 수정
   @PutMapping("/{commentId}")
-  public ResponseEntity<CommentDto> modify(@PathVariable Long commentId,
+  public ResponseEntity<CommentResponseDto> modify(@PathVariable Long commentId,
                                                   @RequestParam String content) {
     Comment updated = commentService.update(commentId, content);
-    return ResponseEntity.ok(CommentDto.fromEntity(updated)); // 200 OK
+    return ResponseEntity.ok(CommentResponseDto.fromEntity(updated)); // 200 OK
   }
 
   // 특정 게시글 댓글 조회
   @GetMapping("/board/{boardId}")
-  public ResponseEntity<List<CommentDto>> getByBoard(@PathVariable Long boardId) {
-    List<CommentDto> comments = commentService.findByBoard(boardId)
+  public ResponseEntity<List<CommentResponseDto>> getByBoard(@PathVariable Long boardId) {
+    List<CommentResponseDto> comments = commentService.findByBoard(boardId)
       .stream()
-      .map(CommentDto::fromEntity)
+      .map(CommentResponseDto::fromEntity)
       .collect(Collectors.toList());
     return ResponseEntity.ok(comments); // 200 OK
   }
 
   // 특정 댓글의 대댓글 조회
   @GetMapping("/reply/{parentId}")
-  public ResponseEntity<List<CommentDto>> getReplies(@PathVariable Long parentId) {
-    List<CommentDto> replies = commentService.findReplies(parentId)
+  public ResponseEntity<List<CommentResponseDto>> getReplies(@PathVariable Long parentId) {
+    List<CommentResponseDto> replies = commentService.findReplies(parentId)
       .stream()
-      .map(CommentDto::fromEntity)
+      .map(CommentResponseDto::fromEntity)
       .collect(Collectors.toList());
     return ResponseEntity.ok(replies); // 200 OK
   }

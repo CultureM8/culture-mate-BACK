@@ -15,7 +15,7 @@ import java.time.ZoneId;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommentDto {
+public class CommentResponseDto {
   private Long id;
   private Long boardId;
   private Long parentId;
@@ -25,8 +25,8 @@ public class CommentDto {
   private Integer likeCount;
   private Integer dislikeCount;
 
-  public static CommentDto fromEntity(Comment comment) {
-    return CommentDto.builder()
+  public static CommentResponseDto fromEntity(Comment comment) {
+    return CommentResponseDto.builder()
       .id(comment.getId())
       .boardId(comment.getBoard().getId())
       .parentId(comment.getParent() != null ? comment.getParent().getId() : null)

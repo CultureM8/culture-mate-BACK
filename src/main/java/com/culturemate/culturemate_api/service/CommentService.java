@@ -4,7 +4,7 @@ import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.community.Comment;
 import com.culturemate.culturemate_api.domain.community.CommentLike;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.CommentDto;
+import com.culturemate.culturemate_api.dto.CommentResponseDto;
 import com.culturemate.culturemate_api.repository.CommentLikeRepository;
 import com.culturemate.culturemate_api.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
