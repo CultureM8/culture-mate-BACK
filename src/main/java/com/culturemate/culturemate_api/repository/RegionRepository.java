@@ -37,8 +37,13 @@ public interface RegionRepository extends JpaRepository<Region, Long> {
 //  List<Region> findByLevel1(String level1);
   
 //  List<Region> findByLevel1AndLevel2(String level1, String level2);
-  
-//  List<Region> findByLevel1AndLevel2AndLevel3(String level1, String level2, String level3);
+  @Query("SELECT r FROM Region r WHERE " +
+    "(:level1 IS NULL AND r.level1 IS NULL OR :level1 = r.level1) AND " +
+    "(:level2 IS NULL AND r.level2 IS NULL OR :level2 = r.level2) AND " +
+    "(:level3 IS NULL AND r.level3 IS NULL OR :level3 = r.level3)")
+  Region findExactRegion(@Param("level1") String level1,
+                         @Param("level2") String level2,
+                         @Param("level3") String level3);
   
   /**
    * 지역 조건에 따른 동적 검색

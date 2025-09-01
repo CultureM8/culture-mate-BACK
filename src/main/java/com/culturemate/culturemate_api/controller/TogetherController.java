@@ -4,6 +4,7 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.TogetherRequestDto;
+import com.culturemate.culturemate_api.dto.TogetherResponseDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.culturemate.culturemate_api.service.TogetherService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/together")
@@ -22,52 +24,63 @@ public class TogetherController {
   private final MemberService memberService;
 
   @GetMapping
-  public ResponseEntity<List<Together>> getAll() {
-    return ResponseEntity.ok().body(togetherService.readAll());
+  public ResponseEntity<List<TogetherResponseDto>> getAll() {
+    return ResponseEntity.ok().body(
+      togetherService.readAll().stream().map(TogetherResponseDto::from).collect(Collectors.toList())
+    );
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Together> getById(@PathVariable Long id) {
+  public ResponseEntity<TogetherResponseDto> getById(@PathVariable Long id) {
     Together together = togetherService.read(id);
-    return ResponseEntity.ok(together);
+    return ResponseEntity.ok().body(TogetherResponseDto.from(together));
   }
 
   // 특정 회원이 호스트인 모집글 조회
   @GetMapping("/hosted-by/{hostId}")
-  public ResponseEntity<List<Together>> getByHostId(@PathVariable Long hostId) {
+  public ResponseEntity<List<TogetherResponseDto>> getByHostId(@PathVariable Long hostId) {
     Member host = memberService.getById(hostId);
     List<Together> togethers = togetherService.readByHost(host);
-    return ResponseEntity.ok(togethers);
+    return ResponseEntity.ok().body(togethers.stream().map(TogetherResponseDto::from).collect(Collectors.toList()));
   }
   // 특정 회원이 참여하는 모집글 조회
   @GetMapping("/with/{memberId}")
-  public ResponseEntity<List<Together>> getByMemberId(@PathVariable Long memberId) {
+  public ResponseEntity<List<TogetherResponseDto>> getByMemberId(@PathVariable Long memberId) {
     Member member = memberService.getById(memberId);
     List<Together> togethers = togetherService.readByMember(member);
-    return ResponseEntity.ok(togethers);
+    return ResponseEntity.ok().body(togethers.stream().map(TogetherResponseDto::from).collect(Collectors.toList()));
   }
   // 모집글 통합 검색
   @GetMapping("/search")
-  public ResponseEntity<List<Together>> search(@RequestParam TogetherSearchDto searchDto) {
+  public ResponseEntity<List<TogetherResponseDto>> search(@RequestParam TogetherSearchDto searchDto) {
     if (searchDto.isEmpty()) {
       List<Together> togethers = togetherService.readAll();
-      return ResponseEntity.ok().body(togethers);
+      return ResponseEntity.ok().body(togethers.stream().map(TogetherResponseDto::from).collect(Collectors.toList()));
     }
 
     List<Together> togethers = togetherService.search(searchDto);
-    return ResponseEntity.ok().body(togethers);
+    return ResponseEntity.ok().body(togethers.stream().map(TogetherResponseDto::from).collect(Collectors.toList()));
   }
 
   // 모집글 생성
   @PostMapping
-  public ResponseEntity<Together> create(@RequestBody TogetherRequestDto togetherRequestDto) {
-    Together together = new Together();
-    // TODO: 구현 예정
-    return ResponseEntity.ok().body(together);
+  public ResponseEntity<TogetherResponseDto> create(@RequestBody TogetherRequestDto togetherRequestDto) {
+    Together together = togetherService.create(togetherRequestDto);
+    return ResponseEntity.ok().body(TogetherResponseDto.from(together));
   }
 
   // 모집글 수정
-  // 모집글 삭제
+  @PutMapping("/{id}")
+  public ResponseEntity<TogetherResponseDto> update(@PathVariable Long id, @RequestBody TogetherRequestDto togetherRequestDto) {
+    Together updatedTogether = togetherService.update(id, togetherRequestDto);
+    return ResponseEntity.ok().body(TogetherResponseDto.from(updatedTogether));
+  }
 
+  // 모집글 삭제
+  @DeleteMapping
+  public ResponseEntity<TogetherResponseDto> delete(@RequestParam Long id) {
+    togetherService.delete(id);
+    return ResponseEntity.ok().build();
+  }
 
 }

@@ -28,6 +28,10 @@ public class RegionService {
     return regionRepository.findRegionsByCondition(regionDto.getLevel1(), regionDto.getLevel2(), regionDto.getLevel3());
   }
 
+  public Region readExact(RegionDto regionDto) {
+    return regionRepository.findExactRegion(regionDto.getLevel1(), regionDto.getLevel2(), regionDto.getLevel3());
+  }
+
   @Transactional
   public Region create(Region region) {
     return regionRepository.save(region);
