@@ -70,6 +70,6 @@ public class EventController {
     }
   }
 
-
+  // TODO: 이벤트 정보 수정
 
 }

@@ -40,11 +40,11 @@ import java.util.List;
 @Repository
 public interface TogetherRepository extends JpaRepository<Together, Long> {
 
+  // search가 있어서 필요없긴함..
   List<Together> findByTitleContaining(String title);
   
-  /**
-   * RegionRepository의 findRegionsByCondition()으로 찾은 지역들과 일치하는 Together 검색
-   */
+
+//  RegionRepository의 findRegionsByCondition()을 함께 사용
   @Query("SELECT t FROM Together t WHERE t.region IN :regions")
   List<Together> findByRegion(@Param("regions") List<Region> regions);
   

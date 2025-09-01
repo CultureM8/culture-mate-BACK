@@ -39,11 +39,7 @@ public class EventService {
   public List<Event> search(EventSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.readByCondition(
-        searchDto.getLevel1(),
-        searchDto.getLevel2(),
-        searchDto.getLevel3()
-      );
+      regions = regionService.readByCondition(searchDto.getRegionDto());
     }
     
     EventType eventType = null;
