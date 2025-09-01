@@ -73,4 +73,17 @@ public class BoardContorller {
     boardService.deleteBoard(boardId);
     return ResponseEntity.noContent().build();
   }
+
+  // 좋아요 토글 (추가/취소)
+  @PostMapping("/{boardId}/like")
+  public ResponseEntity<String> toggleLike(@PathVariable Long boardId,
+                                           @RequestParam Long memberId) {
+    boolean liked = boardService.toggleBoardLike(boardId, memberId);
+
+    if (liked) {
+      return ResponseEntity.ok("좋아요 성공");
+    } else {
+      return ResponseEntity.ok("좋아요 취소");
+    }
+  }
 }

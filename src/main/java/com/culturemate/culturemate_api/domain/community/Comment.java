@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.domain.community;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
@@ -26,8 +27,11 @@ public class Comment {
 
   private Instant createdAt;
 
+  @Setter
+  @NotNull
   private String content;
 
+  @Setter
   private Integer likeCount;
   private Integer dislikeCount;
 

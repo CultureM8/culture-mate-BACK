@@ -4,6 +4,7 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
@@ -33,10 +34,12 @@ public class Board {
   private Member author;
 
   @Setter
+  @NotNull
   private String title;
 
   @Column(length = 2000)
   @Setter
+  @NotNull
   private String content;
 
   @Column(nullable = false)
@@ -46,6 +49,7 @@ public class Board {
   @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Comment> comments;
 
+  @Setter
   private Integer likeCount = 0;
   private Integer dislikeCount = 0;
 
