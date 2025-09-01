@@ -5,10 +5,10 @@ import com.culturemate.culturemate_api.domain.community.BoardLike;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.BoardDto;
+import com.culturemate.culturemate_api.dto.BoardRequestDto;
+import com.culturemate.culturemate_api.dto.BoardSearchDto;
 import com.culturemate.culturemate_api.repository.BoardLikeRepository;
 import com.culturemate.culturemate_api.repository.BoardRepository;
-import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,84 +22,90 @@ import java.util.Optional;
 public class BoardService {
   private final BoardRepository boardRepository;
   private final BoardLikeRepository boardLikeRepository;
-  private final MemberRepository memberRepository;
+  private final MemberService memberService;
   private final EventService eventService;
 
+  public List<Board> findAll() {
+    return boardRepository.findAll();
+  }
+
+  public Board findById(Long boardId) {
+    return boardRepository.findById(boardId)
+      .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+  }
+
   // 작성자로 조회
-  @Transactional(readOnly = true)
-  public List<BoardDto> getBoardsByAuthor(Long memberId) {
-    Member author = memberRepository.findById(memberId)
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
-    return boardRepository.findByAuthor(author)
-      .stream()
-      .map(BoardDto::from)
-      .toList();
+  public List<Board> findByAuthor(Long memberId) {
+    Member author = memberService.findById(memberId);  // MemberService에서 조회
+    return boardRepository.findByAuthor(author);
   }
 
-  // 이벤트로 게시글 조회
-  public List<BoardDto> getBoardsByEvent(Long eventId) {
-    Event event = eventService.read(eventId);
-    return boardRepository.findByEvent(event)
-      .stream()
-      .map(BoardDto::from)
-      .toList();
-  }
+  // 통합 검색
+  public List<Board> search(BoardSearchDto searchDto) {
+    Member author = null;
+    if (searchDto.hasAuthor()) {
+      author = memberService.findById(searchDto.getAuthorId());  // MemberService에서 조회
+    }
 
-  // 이벤트 타입으로 게시글 조회
-  public List<BoardDto> getBoardsByEventType(EventType eventType) {
-    return boardRepository.findByEventType(eventType)
-      .stream()
-      .map(BoardDto::from)
-      .toList();
-  }
+    EventType eventType = null;
+    if (searchDto.hasEventType()) {
+      eventType = EventType.valueOf(searchDto.getEventType().toUpperCase());
+    }
 
-  // 제목으로 검색
-  public List<BoardDto> searchBoardsByTitle(String title) {
-    return boardRepository.findByTitleContaining(title)
-      .stream()
-      .map(BoardDto::from)
-      .toList();
-  }
+    Event event = null;
+    if (searchDto.hasEventId()) {
+      event = eventService.findById(searchDto.getEventId());
+    }
 
-  // 이벤트 + 키워드 검색
-  public List<BoardDto> searchBoardsByEventAndKeyword(Long eventId, String keyword) {
-    Event event = eventService.read(eventId);
-    if (event == null) throw new IllegalArgumentException("이벤트가 존재하지 않습니다.");
-    return boardRepository.findByEventAndTitleContaining(event, keyword)
-      .stream()
-      .map(BoardDto::from)
-      .toList();
+    return boardRepository.findBySearch(
+      searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+      author,
+      event,
+      eventType
+    );
   }
 
   // 게시글 생성
   @Transactional
-  public BoardDto createBoard(Long memberId, BoardDto boardDto) {
-    Member author = memberRepository.findById(memberId)
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+  public Board create(BoardRequestDto requestDto) {
+    Member author = memberService.findById(requestDto.getAuthorId());  // MemberService에서 조회
+    
+    Event event = null;
+    if (requestDto.getEventId() != null) {
+      event = eventService.findById(requestDto.getEventId());
+    }
+    
     Board board = Board.builder()
-      .title(boardDto.getTitle())
-      .content(boardDto.getContent())
+      .title(requestDto.getTitle())
+      .content(requestDto.getContent())
       .author(author)
+      .eventType(requestDto.getEventType())
+      .event(event)
       .build();
-    Board saved = boardRepository.save(board);
-    return BoardDto.from(saved);
+    return boardRepository.save(board);
   }
 
   // 게시글 수정
   @Transactional
-  public BoardDto updateBoard(Long boardId, String title, String content) {
+  public Board update(Long boardId, BoardRequestDto requestDto) {
     Board board = boardRepository.findById(boardId)
       .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
 
-    board.setTitle(title);    // 엔티티에 Setter -> 새로운 객체를 만들어버릴 수 있으므로 엔티티에 Setter를 넣는걸 권장한다
-    board.setContent(content);
+    Event event = null;
+    if (requestDto.getEventId() != null) {
+      event = eventService.findById(requestDto.getEventId());
+    }
+    
+    board.setTitle(requestDto.getTitle());
+    board.setContent(requestDto.getContent());
+    // eventType과 event는 setter가 없으므로 업데이트 불가 (필요시 setter 추가 필요)
 
-    return BoardDto.from(board);
+    return board;
   }
 
   // 게시글 삭제
   @Transactional
-  public void deleteBoard(Long boardId) {
+  public void delete(Long boardId) {
     boardRepository.deleteById(boardId);
   }
 
@@ -108,8 +114,7 @@ public class BoardService {
   public boolean toggleBoardLike(Long boardId, Long memberId) {
     Board board = boardRepository.findById(boardId)
       .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
-    Member member = memberRepository.findById(memberId)
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+    Member member = memberService.findById(memberId);  // MemberService에서 조회
 
     Optional<BoardLike> existing = boardLikeRepository.findByBoardAndMember(board, member);
 

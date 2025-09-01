@@ -9,13 +9,14 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BoardDto {
+public class BoardResponseDto {
   private Long id;
   private String title;
   private String content;
@@ -24,21 +25,24 @@ public class BoardDto {
   private Long eventId;
   private EventType eventType;
   private Integer likeCount;
-  @DateTimeFormat(pattern = "yyyy-MM-dd")
-  private LocalDate createdAt;
-  @DateTimeFormat(pattern = "yyyy-MM-dd")
-  private LocalDate updatedAt;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
 
-  public static BoardDto from(Board board) {
-    return BoardDto.builder()
+  public static BoardResponseDto from(Board board) {
+    return BoardResponseDto.builder()
       .id(board.getId())
       .title(board.getTitle())
       .content(board.getContent())
       .authorId(board.getAuthor().getId())
       .authorLoginId(board.getAuthor().getLoginId())
       .eventId(board.getEvent() != null ? board.getEvent().getId() : null)
-      .eventType(board.getEvent() != null ? board.getEvent().getEventType() : null)
+      .eventType(board.getEventType() != null ? board.getEventType() : 
+                 (board.getEvent() != null ? board.getEvent().getEventType() : null))
       .likeCount(board.getLikeCount())
+      .createdAt(board.getCreatedAt() != null ? 
+                 board.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
+      .updatedAt(board.getUpdatedAt() != null ? 
+                 board.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
       .build();
   }
 }

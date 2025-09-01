@@ -24,6 +24,8 @@ public class TogetherSearchDto {
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate endDate;
 
+  private Boolean isRecruiting; // null이면 전체, true면 모집중, false면 모집완료
+
   // 검증 및 유틸리티 메서드들
   public boolean hasKeyword() {
     return keyword != null && !keyword.trim().isEmpty();
@@ -49,8 +51,12 @@ public class TogetherSearchDto {
     return eventType != null && !eventType.trim().isEmpty();
   }
 
+  public boolean hasRecruitingFilter() {
+    return isRecruiting != null;
+  }
+
   public boolean isEmpty() {
-    return !hasKeyword() && !hasRegion() && !hasDateRange() && !hasEventType() && !hasEventId();
+    return !hasKeyword() && !hasRegion() && !hasDateRange() && !hasEventType() && !hasEventId() && !hasRecruitingFilter();
   }
 
 }

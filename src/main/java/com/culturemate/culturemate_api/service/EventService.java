@@ -3,8 +3,12 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
+import com.culturemate.culturemate_api.domain.member.InterestEvents;
+import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
+import com.culturemate.culturemate_api.repository.InterestEventsRepository;
+import com.culturemate.culturemate_api.repository.MemberRepository;
 import jakarta.persistence.EntityManager;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,17 +26,19 @@ public class EventService {
 
   private final EventRepository eventRepository;
   private final RegionService regionService;
+  private final InterestEventsRepository interestEventsRepository;
 
   @Transactional
   public Event create(Event event) {
     return eventRepository.save(event);
   }
 
-  public Event read(Long eventId) {
-    return eventRepository.findById(eventId).orElse(null);
+  public Event findById(Long eventId) {
+    return eventRepository.findById(eventId)
+      .orElseThrow(() -> new IllegalArgumentException("해당 이벤트가 존재하지 않습니다."));
   }
 
-  public List<Event> readAll() {
+  public List<Event> findAll() {
     return eventRepository.findAll();
   }
 
@@ -39,7 +46,7 @@ public class EventService {
   public List<Event> search(EventSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.readByCondition(searchDto.getRegionDto());
+      regions = regionService.findByCondition(searchDto.getRegionDto());
     }
     
     EventType eventType = null;
@@ -69,6 +76,31 @@ public class EventService {
   @Transactional
   public void delete(Long eventId) {
     eventRepository.deleteById(eventId);
+  }
+
+  // 이벤트 관심 표시 토글
+  @Transactional
+  public boolean toggleEventInterest(Long eventId, Long memberId, MemberService memberService) {
+    Event event = findById(eventId);  // EventService에서 조회
+    Member member = memberService.findById(memberId);  // MemberService에서 조회
+
+    Optional<InterestEvents> existing = interestEventsRepository.findByMemberAndEvent(member, event);
+
+    if (existing.isPresent()) {
+      // 관심 표시 취소
+      interestEventsRepository.delete(existing.get());
+      event.setInterestCount(event.getInterestCount() - 1);
+      return false; // 취소됨
+    } else {
+      // 관심 표시 추가
+      InterestEvents interestEvents = InterestEvents.builder()
+        .member(member)
+        .event(event)
+        .build();
+      interestEventsRepository.save(interestEvents);
+      event.setInterestCount(event.getInterestCount() + 1);
+      return true; // 추가됨
+    }
   }
 
 }

@@ -66,6 +66,7 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
    * - endDate: null이면 종료일 조건 무시
    * - eventType: null이면 이벤트 타입 조건 무시
    * - eventId: null이면 특정 이벤트 조건 무시
+   * - isRecruiting: null이면 모집상태 조건 무시
    */
   @Query("SELECT t FROM Together t " +
          "JOIN t.event e " +
@@ -74,13 +75,15 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
          "      (:startDate IS NULL OR t.meetingDate >= :startDate) AND " +
          "      (:endDate IS NULL OR t.meetingDate <= :endDate) AND " +
          "      (:eventType IS NULL OR e.eventType = :eventType) AND " +
-         "      (:eventId IS NULL OR e.id = :eventId)")
+         "      (:eventId IS NULL OR e.id = :eventId) AND " +
+         "      (:isRecruiting IS NULL OR t.isRecruiting = :isRecruiting)")
   List<Together> findBySearch(@Param("keyword") String keyword,
                               @Param("regions") List<Region> regions,
                               @Param("startDate") LocalDate startDate,
                               @Param("endDate") LocalDate endDate,
                               @Param("eventType") EventType eventType,
-                              @Param("eventId") Long eventId);
+                              @Param("eventId") Long eventId,
+                              @Param("isRecruiting") Boolean isRecruiting);
 
   List<Together> findByIsRecruiting(boolean isRecruiting);
 }

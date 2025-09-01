@@ -5,6 +5,8 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -24,4 +26,15 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
   // 이벤트 + 제목 키워드 조건으로 조회
   List<Board> findByEventAndTitleContaining(Event event, String keyword);
+
+  // 통합 검색 메서드
+  @Query("SELECT b FROM Board b " +
+         "WHERE (:keyword IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+         "AND (:author IS NULL OR b.author = :author) " +
+         "AND (:event IS NULL OR b.event = :event) " +
+         "AND (:eventType IS NULL OR b.event.eventType = :eventType)")
+  List<Board> findBySearch(@Param("keyword") String keyword,
+                          @Param("author") Member author,
+                          @Param("event") Event event,
+                          @Param("eventType") EventType eventType);
 }

@@ -47,7 +47,9 @@ public class Event {
   private String description;      // 요약설명
 
   private BigDecimal avgRating = BigDecimal.ZERO;    // 평균 별점
+  @Setter
   private Integer reviewCount = 0;                   // 리뷰 수
+  @Setter
   private Integer interestCount = 0;                 // 관심수
 
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -84,7 +86,6 @@ public class Event {
   public void recalculateAvgRating() {
     if (eventReview.isEmpty()) {
       this.avgRating = BigDecimal.ZERO;
-      this.reviewCount = 0;
       return;
     }
 
@@ -94,7 +95,6 @@ public class Event {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
     this.avgRating = sum.divide(BigDecimal.valueOf(eventReview.size()), 2, java.math.RoundingMode.HALF_UP);
-    this.reviewCount = eventReview.size();
   }
 
 }

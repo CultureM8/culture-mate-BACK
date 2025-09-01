@@ -9,9 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/members")
+@RequestMapping("/api/v1/members")
 public class MemberController {
   private final MemberService memberService;
 
@@ -21,45 +22,53 @@ public class MemberController {
 
   // 회원 가입
   @PostMapping
-  public ResponseEntity<MemberDto> create(@RequestBody MemberDto dto) {
+  public ResponseEntity<MemberDto> add(@RequestBody MemberDto dto) {
     Member savedMember = memberService.create(dto);
     return ResponseEntity.ok(MemberDto.from(savedMember));
   }
 
   // 회원 삭제
   @DeleteMapping("/{memberId}")
-  public ResponseEntity<String> delete(@PathVariable Long memberId) {
+  public ResponseEntity<String> remove(@PathVariable Long memberId) {
     memberService.delete(memberId);
     return ResponseEntity.ok("회원이 삭제되었습니다.");
   }
 
   // 전체 회원 조회
   @GetMapping
-  public List<MemberDto> getAllMembers(@RequestParam(defaultValue = "false") boolean isAdmin) {
-    return memberService.findAllDto(isAdmin);
+  public List<MemberDto> get() {
+    return memberService.findAll()
+      .stream()
+      .map(MemberDto::from)
+      .collect(Collectors.toList());
   }
 
   // ID로 회원 조회
   @GetMapping("/id/{id}")
   public ResponseEntity<MemberDto> getById(@PathVariable Long id) {
-    return ResponseEntity.ok(memberService.findByIdDto(id));
+    return ResponseEntity.ok(MemberDto.from(memberService.findById(id)));
   }
 
   // 로그인 아이디로 회원 조회
   @GetMapping("/login/{loginId}")
   public ResponseEntity<MemberDto> findByLoginId(@PathVariable String loginId) {
-    return ResponseEntity.ok(memberService.findByLoginIdDto(loginId));
+    return ResponseEntity.ok(MemberDto.from(memberService.findByLoginId(loginId)));
   }
 
   // 상태별 회원 목록 조회
   @GetMapping("/status/{status}")
   public ResponseEntity<List<MemberDto>> findByStatus(@PathVariable MemberStatus status) {
-    return ResponseEntity.ok(memberService.findByStatusDto(status));
+    return ResponseEntity.ok(
+      memberService.findByStatus(status)
+        .stream()
+        .map(MemberDto::from)
+        .collect(Collectors.toList())
+    );
   }
 
   // 회원 상태 변경
   @PatchMapping("/{id}/status")
-  public ResponseEntity<String> updateStatus(
+  public ResponseEntity<String> modifyStatus(
     @PathVariable Long id,
     @RequestParam MemberStatus status
   ) {
@@ -69,7 +78,7 @@ public class MemberController {
 
   // 비밀번호 변경
   @PatchMapping("/{id}/password")
-  public ResponseEntity<String> updatePassword(
+  public ResponseEntity<String> modifyPassword(
     @PathVariable Long id,
     @RequestParam String newPassword
   ) {
@@ -79,7 +88,7 @@ public class MemberController {
 
   // 권한 변경
   @PatchMapping("/{id}/role")
-  public ResponseEntity<String> updateRole(
+  public ResponseEntity<String> modifyRole(
     @PathVariable Long id,
     @RequestParam Role role
   ) {

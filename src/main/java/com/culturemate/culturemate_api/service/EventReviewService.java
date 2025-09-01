@@ -24,25 +24,24 @@ public class EventReviewService {
   public EventReview create(EventReview eventReview) {
     // 리뷰 저장 후 즉시 DB 반영 (평균별점 계산 시 새 리뷰가 포함되어야 함)
     EventReview savedReview = reviewRepository.saveAndFlush(eventReview);
-    updateEventAverageRating(eventReview.getEvent().getId());
+    updateEventAverageRating(eventReview.getEvent().getId(), "create");
     return savedReview;
   }
 
-  public EventReview read(Long reviewId) {
-    return reviewRepository.findById(reviewId).orElse(null);
+  public EventReview findById(Long reviewId) {
+    return reviewRepository.findById(reviewId)
+      .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
   }
 
-  @Transactional
-  public List<EventReview> readAll() {
+  public List<EventReview> findAll() {
     return reviewRepository.findAll();
   }
 
-  @Transactional(readOnly = true)
-  public List<EventReview> readByEvent(Event event) {
+  public List<EventReview> findByEvent(Event event) {
     return reviewRepository.findByEvent(event);
   }
 
-  public List<EventReview> readByMember(Member member) {
+  public List<EventReview> findByMember(Member member) {
     return reviewRepository.findByMember(member);
   }
 
@@ -53,7 +52,7 @@ public class EventReviewService {
     existingReview.setRating(updatedReview.getRating());
     existingReview.setContent(updatedReview.getContent());
     
-    updateEventAverageRating(existingReview.getEvent().getId());
+    updateEventAverageRating(existingReview.getEvent().getId(), "update");
   }
 
   @Transactional
@@ -63,14 +62,20 @@ public class EventReviewService {
     Long eventId = eventReview.getEvent().getId();
 
     reviewRepository.delete(eventReview);
-    updateEventAverageRating(eventId);
+    updateEventAverageRating(eventId, "delete");
+
   }
 
-  // 리뷰 등록/삭제시 해당 이벤트 별점 업데이트
-  private void updateEventAverageRating(Long eventId) {
+  // 리뷰 등록/삭제시 해당 이벤트 별점, 리뷰수 업데이트
+  private void updateEventAverageRating(Long eventId, String type) {
     Event event = eventRepository.findById(eventId)
         .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
     
     event.recalculateAvgRating();
+    if (type.equals("create")) {
+      event.setReviewCount(event.getReviewCount() + 1);
+    } else if(type.equals("delete")) {
+      event.setReviewCount(event.getReviewCount() - 1);
+    } else {}
   }
 }

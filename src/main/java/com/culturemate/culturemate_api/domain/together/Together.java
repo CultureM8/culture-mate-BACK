@@ -80,6 +80,10 @@ public class Together {
   @Setter
   private Integer maxParticipants;
 
+  //  @Formula("(SELECT COUNT(*) FROM participants p WHERE p.together_id = id)")
+  @Setter
+  private Integer participantCount = 1; // 호스트 포함
+
   @Column(length = 2000)
   @Size(max = 2000, message = "내용은 2000자를 초과할 수 없습니다")
   @Setter
@@ -95,15 +99,6 @@ public class Together {
 
   @OneToMany(mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<InterestTogethers> interestTogethers = new ArrayList<>();
-
-  @Formula("(SELECT COUNT(*) FROM participants p WHERE p.together_id = id)")
-  private Integer participantCount;
-
-
-  //=== 비즈니스 로직 ===//
-  public Integer getCurrentParticipantsCount() {
-    return participantCount != null ? participantCount : 0;
-  }
 
   //=== 생성/수정 로직 ===//
   @PrePersist

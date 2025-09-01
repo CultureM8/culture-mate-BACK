@@ -30,15 +30,16 @@ public class TogetherService {
   private final RegionService regionService;
   private final EventService eventService;
 
+
   @Transactional
   public Together create(TogetherRequestDto requestDto) {
-    Event event = eventService.read(requestDto.getEventId());
+    Event event = eventService.findById(requestDto.getEventId());
     Member host = memberService.findById(requestDto.getHostId());
     Together together = Together.builder()
       .event(event)
       .host(host)
       .title(requestDto.getTitle())
-      .region(regionService.readExact(requestDto.getRegionDto()))
+      .region(regionService.findExact(requestDto.getRegionDto()))
       .address(requestDto.getAddress())
       .addressDetail(requestDto.getAddressDetail())
       .content(requestDto.getContent())
@@ -57,13 +58,13 @@ public class TogetherService {
     return savedTogether;
   }
 
+  public List<Together> findAll() {
+    return togetherRepository.findAll();
+  }
+
   public Together findById(Long togetherId) {
     return togetherRepository.findById(togetherId)
         .orElseThrow(() -> new TogetherNotFoundException(togetherId));
-  }
-
-  public List<Together> findAll() {
-    return togetherRepository.findAll();
   }
 
   public List<Together> findByEvent(Event event) {
@@ -79,19 +80,11 @@ public class TogetherService {
     return togetherRepository.findByParticipant(member);
   }
 
-  public List<Together> findByIsRecruiting(boolean isRecruiting) {
-    return togetherRepository.findByIsRecruiting(isRecruiting);
-  }
-
-  public List<Together> findByRegion(List<Region> regions) {
-    return togetherRepository.findByRegion(regions);
-  }
-
   // 통합 검색 기능
   public List<Together> search(TogetherSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.readByCondition(searchDto.getRegionDto());
+      regions = regionService.findByCondition(searchDto.getRegionDto());
     }
 
     EventType eventType = null;
@@ -105,7 +98,8 @@ public class TogetherService {
       searchDto.getStartDate(),
       searchDto.getEndDate(),
       eventType,
-      searchDto.getEventId()
+      searchDto.getEventId(),
+      searchDto.hasRecruitingFilter() ? searchDto.getIsRecruiting() : null
     );
   }
 
@@ -113,8 +107,8 @@ public class TogetherService {
   @Transactional
   public Together update(Long id, TogetherRequestDto requestDto) {
     Together together = findById(id);
-    Event event = eventService.read(requestDto.getEventId());
-    Region region = regionService.readExact(requestDto.getRegionDto());
+    Event event = eventService.findById(requestDto.getEventId());
+    Region region = regionService.findExact(requestDto.getRegionDto());
 
     // 날짜 검증 - 과거 날짜 방지
     if (together.getMeetingDate().isBefore(LocalDate.now())) {
@@ -122,7 +116,7 @@ public class TogetherService {
     }
 
     // 참여자 수 검증 - 현재 참여자보다 적게 설정 방지
-    Integer currentCount = together.getCurrentParticipantsCount();
+    Integer currentCount = together.getParticipantCount();
     if (together.getMaxParticipants() < currentCount) {
       throw new IllegalArgumentException("최대 참여자 수는 현재 참여자 수보다 적을 수 없습니다");
     }
@@ -152,7 +146,7 @@ public class TogetherService {
       throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
     
-    Integer currentParticipants = together.getCurrentParticipantsCount();
+    Integer currentParticipants = together.getParticipantCount();
     if (together.getMaxParticipants() <= currentParticipants) {
       throw new TogetherFullException(togetherId, together.getMaxParticipants());
     }
@@ -174,7 +168,7 @@ public class TogetherService {
       .collect(Collectors.toList());
   }
 
-  // 동행 참여 신청
+  // 동행 참여
   @Transactional
   public void joinTogether(Long togetherId, Long memberId) {
     Together together = findByIdIfAvailable(togetherId);
@@ -192,8 +186,9 @@ public class TogetherService {
         .participant(member)
         .build();
     participantsRepository.save(participation);
+    together.setParticipantCount(together.getParticipantCount() + 1);
 
-    if(together.getMaxParticipants() <= together.getCurrentParticipantsCount()) {
+    if(together.getMaxParticipants() <= together.getParticipantCount()) {
       together.setRecruiting(false);
     }
   }
@@ -213,8 +208,9 @@ public class TogetherService {
       throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
     participantsRepository.delete(participation);
+    together.setParticipantCount(together.getParticipantCount() - 1);
 
-    if(together.getMaxParticipants() > together.getCurrentParticipantsCount()) {
+    if(together.getMaxParticipants() > together.getParticipantCount()) {
       together.setRecruiting(true);
     }
   }

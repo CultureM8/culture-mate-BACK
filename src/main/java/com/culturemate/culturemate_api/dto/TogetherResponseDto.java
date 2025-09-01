@@ -14,8 +14,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class TogetherResponseDto {
 
-  private static ParticipantsRepository participantsRepository;
-
   private long id;
   private Long eventId;
   private Long hostId;
@@ -41,7 +39,7 @@ public class TogetherResponseDto {
       .addressDetail(together.getAddressDetail())
       .meetingDate(together.getMeetingDate())
       .maxParticipants(together.getMaxParticipants())
-      .currentParticipants(together.getCurrentParticipantsCount())
+      .currentParticipants(together.getParticipantCount())
       .content(together.getContent())
       .active(together.isRecruiting())
       .build();

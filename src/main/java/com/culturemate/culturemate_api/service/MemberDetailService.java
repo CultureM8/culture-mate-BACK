@@ -17,14 +17,13 @@ public class MemberDetailService {
   private final MemberRepository memberRepository;
 
   // 모두 조회
-  public MemberDetailDto searchMemberDetail(Long memberId) {
-    MemberDetail memberDetail = memberDetailRepository.findById(memberId)
+  public MemberDetail findByMemberId(Long memberId) {
+    return memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
-    return MemberDetailDto.fromEntity(memberDetail);
   }
 
   // 생성
-  public MemberDetailDto createMemberDetail(MemberDetailDto dto) {
+  public MemberDetail create(MemberDetailDto dto) {
     Member member = memberRepository.findById(dto.getId())
       .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
@@ -40,12 +39,11 @@ public class MemberDetailService {
       .visibility(dto.getVisibility())
       .build();
 
-    MemberDetail saved = memberDetailRepository.save(memberDetail);
-    return MemberDetailDto.fromEntity(saved);
+    return memberDetailRepository.save(memberDetail);
   }
 
   // 수정
-  public MemberDetailDto updateMemberDetail(Long memberId, MemberDetailDto dto) {
+  public MemberDetail update(Long memberId, MemberDetailDto dto) {
     MemberDetail memberDetail = memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
 
@@ -59,11 +57,11 @@ public class MemberDetailService {
     memberDetail.setEmail(dto.getEmail());
     memberDetail.setVisibility(dto.getVisibility());
 
-    return MemberDetailDto.fromEntity(memberDetail);
+    return memberDetail;
   }
 
   // 삭제
-  public void deleteMemberDetail(Long memberId) {
+  public void delete(Long memberId) {
     memberDetailRepository.deleteById(memberId);
   }
 

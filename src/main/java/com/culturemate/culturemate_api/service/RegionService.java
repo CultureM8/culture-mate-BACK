@@ -16,19 +16,20 @@ public class RegionService {
 
   private final RegionRepository regionRepository;
 
-  public Region read(Long regionId) {
-    return regionRepository.findById(regionId).orElse(null);
+  public Region findById(Long regionId) {
+    return regionRepository.findById(regionId)
+      .orElseThrow(() -> new IllegalArgumentException("지역이 존재하지 않습니다."));
   }
 
-  public List<Region> readAll() {
+  public List<Region> findAll() {
     return regionRepository.findAll();
   }
 
-  public List<Region> readByCondition(RegionDto regionDto) {
+  public List<Region> findByCondition(RegionDto regionDto) {
     return regionRepository.findRegionsByCondition(regionDto.getLevel1(), regionDto.getLevel2(), regionDto.getLevel3());
   }
 
-  public Region readExact(RegionDto regionDto) {
+  public Region findExact(RegionDto regionDto) {
     return regionRepository.findExactRegion(regionDto.getLevel1(), regionDto.getLevel2(), regionDto.getLevel3());
   }
 

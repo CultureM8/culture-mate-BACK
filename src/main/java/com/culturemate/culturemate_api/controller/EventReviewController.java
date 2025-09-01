@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/event-reviews")
+@RequestMapping("/api/v1/event-reviews")
 @RequiredArgsConstructor
 public class EventReviewController {
   private final EventReviewService eventReviewService;
@@ -21,64 +21,26 @@ public class EventReviewController {
 
   // 특정 이벤트의 리뷰 데이터 조회
   @GetMapping
-  public ResponseEntity<?> get(@RequestParam Long eventId) {
-    try {
-      Event event = eventService.read(eventId);
-      if (event == null) {
-        return ResponseEntity.notFound().build();
-      }
-      List<EventReview> reviews = eventReviewService.readByEvent(event);
-      return ResponseEntity.ok().body(reviews);
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body("리뷰 조회 중 오류가 발생했습니다: " + e.getMessage());
-    }
+  public ResponseEntity<List<EventReview>> get(@RequestParam Long eventId) {
+    Event event = eventService.findById(eventId);
+    List<EventReview> reviews = eventReviewService.findByEvent(event);
+    return ResponseEntity.ok(reviews);
   }
-
-  // 특정 회원이 작성한 리뷰 데이터 조회
-//  @GetMapping("/member")
-//  public ResponseEntity<?> getByMember(@RequestParam Long memberId) {
-//    try {
-//      Member member = memberService.read(memberId);
-//      if (member == null) {
-//        return ResponseEntity.notFound().build();
-//      }
-//      List<EventReview> reviews = eventReviewService.readByMember(member);
-//      return ResponseEntity.ok().body(reviews);
-//    } catch (Exception e) {
-//      return ResponseEntity.badRequest().body("회원 리뷰 조회 중 오류가 발생했습니다: " + e.getMessage());
-//    }
-//  }
 
   // 이벤트 리뷰 등록
   @PostMapping
-  public ResponseEntity<?> create(@RequestParam Long eventId, @RequestBody EventReview review) {
-    if (review == null) {
-      return ResponseEntity.badRequest().body("리뷰 정보가 필요합니다.");
-    }
-    if (review.getContent() == null || review.getContent().trim().isEmpty()) {
-      return ResponseEntity.badRequest().body("리뷰 내용은 필수입니다.");
-    }
-    try {
-      Event event = eventService.read(eventId);
-      if (event == null) {
-        return ResponseEntity.notFound().build();
-      }
-      review.setEvent(event);
-      EventReview createdReview = eventReviewService.create(review);
-      return ResponseEntity.ok().body(createdReview);
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body("리뷰 생성 중 오류가 발생했습니다: " + e.getMessage());
-    }
+  public ResponseEntity<EventReview> add(@RequestParam Long eventId,
+                                         @RequestBody EventReview review) {
+    Event event = eventService.findById(eventId);
+    review.setEvent(event);
+    EventReview createdReview = eventReviewService.create(review);
+    return ResponseEntity.status(201).body(createdReview);
   }
 
   // 이벤트 리뷰 ID로 삭제
   @DeleteMapping("/{id}")
-  public ResponseEntity<?> delete(@PathVariable Long id) {
-    try {
-      eventReviewService.delete(id);
-      return ResponseEntity.noContent().build();
-    } catch (Exception e) {
-      return ResponseEntity.notFound().build();
-    }
+  public ResponseEntity<Void> remove(@PathVariable Long id) {
+    eventReviewService.delete(id);
+    return ResponseEntity.noContent().build();
   }
 }
