@@ -1,5 +1,6 @@
 package com.culturemate.culturemate_api.dto;
 
+import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;
 import lombok.AllArgsConstructor;
@@ -17,4 +18,14 @@ public class MemberDto {
   private String password;     // Request 시 필요, Response 시는 null 처리 권장
   private Role role;           // Response 또는 Request에 따라 설정
   private MemberStatus status; // Response용, 생성 시 기본값 세팅 가능
+
+  // 간단한 Entity -> DTO 변환용 (컨트롤러에서 사용)
+  public static MemberDto from(Member member) {
+    return MemberDto.builder()
+      .id(member.getId())
+      .loginId(member.getLoginId())
+      .role(member.getRole())
+      .status(member.getStatus())
+      .build();
+  }
 }

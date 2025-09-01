@@ -22,8 +22,8 @@ public class MemberController {
   // 회원 가입
   @PostMapping
   public ResponseEntity<MemberDto> create(@RequestBody MemberDto dto) {
-    MemberDto savedDto = memberService.create(dto);
-    return ResponseEntity.ok(savedDto);
+    Member savedMember = memberService.create(dto);
+    return ResponseEntity.ok(MemberDto.from(savedMember));
   }
 
   // 회원 삭제
@@ -36,25 +36,25 @@ public class MemberController {
   // 전체 회원 조회
   @GetMapping
   public List<MemberDto> getAllMembers(@RequestParam(defaultValue = "false") boolean isAdmin) {
-    return memberService.getAllMembers(isAdmin);
+    return memberService.findAllDto(isAdmin);
   }
 
   // ID로 회원 조회
   @GetMapping("/id/{id}")
   public ResponseEntity<MemberDto> getById(@PathVariable Long id) {
-    return ResponseEntity.ok(memberService.getById(id));
+    return ResponseEntity.ok(memberService.findByIdDto(id));
   }
 
   // 로그인 아이디로 회원 조회
   @GetMapping("/login/{loginId}")
   public ResponseEntity<MemberDto> findByLoginId(@PathVariable String loginId) {
-    return ResponseEntity.ok(memberService.findByLoginId(loginId));
+    return ResponseEntity.ok(memberService.findByLoginIdDto(loginId));
   }
 
   // 상태별 회원 목록 조회
   @GetMapping("/status/{status}")
   public ResponseEntity<List<MemberDto>> findByStatus(@PathVariable MemberStatus status) {
-    return ResponseEntity.ok(memberService.findByStatus(status));
+    return ResponseEntity.ok(memberService.findByStatusDto(status));
   }
 
   // 회원 상태 변경

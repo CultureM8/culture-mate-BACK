@@ -33,7 +33,7 @@ public class TogetherService {
   @Transactional
   public Together create(TogetherRequestDto requestDto) {
     Event event = eventService.read(requestDto.getEventId());
-    Member host = memberService.getById(requestDto.getHostId());
+    Member host = memberService.findById(requestDto.getHostId());
     Together together = Together.builder()
       .event(event)
       .host(host)
@@ -57,33 +57,33 @@ public class TogetherService {
     return savedTogether;
   }
 
-  public Together read(Long togetherId) {
+  public Together findById(Long togetherId) {
     return togetherRepository.findById(togetherId)
         .orElseThrow(() -> new TogetherNotFoundException(togetherId));
   }
 
-  public List<Together> readAll() {
+  public List<Together> findAll() {
     return togetherRepository.findAll();
   }
 
-  public List<Together> readByEvent(Event event) {
+  public List<Together> findByEvent(Event event) {
     return togetherRepository.findByEvent(event);
   }
 
   // 해당 멤버가 호스트인 모집글
-  public List<Together> readByHost(Member host) {
+  public List<Together> findByHost(Member host) {
     return togetherRepository.findByHost(host);
   }
   // 호스트이든 동행인이든 상관없이 참여하는 동행을 불러옴
-  public List<Together> readByMember(Member member) {
+  public List<Together> findByMember(Member member) {
     return togetherRepository.findByParticipant(member);
   }
 
-  public List<Together> readActiveTogether() {
-    return togetherRepository.findByIsRecruiting(true);
+  public List<Together> findByIsRecruiting(boolean isRecruiting) {
+    return togetherRepository.findByIsRecruiting(isRecruiting);
   }
 
-  public List<Together> readByRegion(List<Region> regions) {
+  public List<Together> findByRegion(List<Region> regions) {
     return togetherRepository.findByRegion(regions);
   }
 
@@ -112,7 +112,7 @@ public class TogetherService {
   // 수정
   @Transactional
   public Together update(Long id, TogetherRequestDto requestDto) {
-    Together together = read(id);
+    Together together = findById(id);
     Event event = eventService.read(requestDto.getEventId());
     Region region = regionService.readExact(requestDto.getRegionDto());
 
@@ -145,8 +145,8 @@ public class TogetherService {
   }
 
   // 참여가 가능하면 반환
-  public Together readIfAvailable(Long togetherId) {
-    Together together = read(togetherId);
+  public Together findByIdIfAvailable(Long togetherId) {
+    Together together = findById(togetherId);
     
     if (together.getMeetingDate().isBefore(LocalDate.now())) {
       throw new TogetherExpiredException(togetherId, together.getMeetingDate());
@@ -177,7 +177,7 @@ public class TogetherService {
   // 동행 참여 신청
   @Transactional
   public void joinTogether(Long togetherId, Long memberId) {
-    Together together = readIfAvailable(togetherId);
+    Together together = findByIdIfAvailable(togetherId);
 
     if (!together.isRecruiting()) {
       throw new TogetherClosedException(togetherId);
@@ -186,7 +186,7 @@ public class TogetherService {
       throw new TogetherAlreadyJoinedException(togetherId, memberId);
     }
 
-    Member member = memberService.getById(memberId);
+    Member member = memberService.findById(memberId);
     Participants participation = Participants.builder()
         .together(together)
         .participant(member)
@@ -208,7 +208,7 @@ public class TogetherService {
       throw new TogetherNotJoinedException(togetherId, memberId);
     }
     
-    Together together = read(togetherId);
+    Together together = findById(togetherId);
     if(together.getMeetingDate().isBefore(LocalDate.now())) {
       throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
@@ -223,13 +223,13 @@ public class TogetherService {
 
   @Transactional
   public void closeTogether(Long togetherId) {
-    Together together = readIfAvailable(togetherId);
+    Together together = findByIdIfAvailable(togetherId);
     together.setRecruiting(false);
   }
 
   @Transactional
   public void reopenTogether(Long togetherId) {
-    Together together = readIfAvailable(togetherId);
+    Together together = findByIdIfAvailable(togetherId);
     together.setRecruiting(true);
   }
 
