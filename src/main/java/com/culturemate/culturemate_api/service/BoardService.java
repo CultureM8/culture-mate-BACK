@@ -32,7 +32,7 @@ public class BoardService {
       .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
     return boardRepository.findByAuthor(author)
       .stream()
-      .map(this::toDto)
+      .map(BoardDto::from)
       .toList();
   }
 
@@ -41,7 +41,7 @@ public class BoardService {
     Event event = eventService.read(eventId);
     return boardRepository.findByEvent(event)
       .stream()
-      .map(this::toDto)
+      .map(BoardDto::from)
       .toList();
   }
 
@@ -49,7 +49,7 @@ public class BoardService {
   public List<BoardDto> getBoardsByEventType(EventType eventType) {
     return boardRepository.findByEventType(eventType)
       .stream()
-      .map(this::toDto)
+      .map(BoardDto::from)
       .toList();
   }
 
@@ -57,7 +57,7 @@ public class BoardService {
   public List<BoardDto> searchBoardsByTitle(String title) {
     return boardRepository.findByTitleContaining(title)
       .stream()
-      .map(this::toDto)
+      .map(BoardDto::from)
       .toList();
   }
 
@@ -67,7 +67,7 @@ public class BoardService {
     if (event == null) throw new IllegalArgumentException("이벤트가 존재하지 않습니다.");
     return boardRepository.findByEventAndTitleContaining(event, keyword)
       .stream()
-      .map(this::toDto)
+      .map(BoardDto::from)
       .toList();
   }
 
@@ -82,7 +82,7 @@ public class BoardService {
       .author(author)
       .build();
     Board saved = boardRepository.save(board);
-    return toDto(saved);
+    return BoardDto.from(saved);
   }
 
   // 게시글 수정
@@ -94,7 +94,7 @@ public class BoardService {
     board.setTitle(title);    // 엔티티에 Setter -> 새로운 객체를 만들어버릴 수 있으므로 엔티티에 Setter를 넣는걸 권장한다
     board.setContent(content);
 
-    return toDto(board);
+    return BoardDto.from(board);
   }
 
   // 게시글 삭제
@@ -130,16 +130,4 @@ public class BoardService {
     }
   }
 
-  // DTO 변환 헬퍼
-  private BoardDto toDto(Board board) {
-    return BoardDto.builder()
-      .id(board.getId())
-      .title(board.getTitle())
-      .content(board.getContent())
-      .authorId(board.getAuthor().getId())
-      .authorLoginId(board.getAuthor().getLoginId())
-      .eventId(board.getEvent() != null ? board.getEvent().getId() : null)
-      .eventType(board.getEvent() != null ? board.getEvent().getEventType() : null)
-      .build();
-  }
 }

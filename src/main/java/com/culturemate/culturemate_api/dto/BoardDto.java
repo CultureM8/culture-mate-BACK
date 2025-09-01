@@ -1,5 +1,6 @@
 package com.culturemate.culturemate_api.dto;
 
+import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,4 +28,17 @@ public class BoardDto {
   private LocalDate createdAt;
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate updatedAt;
+
+  public static BoardDto from(Board board) {
+    return BoardDto.builder()
+      .id(board.getId())
+      .title(board.getTitle())
+      .content(board.getContent())
+      .authorId(board.getAuthor().getId())
+      .authorLoginId(board.getAuthor().getLoginId())
+      .eventId(board.getEvent() != null ? board.getEvent().getId() : null)
+      .eventType(board.getEvent() != null ? board.getEvent().getEventType() : null)
+      .likeCount(board.getLikeCount())
+      .build();
+  }
 }
