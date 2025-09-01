@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/together")
+@RequestMapping("/api/v1/together")
 @RequiredArgsConstructor
 public class TogetherController {
   private final TogetherService togetherService;
