@@ -3,14 +3,15 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventReview;
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.dto.EventReviewRequestDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
 import com.culturemate.culturemate_api.repository.EventReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +20,30 @@ public class EventReviewService {
 
   private final EventReviewRepository reviewRepository;
   private final EventRepository eventRepository;
+  private final EventService eventService;
+  private final MemberService memberService;
 
   @Transactional
-  public EventReview create(EventReview eventReview) {
+  public EventReview create(EventReviewRequestDto reviewDto) {
+    Event event = eventService.findById(reviewDto.getEventId());
+    Member member = memberService.findById(reviewDto.getMemberId());
+    
+    EventReview eventReview = EventReview.builder()
+      .event(event)
+      .member(member)
+      .rating(reviewDto.getRating())
+      .content(reviewDto.getContent())
+      .build();
+    
     // 리뷰 저장 후 즉시 DB 반영 (평균별점 계산 시 새 리뷰가 포함되어야 함)
     EventReview savedReview = reviewRepository.saveAndFlush(eventReview);
-    updateEventAverageRating(eventReview.getEvent().getId(), "create");
+    updateEventAverageRating(event.getId(), "create");
     return savedReview;
+  }
+
+  public List<EventReview> findByEventId(Long eventId) {
+    Event event = eventService.findById(eventId);
+    return reviewRepository.findByEvent(event);
   }
 
   public EventReview findById(Long reviewId) {
@@ -45,14 +63,16 @@ public class EventReviewService {
     return reviewRepository.findByMember(member);
   }
 
-  public void update(Long reviewId, EventReview updatedReview) {
+  @Transactional
+  public EventReview update(Long reviewId, EventReviewRequestDto requestDto) {
     EventReview existingReview = reviewRepository.findById(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
     
-    existingReview.setRating(updatedReview.getRating());
-    existingReview.setContent(updatedReview.getContent());
+    existingReview.setRating(requestDto.getRating());
+    existingReview.setContent(requestDto.getContent());
     
     updateEventAverageRating(existingReview.getEvent().getId(), "update");
+    return existingReview;
   }
 
   @Transactional

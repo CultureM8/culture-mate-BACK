@@ -29,6 +29,7 @@ public class Member {
   private Role role = Role.MEMBER;
 
   private Instant joinedAt;
+  private Instant updatedAt;
 
   @Enumerated(EnumType.STRING)
   private MemberStatus status = MemberStatus.ACTIVE;
@@ -46,6 +47,16 @@ public class Member {
   private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
   //=== 생성/수정 로직 ===//
+  @PrePersist
+  public void onCreate() {
+    this.joinedAt = Instant.now();
+  }
+
+  @PreUpdate
+  public void onUpdate() {
+    this.updatedAt = Instant.now();
+  }
+
   public void changeStatus(MemberStatus newstatus) {
     this.status = newstatus;
   }

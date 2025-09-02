@@ -92,10 +92,10 @@ public class TogetherController {
   }
 
   // 모집글 삭제
-  @DeleteMapping
-  public ResponseEntity<TogetherResponseDto> remove(@RequestParam Long id) {
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> remove(@PathVariable Long id) {
     togetherService.delete(id);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 
 }

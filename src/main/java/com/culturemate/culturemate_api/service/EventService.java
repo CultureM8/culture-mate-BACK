@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
@@ -114,8 +116,48 @@ public class EventService {
     event.setDurationMin(requestDto.getDurationMin());
     event.setMinAge(requestDto.getMinAge());
     event.setDescription(requestDto.getDescription());
+
+    // 티켓 가격 업데이트 로직
+    updateTicketPrices(event, requestDto.getTicketPriceDto());
     
     return event;
+  }
+
+  private void updateTicketPrices(Event event, List<TicketPriceDto> ticketPriceDtos) {
+    List<TicketPrice> existingTickets = ticketPriceRepository.findByEvent(event);
+    
+    // 1. DTO에서 ID가 있는 것들을 Set으로 수집 (수정/유지 대상)
+    Set<Long> dtoIds = ticketPriceDtos.stream()
+      .map(TicketPriceDto::getId)
+      .filter(id -> id != null)
+      .collect(Collectors.toSet());
+    
+    // 2. 기존 티켓들 중 삭제 대상 처리
+    for (TicketPrice existingTicket : existingTickets) {
+      if (!dtoIds.contains(existingTicket.getId())) {
+        ticketPriceRepository.delete(existingTicket);
+      }
+    }
+    
+    // 3. DTO 처리: 수정 또는 생성
+    for (TicketPriceDto dto : ticketPriceDtos) {
+      if (dto.getId() == null) {
+        // 새로 생성
+        TicketPrice newTicket = TicketPrice.builder()
+          .event(event)
+          .ticketType(dto.getTicketType())
+          .price(dto.getPrice())
+          .build();
+        ticketPriceRepository.save(newTicket);
+      } else {
+        // 기존 티켓 수정
+        TicketPrice existingTicket = ticketPriceRepository.findById(dto.getId())
+          .orElseThrow(() -> new IllegalArgumentException("해당 티켓 가격이 존재하지 않습니다."));
+        
+        existingTicket.setTicketType(dto.getTicketType());
+        existingTicket.setPrice(dto.getPrice());
+      }
+    }
   }
 
   @Transactional

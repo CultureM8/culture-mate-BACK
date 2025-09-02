@@ -2,17 +2,14 @@ package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.event.EventType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-@Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,8 +36,7 @@ public class BoardResponseDto {
       .eventType(board.getEventType() != null ? board.getEventType() : 
                  (board.getEvent() != null ? board.getEvent().getEventType() : null))
       .likeCount(board.getLikeCount())
-      .createdAt(board.getCreatedAt() != null ? 
-                 board.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
+      .createdAt(board.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
       .updatedAt(board.getUpdatedAt() != null ? 
                  board.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
       .build();

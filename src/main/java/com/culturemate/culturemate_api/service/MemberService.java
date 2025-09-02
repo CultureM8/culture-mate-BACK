@@ -3,7 +3,6 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;
-import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,15 +21,15 @@ public class MemberService {
 
   // 회원 가입
   @Transactional
-  public Member create(MemberDto memberDto) {
-    if (memberRepository.existsByLoginId(memberDto.getLoginId())) {
+  public Member create(String loginId, String password) {
+    if (memberRepository.existsByLoginId(loginId)) {
       throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
     }
 
     Member member = Member.builder()
-      .loginId(memberDto.getLoginId())
-      .password(memberDto.getPassword())
-      .role(memberDto.getRole() != null ? memberDto.getRole() : Role.MEMBER)
+      .loginId(loginId)
+      .password(password)
+      .role(Role.MEMBER)
       .status(MemberStatus.ACTIVE)
       .joinedAt(Instant.now())
       .build();
@@ -68,22 +67,25 @@ public class MemberService {
 
   // 회원 상태 변경
   @Transactional
-  public void updateStatus(Long memberId, MemberStatus newStatus) {
+  public Member updateStatus(Long memberId, MemberStatus newStatus) {
     Member member = findById(memberId);
     member.changeStatus(newStatus);
+    return member;
   }
 
   // 비밀번호 변경
   @Transactional
-  public void updatePassword(Long memberId, String newPassword) {
+  public Member updatePassword(Long memberId, String newPassword) {
     Member member = findById(memberId);
     member.changePassword(newPassword);
+    return member;
   }
 
   // 권한 변경
   @Transactional
-  public void updateRole(Long memberId, Role newRole) {
+  public Member updateRole(Long memberId, Role newRole) {
     Member member = findById(memberId);
     member.changeRole(newRole);
+    return member;
   }
 }

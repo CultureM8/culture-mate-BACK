@@ -18,7 +18,10 @@ public class TicketPrice {
   @JoinColumn(name = "event_id" ,nullable = false)
   private Event event;
 
+  @Setter
   private String ticketType;   // 티켓타입
+  
+  @Setter
   private Integer price;        // 가격
 
 }

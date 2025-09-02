@@ -1,6 +1,5 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.dto.BoardRequestDto;
 import com.culturemate.culturemate_api.dto.BoardResponseDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;

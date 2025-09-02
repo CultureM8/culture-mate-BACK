@@ -1,8 +1,10 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
-import com.culturemate.culturemate_api.dto.MemberDetailDto;
+import com.culturemate.culturemate_api.dto.MemberDetailRequestDto;
+import com.culturemate.culturemate_api.dto.MemberDetailResponseDto;
 import com.culturemate.culturemate_api.service.MemberDetailService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,24 +18,24 @@ public class MemberDetailController {
 
   // 상세 조회
   @GetMapping("/{memberId}")
-  public ResponseEntity<MemberDetailDto> getByMemberId(@PathVariable Long memberId) {
+  public ResponseEntity<MemberDetailResponseDto> getByMemberId(@PathVariable Long memberId) {
     MemberDetail memberDetail = memberDetailService.findByMemberId(memberId);
-    return ResponseEntity.ok(MemberDetailDto.fromEntity(memberDetail));  // HTTP 200 + MemberDetailDto 반환
+    return ResponseEntity.ok(MemberDetailResponseDto.from(memberDetail));  // HTTP 200 + MemberDetailResponseDto 반환
   }
 
   // 생성
   @PostMapping
-  public ResponseEntity<MemberDetailDto> add(@RequestBody MemberDetailDto dto) {
+  public ResponseEntity<MemberDetailResponseDto> add(@Valid @RequestBody MemberDetailRequestDto dto) {
     MemberDetail created = memberDetailService.create(dto);
-    return ResponseEntity.status(201).body(MemberDetailDto.fromEntity(created));  // HTTP 201 Created + 데이터 반환
+    return ResponseEntity.status(201).body(MemberDetailResponseDto.from(created));  // HTTP 201 Created + 데이터 반환
   }
 
   // 수정
   @PutMapping("/{memberId}")
-  public ResponseEntity<MemberDetailDto> modify(@PathVariable Long memberId,
-                                                            @RequestBody MemberDetailDto dto) {
+  public ResponseEntity<MemberDetailResponseDto> modify(@PathVariable Long memberId,
+                                                       @Valid @RequestBody MemberDetailRequestDto dto) {
     MemberDetail updated = memberDetailService.update(memberId, dto);
-    return ResponseEntity.ok(MemberDetailDto.fromEntity(updated));  // HTTP 200 OK + 데이터 반환
+    return ResponseEntity.ok(MemberDetailResponseDto.from(updated));  // HTTP 200 OK + 데이터 반환
   }
 
   // 삭제

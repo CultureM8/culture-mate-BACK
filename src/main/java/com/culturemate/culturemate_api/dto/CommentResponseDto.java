@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
-@Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,16 +22,20 @@ public class CommentResponseDto {
   private String content;
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate createdAt;
+  @DateTimeFormat(pattern = "yyyy-MM-dd")  
+  private LocalDate updatedAt;
   private Integer likeCount;
   private Integer dislikeCount;
 
-  public static CommentResponseDto fromEntity(Comment comment) {
+  public static CommentResponseDto from(Comment comment) {
     return CommentResponseDto.builder()
       .id(comment.getId())
       .boardId(comment.getBoard().getId())
       .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
       .content(comment.getContent())
       .createdAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
+      .updatedAt(comment.getUpdatedAt() != null ? 
+                 comment.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate() : null)
       .likeCount(comment.getLikeCount())
       .dislikeCount(comment.getDislikeCount())
       .build();

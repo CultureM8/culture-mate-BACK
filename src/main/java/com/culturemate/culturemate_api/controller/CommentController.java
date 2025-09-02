@@ -23,7 +23,7 @@ public class CommentController {
                                                   @RequestParam(required = false) Long parentId,
                                                   @RequestParam String content) {
     Comment created = commentService.create(boardId, parentId, content);
-    return ResponseEntity.status(201).body(CommentResponseDto.fromEntity(created)); // 201 Created
+    return ResponseEntity.status(201).body(CommentResponseDto.from(created)); // 201 Created
   }
 
   // 댓글 수정
@@ -31,7 +31,7 @@ public class CommentController {
   public ResponseEntity<CommentResponseDto> modify(@PathVariable Long commentId,
                                                   @RequestParam String content) {
     Comment updated = commentService.update(commentId, content);
-    return ResponseEntity.ok(CommentResponseDto.fromEntity(updated)); // 200 OK
+    return ResponseEntity.ok(CommentResponseDto.from(updated)); // 200 OK
   }
 
   // 특정 게시글 댓글 조회
