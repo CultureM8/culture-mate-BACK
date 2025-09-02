@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.repository;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import com.culturemate.culturemate_api.domain.member.Member;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -17,8 +18,10 @@ public interface InterestEventsRepository extends JpaRepository<InterestEvents, 
   Optional<InterestEvents> findByMemberAndEvent(Member member, Event event);
   
   // 회원의 모든 관심 이벤트 조회
+  @EntityGraph(attributePaths = {"member", "event"})
   List<InterestEvents> findByMember(Member member);
   
   // 이벤트에 관심을 표시한 모든 회원 조회
+  @EntityGraph(attributePaths = {"member", "event"})
   List<InterestEvents> findByEvent(Event event);
 }
