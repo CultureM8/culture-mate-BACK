@@ -6,7 +6,6 @@ import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import com.culturemate.culturemate_api.domain.member.InterestTogethers;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,13 +32,11 @@ public class Together {
 
   @ManyToOne
   @JoinColumn(name = "event_id", nullable = false)
-  @NotNull(message = "이벤트는 필수입니다")
   @Setter
   private Event event;
 
   @ManyToOne
-  @JoinColumn(name = "host_id")
-  @NotNull(message = "호스트는 필수입니다")
+  @JoinColumn(name = "host_id", nullable = false)
   private Member host;
 
   // OneToMany는 실제 저장되는 속성이 아니고, 관계 매핑용
@@ -47,36 +44,27 @@ public class Together {
   private List<Participants> participants;
 
   @Column(nullable = false)
-  @NotBlank(message = "제목은 필수입니다")
-  @Size(max = 100, message = "제목은 100자를 초과할 수 없습니다")
   @Setter
   private String title;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "region_id", nullable = false)
-  @NotNull(message = "지역은 필수입니다")
   @Setter
   private Region region;
 
   @Column(nullable = false)
-  @NotBlank(message = "주소는 필수입니다")
-  @Size(max = 255, message = "주소는 255자를 초과할 수 없습니다")
   @Setter
   private String address;          // 기본 주소 (도로명 주소)
   
   @Column(nullable = false)
-  @NotBlank(message = "상세주소는 필수입니다")
-  @Size(max = 255, message = "상세주소는 255자를 초과할 수 없습니다")
   @Setter
   private String addressDetail;    // 상세 주소
 
-  @NotNull(message = "모임 날짜는 필수입니다")
+  @Column(nullable = false)
   @Setter
   private LocalDate meetingDate;
 
-  @NotNull(message = "최대 참여자 수는 필수입니다")
-  @Min(value = 2, message = "최대 참여자 수는 2명 이상이어야 합니다")
-  @Max(value = 100, message = "최대 참여자 수는 100명을 초과할 수 없습니다")
+  @Column(nullable = false)
   @Setter
   private Integer maxParticipants;
 
@@ -85,13 +73,13 @@ public class Together {
   private Integer participantCount = 1; // 호스트 포함
 
   @Column(length = 2000)
-  @Size(max = 2000, message = "내용은 2000자를 초과할 수 없습니다")
   @Setter
   private String content;
 
   @Setter
   private boolean isRecruiting = true;
 
+  @Setter
   private Integer interestCount = 0;
 
   private Instant createdAt;

@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.dto.BoardRequestDto;
 import com.culturemate.culturemate_api.dto.BoardResponseDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;
 import com.culturemate.culturemate_api.service.BoardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +53,7 @@ public class BoardController {
 
   // 게시글 생성
   @PostMapping
-  public ResponseEntity<BoardResponseDto> add(@RequestBody BoardRequestDto requestDto) {
+  public ResponseEntity<BoardResponseDto> add(@Valid @RequestBody BoardRequestDto requestDto) {
     return ResponseEntity.ok(
       BoardResponseDto.from(boardService.create(requestDto))
     );
@@ -61,7 +62,7 @@ public class BoardController {
   // 게시글 수정
   @PutMapping("/{boardId}")
   public ResponseEntity<BoardResponseDto> modify(@PathVariable Long boardId,
-                                                      @RequestBody BoardRequestDto requestDto) {
+                                                      @Valid @RequestBody BoardRequestDto requestDto) {
     return ResponseEntity.ok(
       BoardResponseDto.from(boardService.update(boardId, requestDto))
     );

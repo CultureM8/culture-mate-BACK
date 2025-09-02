@@ -10,8 +10,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EventReview {
-  @Id
-  @GeneratedValue
+  @Id @GeneratedValue
   @Column(name = "review_id")
   private Long id;
 

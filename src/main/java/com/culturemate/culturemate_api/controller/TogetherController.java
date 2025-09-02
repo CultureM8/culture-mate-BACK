@@ -8,6 +8,7 @@ import com.culturemate.culturemate_api.dto.TogetherResponseDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.culturemate.culturemate_api.service.TogetherService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -78,14 +79,14 @@ public class TogetherController {
 
   // 모집글 생성
   @PostMapping
-  public ResponseEntity<TogetherResponseDto> add(@RequestBody TogetherRequestDto togetherRequestDto) {
+  public ResponseEntity<TogetherResponseDto> add(@Valid @RequestBody TogetherRequestDto togetherRequestDto) {
     Together together = togetherService.create(togetherRequestDto);
     return ResponseEntity.ok().body(TogetherResponseDto.from(together));
   }
 
   // 모집글 수정
   @PutMapping("/{id}")
-  public ResponseEntity<TogetherResponseDto> modify(@PathVariable Long id, @RequestBody TogetherRequestDto togetherRequestDto) {
+  public ResponseEntity<TogetherResponseDto> modify(@PathVariable Long id, @Valid @RequestBody TogetherRequestDto togetherRequestDto) {
     Together updatedTogether = togetherService.update(id, togetherRequestDto);
     return ResponseEntity.ok().body(TogetherResponseDto.from(updatedTogether));
   }

@@ -3,12 +3,16 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
+import com.culturemate.culturemate_api.domain.event.TicketPrice;
 import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.dto.EventRequestDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
+import com.culturemate.culturemate_api.dto.TicketPriceDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
 import com.culturemate.culturemate_api.repository.InterestEventsRepository;
 import com.culturemate.culturemate_api.repository.MemberRepository;
+import com.culturemate.culturemate_api.repository.TicketPriceRepository;
 import jakarta.persistence.EntityManager;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +29,41 @@ import java.util.Optional;
 public class EventService {
 
   private final EventRepository eventRepository;
-  private final RegionService regionService;
+  private final TicketPriceRepository ticketPriceRepository;
   private final InterestEventsRepository interestEventsRepository;
+  private final RegionService regionService;
+  private final MemberService memberService;
 
   @Transactional
-  public Event create(Event event) {
-    return eventRepository.save(event);
+  public Event create(EventRequestDto requestDto) {
+    Region region = regionService.findExact(requestDto.getRegionDto());
+    
+    Event event = Event.builder()
+      .eventType(requestDto.getEventType())
+      .title(requestDto.getTitle())
+      .region(region)
+      .eventLocation(requestDto.getEventLocation())
+      .address(requestDto.getAddress())
+      .addressDetail(requestDto.getAddressDetail())
+      .startDate(requestDto.getStartDate())
+      .endDate(requestDto.getEndDate())
+      .durationMin(requestDto.getDurationMin())
+      .minAge(requestDto.getMinAge())
+      .description(requestDto.getDescription())
+      .build();
+
+    eventRepository.save(event);
+
+    for (TicketPriceDto dto : requestDto.getTicketPriceDto()) {
+      TicketPrice newTicketPrice = TicketPrice.builder()
+        .event(event)
+        .ticketType(dto.getTicketType())
+        .price(dto.getPrice())
+        .build();
+      ticketPriceRepository.save(newTicketPrice);
+    }
+      
+    return event;
   }
 
   public Event findById(Long eventId) {
@@ -66,11 +99,23 @@ public class EventService {
 
 
   @Transactional
-  public void update(Event newEvent) {
-    if(!eventRepository.existsById(newEvent.getId())) {
-      throw new IllegalArgumentException("해당 이벤트가 존재하지 않습니다.");
-    }
-    eventRepository.save(newEvent);
+  public Event update(Long id, EventRequestDto requestDto) {
+    Event event = findById(id);
+    Region region = regionService.findExact(requestDto.getRegionDto());
+    
+    event.setEventType(requestDto.getEventType());
+    event.setTitle(requestDto.getTitle());
+    event.setRegion(region);
+    event.setEventLocation(requestDto.getEventLocation());
+    event.setAddress(requestDto.getAddress());
+    event.setAddressDetail(requestDto.getAddressDetail());
+    event.setStartDate(requestDto.getStartDate());
+    event.setEndDate(requestDto.getEndDate());
+    event.setDurationMin(requestDto.getDurationMin());
+    event.setMinAge(requestDto.getMinAge());
+    event.setDescription(requestDto.getDescription());
+    
+    return event;
   }
 
   @Transactional
@@ -80,9 +125,9 @@ public class EventService {
 
   // 이벤트 관심 표시 토글
   @Transactional
-  public boolean toggleEventInterest(Long eventId, Long memberId, MemberService memberService) {
+  public boolean toggleEventInterest(Long eventId, Long memberId) {
     Event event = findById(eventId);  // EventService에서 조회
-    Member member = memberService.findById(memberId);  // MemberService에서 조회
+    Member member = memberService.findById(memberId);  // 의존성 주입된 MemberService 사용
 
     Optional<InterestEvents> existing = interestEventsRepository.findByMemberAndEvent(member, event);
 

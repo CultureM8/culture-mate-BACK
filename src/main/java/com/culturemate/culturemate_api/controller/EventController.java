@@ -1,8 +1,10 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.event.Event;
+import com.culturemate.culturemate_api.dto.EventRequestDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
 import com.culturemate.culturemate_api.service.EventService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,11 +45,29 @@ public class EventController {
 
   // 이벤트 등록
   @PostMapping
-  public ResponseEntity<Event> add(@RequestBody Event event) {
-    Event createdEvent = eventService.create(event);
+  public ResponseEntity<Event> add(@Valid @RequestBody EventRequestDto requestDto) {
+    Event createdEvent = eventService.create(requestDto);
     return ResponseEntity.status(201).body(createdEvent);
   }
 
-  // TODO: 이벤트 정보 수정
+  // 이벤트 정보 수정
+  @PutMapping("/{id}")
+  public ResponseEntity<Event> update(@PathVariable Long id, @Valid @RequestBody EventRequestDto requestDto) {
+    Event updatedEvent = eventService.update(id, requestDto);
+    return ResponseEntity.ok(updatedEvent);
+  }
+
+  // 관심 설정
+  @PostMapping("/{eventId}/interest")
+  public ResponseEntity<String> toggleInterest(@PathVariable Long eventId,
+                                                  @RequestParam Long memberId) {
+    boolean interest = eventService.toggleEventInterest(eventId, memberId);
+
+    if (interest) {
+      return ResponseEntity.ok("관심 등록");
+    } else {
+      return ResponseEntity.ok("관심 취소");
+    }
+  }
 
 }
