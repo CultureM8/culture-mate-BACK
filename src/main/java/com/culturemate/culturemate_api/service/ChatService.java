@@ -21,12 +21,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final TogetherRepository togetherRepository; // '같이해요' 정보를 가져오기 위해 필요
 
-    /**
-     * 채팅방 생성
-     * @param roomName
-     * @param togetherId
-     * @return
-     */
+    // 채팅방 생성
     @Transactional
     public ChatRoom createChatRoom(String roomName, Long togetherId) {
         Together together = togetherRepository.findById(togetherId)
@@ -40,34 +35,21 @@ public class ChatService {
         return chatRoomRepository.save(chatRoom);
     }
 
-    /**
-     * 메시지 저장
-     * @param chatMessage
-     * @return
-     */
+    // 메시지 저장
     @Transactional
     public ChatMessage saveMessage(ChatMessage chatMessage) {
         return chatMessageRepository.save(chatMessage);
     }
 
-    /**
-     * 특정 채팅방의 모든 메시지 조회
-     * @param roomId
-     * @return
-     */
+    // 특정 채팅방의 모든 메시지 조회
     public List<ChatMessage> getMessagesByRoomId(Long roomId) {
         // TODO: 페이징 처리 추가 고려
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
-        // return chatMessageRepository.findByChatRoom(chatRoom);
-        return null; // 임시
+        return chatMessageRepository.findByChatRoom(chatRoom);
     }
 
-    /**
-     * 채팅방 ID로 채팅방 조회
-     * @param roomId
-     * @return
-     */
+    // 채팅방 ID로 채팅방 조회
     public ChatRoom findRoomById(Long roomId) {
         return chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
