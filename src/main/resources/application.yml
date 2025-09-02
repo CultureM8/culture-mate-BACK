@@ -1,6 +1,8 @@
 spring:
   application:
     name: "CultureMate API"
+#  session:
+#    store-type: jdbc
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -16,3 +18,4 @@ spring:
 logging.level:
   org.hibernate.SQL: debug
   # org.hibernate.orm.jdbc.bind: trace
+

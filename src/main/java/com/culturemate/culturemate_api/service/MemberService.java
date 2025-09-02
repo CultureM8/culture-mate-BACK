@@ -6,6 +6,8 @@ import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MemberService {
   private final MemberRepository memberRepository;
+  private final PasswordEncoder passwordEncoder;
 
   // Entity를 DTO로 변환하는 내부 메서드
   private MemberDto toDto(Member member) {
@@ -47,9 +50,11 @@ public class MemberService {
       throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
     }
 
+    var hash = passwordEncoder.encode(memberDto.getPassword());
+
     Member member = Member.builder()
       .loginId(memberDto.getLoginId())
-      .password(memberDto.getPassword())
+      .password(hash)
       .role(memberDto.getRole() != null ? memberDto.getRole() : Role.MEMBER)
       .status(MemberStatus.ACTIVE)
       .joinedAt(Instant.now())

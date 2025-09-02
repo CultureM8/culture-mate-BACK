@@ -7,8 +7,10 @@ import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.service.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/members")
@@ -21,7 +23,7 @@ public class MemberController {
 
   // 회원 가입
   @PostMapping
-  public ResponseEntity<MemberDto> create(@RequestBody MemberDto dto) {
+  public ResponseEntity<MemberDto> create(@ModelAttribute MemberDto dto) {
     Member savedMember = memberService.create(dto);
     return ResponseEntity.ok(MemberDto.from(savedMember));
   }
