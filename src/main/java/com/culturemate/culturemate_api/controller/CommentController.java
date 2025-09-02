@@ -39,7 +39,7 @@ public class CommentController {
   public ResponseEntity<List<CommentResponseDto>> getByBoard(@PathVariable Long boardId) {
     List<CommentResponseDto> comments = commentService.findByBoard(boardId)
       .stream()
-      .map(CommentResponseDto::fromEntity)
+      .map(CommentResponseDto::from)
       .collect(Collectors.toList());
     return ResponseEntity.ok(comments); // 200 OK
   }
@@ -49,7 +49,7 @@ public class CommentController {
   public ResponseEntity<List<CommentResponseDto>> getReplies(@PathVariable Long parentId) {
     List<CommentResponseDto> replies = commentService.findReplies(parentId)
       .stream()
-      .map(CommentResponseDto::fromEntity)
+      .map(CommentResponseDto::from)
       .collect(Collectors.toList());
     return ResponseEntity.ok(replies); // 200 OK
   }

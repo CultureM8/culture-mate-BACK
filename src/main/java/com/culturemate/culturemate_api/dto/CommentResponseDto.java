@@ -1,10 +1,7 @@
 package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.community.Comment;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
@@ -34,8 +31,6 @@ public class CommentResponseDto {
       .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
       .content(comment.getContent())
       .createdAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
-      .updatedAt(comment.getUpdatedAt() != null ? 
-                 comment.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate() : null)
       .likeCount(comment.getLikeCount())
       .dislikeCount(comment.getDislikeCount())
       .build();

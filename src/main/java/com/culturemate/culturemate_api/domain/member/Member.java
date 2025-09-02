@@ -26,24 +26,29 @@ public class Member {
   private String password;
 
   @Enumerated(EnumType.STRING)
+  @Builder.Default
   private Role role = Role.MEMBER;
 
   private Instant joinedAt;
   private Instant updatedAt;
 
   @Enumerated(EnumType.STRING)
+  @Builder.Default
   private MemberStatus status = MemberStatus.ACTIVE;
 
   @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private MemberDetail memberDetail;
 
   @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @Builder.Default
   private List<Board> boards = new ArrayList<>();
 
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @Builder.Default
   private List<InterestEvents> interestEvents = new ArrayList<>();
 
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @Builder.Default
   private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
   //=== 생성/수정 로직 ===//

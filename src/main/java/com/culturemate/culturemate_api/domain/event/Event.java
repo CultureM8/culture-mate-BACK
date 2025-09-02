@@ -54,26 +54,34 @@ public class Event {
   @Setter
   private Integer durationMin;     // 예상 소요시간
   @Setter
+  @Builder.Default
   private Integer minAge = 0;      // 최소 연령
   @Setter
   @Column(nullable = false)
   private String description;      // 요약설명
 
+  @Builder.Default
   private BigDecimal avgRating = BigDecimal.ZERO;    // 평균 별점
   @Setter
+  @Builder.Default
   private Integer reviewCount = 0;                   // 리뷰 수
   @Setter
+  @Builder.Default
   private Integer interestCount = 0;                 // 관심수
 
   // 가격정보는 연결용 ToMany가 아니라 필수적인 정보
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
   private List<TicketPrice> ticketPrice = new ArrayList<>();
 
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
   private List<EventReview> eventReview = new ArrayList<>();
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
   private List<Board> board = new ArrayList<>();
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
   private List<InterestEvents> interestEvents = new ArrayList<>();
 
   // 관리용 필드

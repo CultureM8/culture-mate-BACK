@@ -8,6 +8,7 @@ import lombok.*;
 import org.hibernate.annotations.Formula;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -46,11 +47,13 @@ public class Board {
   private Instant updatedAt;
 
   @Setter
+  @Builder.Default
   private Integer likeCount = 0;
   // private Integer dislikeCount = 0;
 
   @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Comment> comments;
+  @Builder.Default
+  private List<Comment> comments = new ArrayList<>();
 
   //=== 조회 로직 ===//
   public Integer getCommentCount() {

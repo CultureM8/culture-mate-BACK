@@ -41,7 +41,8 @@ public class Together {
 
   // OneToMany는 실제 저장되는 속성이 아니고, 관계 매핑용
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Participants> participants;
+  @Builder.Default
+  private List<Participants> participants = new ArrayList<>();
 
   @Column(nullable = false)
   @Setter
@@ -70,6 +71,7 @@ public class Together {
 
   //  @Formula("(SELECT COUNT(*) FROM participants p WHERE p.together_id = id)")
   @Setter
+  @Builder.Default
   private Integer participantCount = 1; // 호스트 포함
 
   @Column(length = 2000)
@@ -77,15 +79,18 @@ public class Together {
   private String content;
 
   @Setter
+  @Builder.Default
   private boolean isRecruiting = true;
 
   @Setter
+  @Builder.Default
   private Integer interestCount = 0;
 
   private Instant createdAt;
   private Instant updatedAt;
 
   @OneToMany(mappedBy = "together", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
   private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
   //=== 생성/수정 로직 ===//

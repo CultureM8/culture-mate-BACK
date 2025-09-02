@@ -19,10 +19,11 @@ public class Comment {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @Column(nullable = false)
+  @JoinColumn(name = "board_id", nullable = false)
   private Board board;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "parent_id")
   private Comment parent;
 
   private Instant createdAt;
