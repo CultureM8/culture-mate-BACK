@@ -1,4 +1,4 @@
-package com.culturemate.culturemate_api;
+package com.culturemate.culturemate_api.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +34,7 @@ public class SecurityConfig {
 //    )
     http.csrf((csrf) -> csrf.disable());
     http.authorizeHttpRequests((authorize) ->
-      authorize.requestMatchers("/register", "/login").permitAll()
+      authorize.requestMatchers("/register", "/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
         .anyRequest().authenticated()
     );
     http.formLogin(formLogin -> formLogin
