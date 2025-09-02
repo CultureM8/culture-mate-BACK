@@ -4,6 +4,8 @@ import com.culturemate.culturemate_api.domain.together.VisibleType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity
 @Getter
 @Setter
@@ -20,16 +22,30 @@ public class MemberDetail {
   @JoinColumn(name = "member_id")
   private Member member;
 
-  private String user_name;
-  private Long profile_image_id;
-  private Long background_image_id;
+  private String userName;
+  private Long profileImageId;
+  private Long backgroundImageId;
   private String intro;
   private String MBTI;
-  private Integer together_score;
+  private Integer togetherScore;
   private String email;
 
   @Enumerated(EnumType.STRING)
   private VisibleType visibility;
+
+  @Column(nullable = false)
+  private Instant createdAt;
+  private Instant updatedAt;
+
+  @PrePersist
+  public void onCreate() {
+    this.createdAt = Instant.now();
+  }
+
+  @PreUpdate
+  public void onUpdate() {
+    this.updatedAt = Instant.now();
+  }
 
 }
 

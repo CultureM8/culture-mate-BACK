@@ -11,17 +11,16 @@ import lombok.*;
 @AllArgsConstructor
 public class CommentLike {
   //=== 필드 ===//
-  @Id
-  @GeneratedValue
+  @Id @GeneratedValue
   @Column(name = "commentLike_id")
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "comment_id")
+  @JoinColumn(name = "comment_id", nullable = false)
   private Comment comment;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
 }

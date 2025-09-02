@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.repository;
 
 import com.culturemate.culturemate_api.domain.together.Participants;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,7 @@ import java.util.List;
 public interface ParticipantsRepository extends JpaRepository<Participants, Long> {
 
 //  특정 Together의 모든 참여자 조회
+  @EntityGraph(attributePaths = {"participant"})
   List<Participants> findByTogetherId(Long togetherId);
 
 //  특정 Together에 특정 Member가 참여하는지 조회

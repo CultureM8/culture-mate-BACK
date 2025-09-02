@@ -6,15 +6,16 @@ import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TogetherResponseDto {
-
-  private static ParticipantsRepository participantsRepository;
 
   private long id;
   private Long eventId;
@@ -29,6 +30,8 @@ public class TogetherResponseDto {
   private Integer currentParticipants;
   private String content;
   private Boolean active;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
 
   public static TogetherResponseDto from(Together together) {
     return TogetherResponseDto.builder()
@@ -41,9 +44,12 @@ public class TogetherResponseDto {
       .addressDetail(together.getAddressDetail())
       .meetingDate(together.getMeetingDate())
       .maxParticipants(together.getMaxParticipants())
-      .currentParticipants(together.getCurrentParticipantsCount())
+      .currentParticipants(together.getParticipantCount())
       .content(together.getContent())
       .active(together.isRecruiting())
+      .createdAt(together.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+      .updatedAt(together.getUpdatedAt() != null ? 
+                 together.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
       .build();
   }
 

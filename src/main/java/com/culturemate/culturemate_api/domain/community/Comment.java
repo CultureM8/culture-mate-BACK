@@ -1,7 +1,6 @@
 package com.culturemate.culturemate_api.domain.community;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
@@ -20,15 +19,17 @@ public class Comment {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "board_id", nullable = false)
   private Board board;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "parent_id")
   private Comment parent;
 
   private Instant createdAt;
 
   @Setter
-  @NotNull
+  @Column(nullable = false)
   private String content;
 
   @Setter

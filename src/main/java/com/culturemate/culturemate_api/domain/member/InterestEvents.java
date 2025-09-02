@@ -2,14 +2,13 @@ package com.culturemate.culturemate_api.domain.member;
 
 import com.culturemate.culturemate_api.domain.event.Event;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class InterestEvents {
   @Id
   @GeneratedValue

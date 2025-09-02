@@ -3,8 +3,16 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
+import com.culturemate.culturemate_api.domain.event.TicketPrice;
+import com.culturemate.culturemate_api.domain.member.InterestEvents;
+import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.dto.EventRequestDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
+import com.culturemate.culturemate_api.dto.TicketPriceDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
+import com.culturemate.culturemate_api.repository.InterestEventsRepository;
+import com.culturemate.culturemate_api.repository.MemberRepository;
+import com.culturemate.culturemate_api.repository.TicketPriceRepository;
 import jakarta.persistence.EntityManager;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
@@ -20,18 +31,49 @@ import java.util.List;
 public class EventService {
 
   private final EventRepository eventRepository;
+  private final TicketPriceRepository ticketPriceRepository;
+  private final InterestEventsRepository interestEventsRepository;
   private final RegionService regionService;
+  private final MemberService memberService;
 
   @Transactional
-  public Event create(Event event) {
-    return eventRepository.save(event);
+  public Event create(EventRequestDto requestDto) {
+    Region region = regionService.findExact(requestDto.getRegionDto());
+    
+    Event event = Event.builder()
+      .eventType(requestDto.getEventType())
+      .title(requestDto.getTitle())
+      .region(region)
+      .eventLocation(requestDto.getEventLocation())
+      .address(requestDto.getAddress())
+      .addressDetail(requestDto.getAddressDetail())
+      .startDate(requestDto.getStartDate())
+      .endDate(requestDto.getEndDate())
+      .durationMin(requestDto.getDurationMin())
+      .minAge(requestDto.getMinAge())
+      .description(requestDto.getDescription())
+      .build();
+
+    eventRepository.save(event);
+
+    for (TicketPriceDto dto : requestDto.getTicketPriceDto()) {
+      TicketPrice newTicketPrice = TicketPrice.builder()
+        .event(event)
+        .ticketType(dto.getTicketType())
+        .price(dto.getPrice())
+        .build();
+      ticketPriceRepository.save(newTicketPrice);
+    }
+      
+    return event;
   }
 
-  public Event read(Long eventId) {
-    return eventRepository.findById(eventId).orElse(null);
+  public Event findById(Long eventId) {
+    return eventRepository.findById(eventId)
+      .orElseThrow(() -> new IllegalArgumentException("해당 이벤트가 존재하지 않습니다."));
   }
 
-  public List<Event> readAll() {
+  public List<Event> findAll() {
     return eventRepository.findAll();
   }
 
@@ -39,7 +81,7 @@ public class EventService {
   public List<Event> search(EventSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.readByCondition(searchDto.getRegionDto());
+      regions = regionService.findByCondition(searchDto.getRegionDto());
     }
     
     EventType eventType = null;
@@ -59,16 +101,93 @@ public class EventService {
 
 
   @Transactional
-  public void update(Event newEvent) {
-    if(!eventRepository.existsById(newEvent.getId())) {
-      throw new IllegalArgumentException("해당 이벤트가 존재하지 않습니다.");
+  public Event update(Long id, EventRequestDto requestDto) {
+    Event event = findById(id);
+    Region region = regionService.findExact(requestDto.getRegionDto());
+    
+    event.setEventType(requestDto.getEventType());
+    event.setTitle(requestDto.getTitle());
+    event.setRegion(region);
+    event.setEventLocation(requestDto.getEventLocation());
+    event.setAddress(requestDto.getAddress());
+    event.setAddressDetail(requestDto.getAddressDetail());
+    event.setStartDate(requestDto.getStartDate());
+    event.setEndDate(requestDto.getEndDate());
+    event.setDurationMin(requestDto.getDurationMin());
+    event.setMinAge(requestDto.getMinAge());
+    event.setDescription(requestDto.getDescription());
+
+    // 티켓 가격 업데이트 로직
+    updateTicketPrices(event, requestDto.getTicketPriceDto());
+    
+    return event;
+  }
+
+  private void updateTicketPrices(Event event, List<TicketPriceDto> ticketPriceDtos) {
+    List<TicketPrice> existingTickets = ticketPriceRepository.findByEvent(event);
+    
+    // 1. DTO에서 ID가 있는 것들을 Set으로 수집 (수정/유지 대상)
+    Set<Long> dtoIds = ticketPriceDtos.stream()
+      .map(TicketPriceDto::getId)
+      .filter(id -> id != null)
+      .collect(Collectors.toSet());
+    
+    // 2. 기존 티켓들 중 삭제 대상 처리
+    for (TicketPrice existingTicket : existingTickets) {
+      if (!dtoIds.contains(existingTicket.getId())) {
+        ticketPriceRepository.delete(existingTicket);
+      }
     }
-    eventRepository.save(newEvent);
+    
+    // 3. DTO 처리: 수정 또는 생성
+    for (TicketPriceDto dto : ticketPriceDtos) {
+      if (dto.getId() == null) {
+        // 새로 생성
+        TicketPrice newTicket = TicketPrice.builder()
+          .event(event)
+          .ticketType(dto.getTicketType())
+          .price(dto.getPrice())
+          .build();
+        ticketPriceRepository.save(newTicket);
+      } else {
+        // 기존 티켓 수정
+        TicketPrice existingTicket = ticketPriceRepository.findById(dto.getId())
+          .orElseThrow(() -> new IllegalArgumentException("해당 티켓 가격이 존재하지 않습니다."));
+        
+        existingTicket.setTicketType(dto.getTicketType());
+        existingTicket.setPrice(dto.getPrice());
+      }
+    }
   }
 
   @Transactional
   public void delete(Long eventId) {
     eventRepository.deleteById(eventId);
+  }
+
+  // 이벤트 관심 표시 토글
+  @Transactional
+  public boolean toggleEventInterest(Long eventId, Long memberId) {
+    Event event = findById(eventId);  // EventService에서 조회
+    Member member = memberService.findById(memberId);  // 의존성 주입된 MemberService 사용
+
+    Optional<InterestEvents> existing = interestEventsRepository.findByMemberAndEvent(member, event);
+
+    if (existing.isPresent()) {
+      // 관심 표시 취소
+      interestEventsRepository.delete(existing.get());
+      event.setInterestCount(event.getInterestCount() - 1);
+      return false; // 취소됨
+    } else {
+      // 관심 표시 추가
+      InterestEvents interestEvents = InterestEvents.builder()
+        .member(member)
+        .event(event)
+        .build();
+      interestEventsRepository.save(interestEvents);
+      event.setInterestCount(event.getInterestCount() + 1);
+      return true; // 추가됨
+    }
   }
 
 }

@@ -44,7 +44,8 @@ out/
 ### env ###
 .env
 
-### Claude ###
+### AI ###
 CLAUDE.md
 DEVELOPMENT_STATUS.md
 PROJECT_OVERVIEW.md
+GEMINI.md

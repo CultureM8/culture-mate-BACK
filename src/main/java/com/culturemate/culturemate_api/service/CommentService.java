@@ -1,13 +1,12 @@
 package com.culturemate.culturemate_api.service;
 
+import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.community.Comment;
 import com.culturemate.culturemate_api.domain.community.CommentLike;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.CommentDto;
-import com.culturemate.culturemate_api.repository.BoardRepository;
+import com.culturemate.culturemate_api.dto.CommentResponseDto;
 import com.culturemate.culturemate_api.repository.CommentLikeRepository;
 import com.culturemate.culturemate_api.repository.CommentRepository;
-import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +20,13 @@ import java.util.Optional;
 public class CommentService {
   private final CommentRepository commentRepository;
   private final CommentLikeRepository commentLikeRepository;
-  private final BoardRepository boardRepository;
-  private final MemberRepository memberRepository;
+  private final BoardService boardService;
+  private final MemberService memberService;
 
   // 댓글 생성
-  public CommentDto createComment(Long boardId, Long parentId, String content) {
-    var board = boardRepository.findById(boardId)
-      .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+  @Transactional
+  public Comment create(Long boardId, Long parentId, String content) {
+    Board board = boardService.findById(boardId);
     Comment parent = null;
     if (parentId != null) {
       parent = commentRepository.findById(parentId)
@@ -42,37 +41,32 @@ public class CommentService {
 //      .dislikeCount(0)
       .build();
 
-    return CommentDto.fromEntity(commentRepository.save(comment));
+    return commentRepository.save(comment);
   }
 
   @Transactional
-  public CommentDto updateComment(Long commentId, String content) {
+  public Comment update(Long commentId, String content) {
     Comment comment = commentRepository.findById(commentId)
       .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
 
     comment.setContent(content);
-    return CommentDto.fromEntity(comment);
+    return comment;
   }
 
 
   // 특정 게시글 댓글 조회
-  public List<CommentDto> getCommentsByBoard(Long boardId) {
-    return commentRepository.findByBoardIdOrderByCreatedAtDesc(boardId)
-      .stream()
-      .map(CommentDto::fromEntity)
-      .toList();
+  public List<Comment> findByBoard(Long boardId) {
+    return commentRepository.findByBoardIdOrderByCreatedAtDesc(boardId);
   }
 
   // 특정 댓글의 대댓글 조회
-  public List<CommentDto> getReplies(Long parentId) {
-    return commentRepository.findByParentId(parentId)
-      .stream()
-      .map(CommentDto::fromEntity)
-      .toList();
+  public List<Comment> findReplies(Long parentId) {
+    return commentRepository.findByParentId(parentId);
   }
 
   // 삭제
-  public void deleteComment(Long commentId) {
+  @Transactional
+  public void delete(Long commentId) {
     commentRepository.deleteById(commentId);
   }
 
@@ -80,8 +74,7 @@ public class CommentService {
   public boolean toggleCommentLike(Long commentId, Long memberId) {
     Comment comment = commentRepository.findById(commentId)
       .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
-    Member member = memberRepository.findById(memberId)
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+    Member member = memberService.findById(memberId);  // MemberService에서 조회
 
     Optional<CommentLike> existing = commentLikeRepository.findByCommentAndMember(comment, member);
 

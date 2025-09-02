@@ -4,10 +4,11 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -30,28 +31,29 @@ public class Board {
   private Event event;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name="member_id")
+  @JoinColumn(name="member_id", nullable = false)
   private Member author;
 
+  @Column(nullable = false)
   @Setter
-  @NotNull
   private String title;
 
-  @Column(length = 2000)
+  @Column(length = 2000, nullable = false)
   @Setter
-  @NotNull
   private String content;
 
   @Column(nullable = false)
   private Instant createdAt;
   private Instant updatedAt;
 
-  @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Comment> comments;
-
   @Setter
+  @Builder.Default
   private Integer likeCount = 0;
-  private Integer dislikeCount = 0;
+  // private Integer dislikeCount = 0;
+
+  @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<Comment> comments = new ArrayList<>();
 
   //=== 조회 로직 ===//
   public Integer getCommentCount() {
