@@ -1,7 +1,7 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.CustomUser;
-import com.culturemate.culturemate_api.dto.MemberDto;
+import com.culturemate.culturemate_api.dto.RegisterDto;
 import com.culturemate.culturemate_api.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -18,12 +18,13 @@ public class LoginController {
 
   @GetMapping("/register")
   public String memberForm(Model model) {
-    model.addAttribute("memberDto", new MemberDto()); // 빈 객체 전달해서 폼 바인딩
+    model.addAttribute("registerDto", new RegisterDto()); // 빈 객체 전달해서 폼 바인딩
     return "register"; // 타임리프라면 뷰 이름, REST라면 JSON
   }
+
   @PostMapping("/register")
-  String showRegisterForm(@ModelAttribute MemberDto memberDto){
-    memberService.create(memberDto);
+  String showRegisterForm(@ModelAttribute RegisterDto registerDto){
+    memberService.create(registerDto);
 
     return "redirect:/login";
   }

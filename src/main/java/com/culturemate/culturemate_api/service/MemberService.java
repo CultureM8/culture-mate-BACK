@@ -3,8 +3,10 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;
+import com.culturemate.culturemate_api.dto.RegisterDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MemberService {
   private final MemberRepository memberRepository;
+  private final PasswordEncoder passwordEncoder;
 
 
   // 회원 가입
@@ -26,15 +29,23 @@ public class MemberService {
       throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
     }
 
+    var hash = passwordEncoder.encode(password);
+
     Member member = Member.builder()
       .loginId(loginId)
-      .password(password)
+      .password(hash)
       .role(Role.MEMBER)
       .status(MemberStatus.ACTIVE)
       .joinedAt(Instant.now())
       .build();
 
     return memberRepository.save(member);
+  }
+
+  // 회원 가입 (RegisterDto 사용)
+  @Transactional
+  public Member create(RegisterDto registerDto) {
+    return create(registerDto.getLoginId(), registerDto.getPassword());
   }
 
   // 회원 삭제
@@ -77,7 +88,8 @@ public class MemberService {
   @Transactional
   public Member updatePassword(Long memberId, String newPassword) {
     Member member = findById(memberId);
-    member.changePassword(newPassword);
+    var hash = passwordEncoder.encode(newPassword);
+    member.changePassword(hash);
     return member;
   }
 
