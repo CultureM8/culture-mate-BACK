@@ -1,6 +1,5 @@
 package com.culturemate.culturemate_api.domain.member;
 
-import com.culturemate.culturemate_api.domain.together.VisibleType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,11 +21,11 @@ public class MemberDetail {
   @JoinColumn(name = "member_id")
   private Member member;
 
-  private String userName;
+  private String nickname;
   private Long profileImageId;
   private Long backgroundImageId;
   private String intro;
-  private String MBTI;
+  private String mbti;
   private Integer togetherScore;
   private String email;
 

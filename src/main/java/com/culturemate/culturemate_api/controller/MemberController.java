@@ -4,6 +4,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.MemberResponseDto;
+import com.culturemate.culturemate_api.dto.RegisterDto;
 import com.culturemate.culturemate_api.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,8 @@ public class MemberController {
 
   // 회원 가입
   @PostMapping
-  public ResponseEntity<MemberResponseDto> add(@RequestParam String loginId, 
-                                               @RequestParam String password) {
-    Member savedMember = memberService.create(loginId, password);
+  public ResponseEntity<MemberResponseDto> add(@Valid @RequestBody RegisterDto registerDto) {
+    Member savedMember = memberService.create(registerDto);
     return ResponseEntity.status(201).body(MemberResponseDto.from(savedMember));
   }
 

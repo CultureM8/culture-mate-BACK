@@ -1,7 +1,7 @@
 package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
-import com.culturemate.culturemate_api.domain.together.VisibleType;
+import com.culturemate.culturemate_api.domain.member.VisibleType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,11 +16,11 @@ import java.time.ZoneId;
 @AllArgsConstructor
 public class MemberDetailResponseDto {
   private Long id;
-  private String userName;
+  private String nickname;
   private Long profileImageId;
   private Long backgroundImageId;
   private String intro;
-  private String MBTI;
+  private String mbti;
   private Integer togetherScore;
   private String email;
   private VisibleType visibility;
@@ -30,11 +30,11 @@ public class MemberDetailResponseDto {
   public static MemberDetailResponseDto from(MemberDetail memberDetail) {
     return MemberDetailResponseDto.builder()
       .id(memberDetail.getId())
-      .userName(memberDetail.getUserName())
+      .nickname(memberDetail.getNickname())
       .profileImageId(memberDetail.getProfileImageId())
       .backgroundImageId(memberDetail.getBackgroundImageId())
       .intro(memberDetail.getIntro())
-      .MBTI(memberDetail.getMBTI())
+      .mbti(memberDetail.getMbti())
       .togetherScore(memberDetail.getTogetherScore())
       .email(memberDetail.getEmail())
       .visibility(memberDetail.getVisibility())
