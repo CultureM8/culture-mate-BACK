@@ -37,8 +37,11 @@ public class AdminInitializer {
       List<Map<String, String>> adminList = mapper.readValue(jsonFile, 
           new TypeReference<List<Map<String, String>>>() {});
       
+      System.out.println("관리자 데이터 개수: " + adminList.size());
+      
       for (Map<String, String> adminData : adminList) {
         String loginId = adminData.get("loginId");
+        System.out.println("처리 중인 관리자: " + loginId);
         
         // 이미 존재하는 관리자인지 확인
         if (memberRepository.existsByLoginId(loginId)) {
@@ -56,14 +59,20 @@ public class AdminInitializer {
             .email(adminData.get("email"))
             .build();
         
+        System.out.println("RegisterDto 생성 완료: " + loginId);
+        
         // 컨트롤러와 동일한 방식으로 계정 생성
         memberService.create(registerDto);
+        System.out.println("관리자 계정 생성 완료: " + loginId);
       }
       
       System.out.println("관리자 데이터 초기화 완료");
       
     } catch (Exception e) {
-      System.out.println("관리자 데이터 불러오기 실패\n" + e.getMessage());
+      System.out.println("관리자 데이터 불러오기 실패");
+      System.out.println("에러 타입: " + e.getClass().getSimpleName());
+      System.out.println("에러 메시지: " + e.getMessage());
+      e.printStackTrace();
     }
   }
 

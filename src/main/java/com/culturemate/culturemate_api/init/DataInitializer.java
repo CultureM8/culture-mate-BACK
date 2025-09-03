@@ -17,7 +17,7 @@ public class DataInitializer implements ApplicationRunner {
     System.out.println("=== 데이터 초기화 시작 ===");
     
     // 지역 데이터 초기화
-    regionInitializer.regionInit();
+//    regionInitializer.regionInit();
     
     // 관리자 데이터 초기화
     adminInitializer.adminInit();
