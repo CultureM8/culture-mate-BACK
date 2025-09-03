@@ -25,12 +25,12 @@ public class ChatService {
     @Transactional
     public ChatRoom createChatRoom(String roomName, Long togetherId) {
         Together together = togetherRepository.findById(togetherId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid togetherId: " + togetherId));
+          .orElseThrow(() -> new IllegalArgumentException("Invalid togetherId: " + togetherId));
 
         ChatRoom chatRoom = ChatRoom.builder()
-                .roomName(roomName)
-                .together(together)
-                .build();
+          .roomName(roomName)
+          .together(together)
+          .build();
 
         return chatRoomRepository.save(chatRoom);
     }
@@ -45,13 +45,13 @@ public class ChatService {
     public List<ChatMessage> getMessagesByRoomId(Long roomId) {
         // TODO: 페이징 처리 추가 고려
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
+          .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
         return chatMessageRepository.findByChatRoom(chatRoom);
     }
 
     // 채팅방 ID로 채팅방 조회
     public ChatRoom findRoomById(Long roomId) {
         return chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
+          .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
     }
 }
