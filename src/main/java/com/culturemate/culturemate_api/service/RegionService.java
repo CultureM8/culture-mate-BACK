@@ -34,8 +34,20 @@ public class RegionService {
   }
 
   @Transactional
-  public Region create(Region region) {
-    return regionRepository.save(region);
+  public Region create(String level1, String level2, String level3) {
+    // 이미 존재하면 기존 것을 반환 (초기화에서 중복 생성 방지)
+    Region existingRegion = regionRepository.findExactRegion(level1, level2, level3);
+    if (existingRegion != null) {
+      System.out.println("이미 존재하는 지역: " + level1 + "-" + level2 + "-" + level3);
+      return existingRegion;
+    }
+    
+    Region newRegion = Region.builder()
+      .level1(level1)
+      .level2(level2)
+      .level3(level3)
+      .build();
+    return regionRepository.save(newRegion);
   }
 
   @Transactional

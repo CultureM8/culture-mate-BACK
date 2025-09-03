@@ -1,0 +1,70 @@
+package com.culturemate.culturemate_api.init;
+
+import com.culturemate.culturemate_api.dto.RegisterDto;
+import com.culturemate.culturemate_api.repository.MemberRepository;
+import com.culturemate.culturemate_api.service.MemberService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+@Component
+public class AdminInitializer {
+
+  private final MemberService memberService;
+  private final MemberRepository memberRepository;
+
+  @Autowired
+  public AdminInitializer(MemberService memberService, MemberRepository memberRepository) {
+    this.memberService = memberService;
+    this.memberRepository = memberRepository;
+  }
+
+  public void adminInit() {
+    try(InputStream jsonFile = Thread.currentThread()
+      .getContextClassLoader()
+      .getResourceAsStream("db/AdminMember.json")) {
+      
+      if (jsonFile == null) { 
+        throw new IllegalStateException("파일을 찾을 수 없음");
+      }
+      
+      ObjectMapper mapper = new ObjectMapper();
+      List<Map<String, String>> adminList = mapper.readValue(jsonFile, 
+          new TypeReference<List<Map<String, String>>>() {});
+      
+      for (Map<String, String> adminData : adminList) {
+        String loginId = adminData.get("loginId");
+        
+        // 이미 존재하는 관리자인지 확인
+        if (memberRepository.existsByLoginId(loginId)) {
+          System.out.println("관리자 " + loginId + "는 이미 존재합니다.");
+          continue;
+        }
+        
+        // RegisterDto 생성
+        RegisterDto registerDto = RegisterDto.builder()
+            .loginId(loginId)
+            .password(adminData.get("password"))
+            .nickname(adminData.get("nickname"))
+            .intro(adminData.get("intro"))
+            .mbti(adminData.get("mbti"))
+            .email(adminData.get("email"))
+            .build();
+        
+        // 컨트롤러와 동일한 방식으로 계정 생성
+        memberService.create(registerDto);
+      }
+      
+      System.out.println("관리자 데이터 초기화 완료");
+      
+    } catch (Exception e) {
+      System.out.println("관리자 데이터 불러오기 실패\n" + e.getMessage());
+    }
+  }
+
+}
