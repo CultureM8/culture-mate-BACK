@@ -22,21 +22,16 @@ public class MemberDetailService {
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
   }
 
-  // 생성
-  public MemberDetail create(MemberDetailRequestDto dto) {
-    Member member = memberRepository.findById(dto.getMemberId())
-      .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
-
+  // 생성 (Member 객체와 DTO 사용) - @MapsId 활용
+  public MemberDetail create(Member member, MemberDetailRequestDto dto) {
     MemberDetail memberDetail = MemberDetail.builder()
-      .member(member)
-      .userName(dto.getUserName())
-      .profileImageId(dto.getProfileImageId())
-      .backgroundImageId(dto.getBackgroundImageId())
+      .member(member)  // @MapsId에 의해 ID 자동 매핑
+      .nickname(dto.getNickname())
+//      .profileImageId(dto.getProfileImageId())
+//      .backgroundImageId(dto.getBackgroundImageId())
       .intro(dto.getIntro())
-      .MBTI(dto.getMBTI())
-      .togetherScore(dto.getTogetherScore())
+      .mbti(dto.getMbti())
       .email(dto.getEmail())
-      .visibility(dto.getVisibility())
       .build();
 
     return memberDetailRepository.save(memberDetail);
@@ -48,12 +43,11 @@ public class MemberDetailService {
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
 
     // 필드 업데이트
-    memberDetail.setUserName(dto.getUserName());
-    memberDetail.setProfileImageId(dto.getProfileImageId());
-    memberDetail.setBackgroundImageId(dto.getBackgroundImageId());
+    memberDetail.setNickname(dto.getNickname());
+//    memberDetail.setProfileImageId(dto.getProfileImageId());
+//    memberDetail.setBackgroundImageId(dto.getBackgroundImageId());
     memberDetail.setIntro(dto.getIntro());
-    memberDetail.setMBTI(dto.getMBTI());
-    memberDetail.setTogetherScore(dto.getTogetherScore());
+    memberDetail.setMbti(dto.getMbti());
     memberDetail.setEmail(dto.getEmail());
     memberDetail.setVisibility(dto.getVisibility());
 
