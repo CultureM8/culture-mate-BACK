@@ -1,9 +1,11 @@
 package com.culturemate.culturemate_api.controller;
 
+import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
 import com.culturemate.culturemate_api.dto.MemberDetailRequestDto;
 import com.culturemate.culturemate_api.dto.MemberDetailResponseDto;
 import com.culturemate.culturemate_api.service.MemberDetailService;
+import com.culturemate.culturemate_api.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberDetailController {
 
   private final MemberDetailService memberDetailService;
+  private final MemberService memberService;
 
   // 상세 조회
   @GetMapping("/{memberId}")
@@ -24,9 +27,10 @@ public class MemberDetailController {
   }
 
   // 생성
-  @PostMapping
-  public ResponseEntity<MemberDetailResponseDto> add(@Valid @RequestBody MemberDetailRequestDto dto) {
-    MemberDetail created = memberDetailService.create(dto);
+  @PostMapping("/{memberId}")
+  public ResponseEntity<MemberDetailResponseDto> add(@PathVariable Long memberId, @Valid @RequestBody MemberDetailRequestDto dto) {
+    Member member = memberService.findById(memberId);
+    MemberDetail created = memberDetailService.create(member, dto);
     return ResponseEntity.status(201).body(MemberDetailResponseDto.from(created));  // HTTP 201 Created + 데이터 반환
   }
 

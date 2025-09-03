@@ -1,8 +1,10 @@
 package com.culturemate.culturemate_api.service;
 
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.domain.member.MemberDetail;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;
+import com.culturemate.culturemate_api.dto.MemberDetailRequestDto;
 import com.culturemate.culturemate_api.dto.RegisterDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,32 +22,27 @@ import java.util.stream.Collectors;
 public class MemberService {
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
+  private final MemberDetailService memberDetailService;
 
-
-  // 회원 가입
-  @Transactional
-  public Member create(String loginId, String password) {
-    if (memberRepository.existsByLoginId(loginId)) {
-      throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
-    }
-
-    var hash = passwordEncoder.encode(password);
-
-    Member member = Member.builder()
-      .loginId(loginId)
-      .password(hash)
-      .role(Role.MEMBER)
-      .status(MemberStatus.ACTIVE)
-      .joinedAt(Instant.now())
-      .build();
-
-    return memberRepository.save(member);
-  }
 
   // 회원 가입 (RegisterDto 사용)
   @Transactional
   public Member create(RegisterDto registerDto) {
-    return create(registerDto.getLoginId(), registerDto.getPassword());
+    if (memberRepository.existsByLoginId(registerDto.getLoginId())) {
+      throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
+    }
+
+    var hash = passwordEncoder.encode(registerDto.getPassword());
+
+    Member member = Member.builder()
+      .loginId(registerDto.getLoginId())
+      .password(hash)
+      .build();
+
+    Member savedMember = memberRepository.save(member);
+    memberDetailService.create(savedMember, MemberDetailRequestDto.from(registerDto));
+
+    return savedMember;
   }
 
   // 회원 삭제
