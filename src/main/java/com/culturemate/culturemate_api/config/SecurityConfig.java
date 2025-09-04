@@ -34,13 +34,14 @@ public class SecurityConfig {
 //    )
     http.csrf((csrf) -> csrf.disable());
     http.authorizeHttpRequests((authorize) ->
-      authorize.anyRequest().permitAll()
+      authorize.requestMatchers("/register", "/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+        .anyRequest().authenticated() // 로그인없이 접근할 수 있음
     );
     http.formLogin(formLogin -> formLogin
       .loginPage("/login")       // 로그인 페이지 지정
       .usernameParameter("loginId")  // 아이디 파라미터 이름 변경
       .passwordParameter("password")
-      .defaultSuccessUrl("/chat/room/enter/52", true)  // 로그인 성공 시 /my-page로 이동
+      .defaultSuccessUrl("/chat/room/enter/1", true)  // 로그인 성공 시 /my-page로 이동
       .failureUrl("/login?error")   // 실패 시 리다이렉트
     );
     http.logout( logout -> logout.logoutUrl("/logout") );
