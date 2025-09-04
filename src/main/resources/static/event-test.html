@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이벤트 관리 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+        textarea { height: 100px; resize: vertical; }
+        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 3px; }
+        .error { color: red; }
+        .success { color: green; }
+        .image-preview { margin-top: 10px; }
+        .image-preview img { max-width: 200px; max-height: 200px; margin: 5px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 이벤트 관리 테스트</h1>
+
+        <!-- 이벤트 생성 -->
+        <div class="section">
+            <h2>📝 이벤트 생성</h2>
+            <form id="createForm">
+                <div class="form-group">
+                    <label for="eventType">이벤트 타입</label>
+                    <select id="eventType" required>
+                        <option value="">선택하세요</option>
+                        <option value="MUSICAL">뮤지컬</option>
+                        <option value="MOVIE">영화</option>
+                        <option value="THEATER">연극</option>
+                        <option value="EXHIBITION">전시</option>
+                        <option value="Classical">클래식</option>
+                        <option value="DANCE">무용</option>
+                        <option value="CONCERT">콘서트</option>
+                        <option value="FESTIVAL">페스티벌</option>
+                        <option value="LOCAL_EVENT">지역 행사</option>
+                        <option value="OTHER">기타</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">제목</label>
+                    <input type="text" id="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sido">시/도 (선택사항)</label>
+                    <input type="text" id="sido" placeholder="예: 서울특별시">
+                </div>
+
+                <div class="form-group">
+                    <label for="sigungu">시/군/구 (선택사항)</label>
+                    <input type="text" id="sigungu" placeholder="예: 강남구">
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLocation">장소명</label>
+                    <input type="text" id="eventLocation" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">주소 (선택사항)</label>
+                    <input type="text" id="address">
+                </div>
+
+                <div class="form-group">
+                    <label for="addressDetail">상세주소 (선택사항)</label>
+                    <input type="text" id="addressDetail">
+                </div>
+
+                <div class="form-group">
+                    <label for="startDate">시작일</label>
+                    <input type="date" id="startDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="endDate">종료일</label>
+                    <input type="date" id="endDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="durationMin">소요시간(분) (선택사항)</label>
+                    <input type="number" id="durationMin" min="0" placeholder="예: 120">
+                </div>
+
+                <div class="form-group">
+                    <label for="minAge">최소 연령 (선택사항)</label>
+                    <input type="number" id="minAge" min="0" placeholder="기본값: 0">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">설명</label>
+                    <textarea id="description" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="mainImage">메인 이미지</label>
+                    <input type="file" id="mainImage" accept="image/*">
+                    <div id="mainImagePreview" class="image-preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contentImages">설명 이미지들</label>
+                    <input type="file" id="contentImages" accept="image/*" multiple>
+                    <div id="contentImagesPreview" class="image-preview"></div>
+                </div>
+
+                <button type="submit">이벤트 생성</button>
+            </form>
+            <div id="createResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- 이벤트 목록 조회 -->
+        <div class="section">
+            <h2>📋 이벤트 목록</h2>
+            <button onclick="loadEvents()">이벤트 목록 조회</button>
+            <div id="eventsList" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- 특정 이벤트 조회 -->
+        <div class="section">
+            <h2>🔍 이벤트 상세 조회</h2>
+            <div class="form-group">
+                <label for="eventId">이벤트 ID</label>
+                <input type="number" id="eventId">
+            </div>
+            <button onclick="loadEventDetail()">상세 정보 조회</button>
+            <div id="eventDetail" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- 이벤트 검색 -->
+        <div class="section">
+            <h2>🔎 이벤트 검색</h2>
+            <div class="form-group">
+                <label for="searchTitle">제목</label>
+                <input type="text" id="searchTitle">
+            </div>
+            <div class="form-group">
+                <label for="searchSido">시/도</label>
+                <input type="text" id="searchSido">
+            </div>
+            <div class="form-group">
+                <label for="searchEventType">이벤트 타입</label>
+                <select id="searchEventType">
+                    <option value="">전체</option>
+                    <option value="MUSICAL">뮤지컬</option>
+                    <option value="MOVIE">영화</option>
+                    <option value="THEATER">연극</option>
+                    <option value="EXHIBITION">전시</option>
+                    <option value="Classical">클래식</option>
+                    <option value="DANCE">무용</option>
+                    <option value="CONCERT">콘서트</option>
+                    <option value="FESTIVAL">페스티벌</option>
+                    <option value="LOCAL_EVENT">지역 행사</option>
+                    <option value="OTHER">기타</option>
+                </select>
+            </div>
+            <button onclick="searchEvents()">검색</button>
+            <div id="searchResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 이미지 미리보기
+        document.getElementById('mainImage').addEventListener('change', function(e) {
+            previewImage(e.target.files[0], 'mainImagePreview');
+        });
+
+        document.getElementById('contentImages').addEventListener('change', function(e) {
+            previewImages(e.target.files, 'contentImagesPreview');
+        });
+
+        function previewImage(file, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewImages(files, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 이벤트 생성
+        document.getElementById('createForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            
+            // 지역 정보 처리
+            const sido = document.getElementById('sido').value;
+            const sigungu = document.getElementById('sigungu').value;
+            const regionDto = (sido || sigungu) ? { sido: sido || null, sigungu: sigungu || null } : null;
+
+            // JSON 데이터 생성
+            const eventData = {
+                eventType: document.getElementById('eventType').value,
+                title: document.getElementById('title').value,
+                regionDto: regionDto,
+                eventLocation: document.getElementById('eventLocation').value,
+                address: document.getElementById('address').value || null,
+                addressDetail: document.getElementById('addressDetail').value || null,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                durationMin: document.getElementById('durationMin').value ? parseInt(document.getElementById('durationMin').value) : null,
+                minAge: document.getElementById('minAge').value ? parseInt(document.getElementById('minAge').value) : null,
+                description: document.getElementById('description').value
+            };
+
+            // JSON을 Blob으로 변환하여 추가 (multipart/form-data에서 JSON 객체 전송)
+            formData.append('eventRequestDto', new Blob([JSON.stringify(eventData)], {type: 'application/json'}));
+
+            // 메인 이미지 추가
+            const mainImage = document.getElementById('mainImage').files[0];
+            if (mainImage) {
+                formData.append('mainImage', mainImage);
+            }
+
+            // 설명 이미지들 추가
+            const contentImages = document.getElementById('contentImages').files;
+            for (let file of contentImages) {
+                formData.append('imagesToAdd', file);
+            }
+
+            try {
+                const response = await fetch('/api/v1/events', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                const resultDiv = document.getElementById('createResult');
+                resultDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h4>✅ 이벤트 생성 성공!</h4>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h4>❌ 생성 실패</h4>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('createResult');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h4>❌ 네트워크 오류</h4><p>${error.message}</p>`;
+            }
+        });
+
+        // 이벤트 목록 조회
+        async function loadEvents() {
+            try {
+                const response = await fetch('/api/v1/events');
+                const events = await response.json();
+                const resultDiv = document.getElementById('eventsList');
+                resultDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML = `
+                        <h4>📋 이벤트 목록 (총 ${events.length}개)</h4>
+                        <pre>${JSON.stringify(events, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h4>❌ 조회 실패</h4><pre>${JSON.stringify(events, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('eventsList');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h4>❌ 네트워크 오류</h4><p>${error.message}</p>`;
+            }
+        }
+
+        // 특정 이벤트 상세 조회
+        async function loadEventDetail() {
+            const eventId = document.getElementById('eventId').value;
+            if (!eventId) {
+                alert('이벤트 ID를 입력하세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/events/${eventId}`);
+                const event = await response.json();
+                const resultDiv = document.getElementById('eventDetail');
+                resultDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML = `
+                        <h4>🔍 이벤트 상세정보</h4>
+                        <pre>${JSON.stringify(event, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h4>❌ 조회 실패</h4><pre>${JSON.stringify(event, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('eventDetail');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h4>❌ 네트워크 오류</h4><p>${error.message}</p>`;
+            }
+        }
+
+        // 이벤트 검색
+        async function searchEvents() {
+            const params = new URLSearchParams();
+            
+            const title = document.getElementById('searchTitle').value;
+            const sido = document.getElementById('searchSido').value;
+            const eventType = document.getElementById('searchEventType').value;
+            
+            if (title) params.append('keyword', title);
+            if (sido) {
+                params.append('regionDto.level1', sido);
+            }
+            if (eventType) params.append('eventType', eventType);
+
+            try {
+                const response = await fetch(`/api/v1/events/search?${params.toString()}`);
+                const events = await response.json();
+                const resultDiv = document.getElementById('searchResult');
+                resultDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML = `
+                        <h4>🔎 검색 결과 (총 ${events.length}개)</h4>
+                        <pre>${JSON.stringify(events, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h4>❌ 검색 실패</h4><pre>${JSON.stringify(events, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('searchResult');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h4>❌ 네트워크 오류</h4><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

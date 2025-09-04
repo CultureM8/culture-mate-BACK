@@ -25,7 +25,6 @@ public class EventRequestDto {
   @NotBlank(message = "이벤트 제목은 필수입니다.")
   private String title;
   
-  @NotNull(message = "지역 정보는 필수입니다.")
   private RegionDto regionDto;
   
   @NotBlank(message = "장소명은 필수입니다.")
@@ -52,5 +51,8 @@ public class EventRequestDto {
   private String description;
 
   private List<TicketPriceDto> ticketPriceDto;
+  
+  // 삭제할 설명 이미지 경로들 (수정 시 사용)
+  private List<String> imagesToDelete;
 
 }

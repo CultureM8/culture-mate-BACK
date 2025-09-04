@@ -7,6 +7,7 @@ import com.culturemate.culturemate_api.dto.MemberDetailResponseDto;
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.service.ImageService;
+import com.culturemate.culturemate_api.service.ImagePermissionService;
 import com.culturemate.culturemate_api.service.MemberDetailService;
 import com.culturemate.culturemate_api.service.MemberService;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public class MemberDetailController {
   private final MemberDetailService memberDetailService;
   private final MemberService memberService;
   private final ImageService imageService;
+  private final ImagePermissionService imagePermissionService;
 
   // 상세 조회
   @GetMapping("/{memberId}")
@@ -57,7 +59,7 @@ public class MemberDetailController {
     return ResponseEntity.noContent().build();  // HTTP 204 No Content
   }
 
-  // ===== 이미지 관리 =====
+  // =========================== 이미지 관련 API ===========================
   
   // 프로필 이미지 업로드/수정 (썸네일 + 메인)
   @PatchMapping("/{memberId}/profile-image")
@@ -113,14 +115,26 @@ public class MemberDetailController {
   @DeleteMapping("/{memberId}/gallery")
   public ResponseEntity<Void> deleteGalleryImage(@PathVariable Long memberId,
                                                  @RequestParam String imagePath) {
-    imageService.deleteImageByPath(imagePath, memberId);
+    // 1. 권한 검증
+    imagePermissionService.validateDeletePermission(imagePath, memberId);
+    
+    // 2. 이미지 삭제
+    imageService.deleteImageByPath(imagePath);
+    
     return ResponseEntity.noContent().build();
   }
 
   // 갤러리 이미지 전체 삭제
   @DeleteMapping("/{memberId}/gallery/all")
   public ResponseEntity<Void> deleteAllGalleryImages(@PathVariable Long memberId) {
+    Long requesterId = memberId; // 명확성을 위해 변수명 분리
+    
+    // 1. 권한 검증
+    imagePermissionService.validateDeleteAllPermission(ImageTarget.MEMBER_GALLERY, memberId, requesterId);
+    
+    // 2. 이미지 삭제
     imageService.deleteAllImagesByTarget(ImageTarget.MEMBER_GALLERY, memberId);
+    
     return ResponseEntity.noContent().build();
   }
 }

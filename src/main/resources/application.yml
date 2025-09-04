@@ -26,3 +26,16 @@ custom:
   path:
     upload:
       default: src/main/resources/static/images
+
+# OpenAPI/Swagger 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    doc-expansion: none

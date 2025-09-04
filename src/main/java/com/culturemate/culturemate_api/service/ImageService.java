@@ -2,10 +2,7 @@ package com.culturemate.culturemate_api.service;
 
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.ImageTarget;
-import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.repository.ImageRepository;
-import com.culturemate.culturemate_api.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,7 +26,6 @@ import javax.imageio.ImageIO;
 public class ImageService {
 
   private final ImageRepository imageRepository;
-  private final MemberService memberService;
 
   @Value("${custom.path.upload.default}")
   private String uploadDefaultDir;
@@ -72,9 +68,10 @@ public class ImageService {
   }
 
   // 리스트형 이미지 업로드용 & DB 저장 (EVENT_CONTENT, BOARD_CONTENT, MEMBER_GALLERY 등)
-  public void uploadMultipleImages(List<MultipartFile> files, ImageTarget imageTarget, Long targetId) {
+  public List<String> uploadMultipleImages(List<MultipartFile> files, ImageTarget imageTarget, Long targetId) {
     String uploadDir = getUploadDirectory(imageTarget);
     createDirectoryIfNotExists(uploadDir);
+    List<String> webPaths = new java.util.ArrayList<>();
 
     for (MultipartFile file : files) {
       try {
@@ -88,6 +85,7 @@ public class ImageService {
 
         // 웹 접근 경로 생성 (static 기준으로)
         String webPath = "/images/" + imageTarget.getPath() + "/" + newFileName;
+        webPaths.add(webPath);
         
         // DB에 이미지 정보 저장
         Image image = Image.builder()
@@ -105,6 +103,7 @@ public class ImageService {
         System.out.println(stb.toString());
       }
     }
+    return webPaths;
   }
 
   // 리스트형 이미지 조회
@@ -134,7 +133,7 @@ public class ImageService {
     }
   }
 
-  // 경로로 이미지 삭제 (DB + 물리적 파일) - 권한 검증 없음
+  // 경로로 이미지 삭제 (DB + 물리적 파일) - 권한 검증은 외부에서 처리
   public void deleteImageByPath(String webPath) {
     // 1. DB에서 해당 경로의 Image 엔티티 찾기
     Image image = imageRepository.findByPath(webPath)
@@ -149,23 +148,6 @@ public class ImageService {
     System.out.println("이미지 삭제 완료: " + webPath);
   }
 
-  // 경로로 이미지 삭제 (권한 검증 포함)
-  public void deleteImageByPath(String webPath, Long requesterId) {
-    // 1. DB에서 해당 경로의 Image 엔티티 찾기
-    Image image = imageRepository.findByPath(webPath)
-        .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다: " + webPath));
-
-    // 2. 권한 검증
-    validateDeletePermission(image, requesterId);
-
-    // 3. 물리적 파일 삭제
-    deletePhysicalFile(webPath);
-
-    // 4. DB 레코드 삭제
-    imageRepository.delete(image);
-    
-    System.out.println("이미지 삭제 완료 (권한 검증): " + webPath);
-  }
 
   // ===== 내부 편의 메서드 (Private Utilities) =====
 
@@ -233,26 +215,5 @@ public class ImageService {
     }
   }
 
-  // 권한 검증 로직
-  private void validateDeletePermission(Image image, Long requesterId) {
-    // ADMIN은 모든 이미지 삭제 가능
-    Member requester = memberService.findById(requesterId);
-    if (requester.getRole() == Role.ADMIN) {
-      return;
-    }
-    
-    switch (image.getTargetType()) {
-      case MEMBER_GALLERY:
-        // 본인의 갤러리 이미지인지 확인
-        if (!image.getTargetId().equals(requesterId)) {
-          throw new IllegalArgumentException("본인의 갤러리 이미지만 삭제할 수 있습니다");
-        }
-        break;
-      // 나중에 다른 타입들 추가 예정 (TOGETHER, BOARD_CONTENT 등)
-      default:
-        // 현재는 MEMBER_GALLERY만 지원
-        throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + image.getTargetType());
-    }
-  }
 
 }

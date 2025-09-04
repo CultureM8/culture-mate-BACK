@@ -32,7 +32,7 @@ public class Event {
 
   @Setter
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "region_id", nullable = false)
+  @JoinColumn(name = "region_id")
   private Region region;           // 지역ID
 
   @Setter

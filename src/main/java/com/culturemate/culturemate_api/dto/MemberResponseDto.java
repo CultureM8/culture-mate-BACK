@@ -16,15 +16,14 @@ import java.time.ZoneId;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemberResponseDto {
-  private Long id;             // Response 시 필요
-  private String loginId;      // Request + Response
-  private String password;     // Request 시 필요, Response 시는 null 처리 권장
-  private Role role;           // Response 또는 Request에 따라 설정
-  private MemberStatus status; // Response용, 생성 시 기본값 세팅 가능
+  private Long id;
+  private String loginId;
+  private Role role;
+  private MemberStatus status;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
-  // 간단한 Entity -> DTO 변환용 (컨트롤러에서 사용)
+  // Entity -> ResponseDto 변환 (Response 전용)
   public static MemberResponseDto from(Member member) {
     return MemberResponseDto.builder()
       .id(member.getId())

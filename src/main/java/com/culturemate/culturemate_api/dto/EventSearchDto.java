@@ -4,17 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventSearchDto {
   
-  private String keyword ;
+  private String keyword;
   private RegionDto regionDto;
   private String eventType;
 
@@ -25,7 +27,7 @@ public class EventSearchDto {
 
   // 검증 및 유틸리티 메서드들
   public boolean hasKeyword() {
-    return keyword  != null && !keyword .trim().isEmpty();
+    return keyword != null && !keyword.trim().isEmpty();
   }
   
   public boolean hasRegion() {

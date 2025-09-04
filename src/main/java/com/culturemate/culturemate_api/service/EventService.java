@@ -1,12 +1,14 @@
 package com.culturemate.culturemate_api.service;
 
+import com.culturemate.culturemate_api.domain.Image;
+import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.event.TicketPrice;
 import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.EventRequestDto;
+import com.culturemate.culturemate_api.dto.EventDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
 import com.culturemate.culturemate_api.dto.TicketPriceDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
@@ -18,8 +20,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,42 +39,89 @@ public class EventService {
   private final InterestEventsRepository interestEventsRepository;
   private final RegionService regionService;
   private final MemberService memberService;
+  private final ImageService imageService;
 
   @Transactional
-  public Event create(EventRequestDto requestDto) {
-    Region region = regionService.findExact(requestDto.getRegionDto());
-    
-    Event event = Event.builder()
-      .eventType(requestDto.getEventType())
-      .title(requestDto.getTitle())
-      .region(region)
-      .eventLocation(requestDto.getEventLocation())
-      .address(requestDto.getAddress())
-      .addressDetail(requestDto.getAddressDetail())
-      .startDate(requestDto.getStartDate())
-      .endDate(requestDto.getEndDate())
-      .durationMin(requestDto.getDurationMin())
-      .minAge(requestDto.getMinAge())
-      .description(requestDto.getDescription())
-      .build();
+  public Event create(EventDto.Request requestDto, MultipartFile mainImage, List<MultipartFile> imagesToAdd) {
+    Region region = requestDto.getRegionDto() != null ? regionService.findExact(requestDto.getRegionDto()) : null;
 
-    eventRepository.save(event);
+    String mainImagePath = null;
+    String thumbnailImagePath = null;
+    List<String> contentImagePaths = new ArrayList<>();
 
-    for (TicketPriceDto dto : requestDto.getTicketPriceDto()) {
-      TicketPrice newTicketPrice = TicketPrice.builder()
-        .event(event)
-        .ticketType(dto.getTicketType())
-        .price(dto.getPrice())
+    try {
+      // 1. 이미지 먼저 업로드
+      if (mainImage != null && !mainImage.isEmpty()) {
+        mainImagePath = imageService.uploadSingleImage(mainImage, ImageTarget.EVENT, "main");
+        thumbnailImagePath = imageService.uploadThumbnail(mainImage, ImageTarget.EVENT);
+      }
+
+      // 2. 엔티티 생성 (이미지 경로 포함)
+      Event event = Event.builder()
+        .eventType(requestDto.getEventType())
+        .title(requestDto.getTitle())
+        .region(region)
+        .eventLocation(requestDto.getEventLocation())
+        .address(requestDto.getAddress())
+        .addressDetail(requestDto.getAddressDetail())
+        .startDate(requestDto.getStartDate())
+        .endDate(requestDto.getEndDate())
+        .durationMin(requestDto.getDurationMin())
+        .minAge(requestDto.getMinAge())
+        .description(requestDto.getDescription())
+        .mainImagePath(mainImagePath)
+        .thumbnailImagePath(thumbnailImagePath)
         .build();
-      ticketPriceRepository.save(newTicketPrice);
-    }
+
+      eventRepository.save(event); // DB 저장
+
+      // 3. 티켓 가격 정보 저장
+      if (requestDto.getTicketPriceDto() != null) {
+        for (TicketPriceDto dto : requestDto.getTicketPriceDto()) {
+          TicketPrice newTicketPrice = TicketPrice.builder()
+            .event(event)
+            .ticketType(dto.getTicketType())
+            .price(dto.getPrice())
+            .build();
+          ticketPriceRepository.save(newTicketPrice);
+        }
+      }
+
+      // 4. 설명 이미지 추가 및 경로 저장
+      if (imagesToAdd != null && !imagesToAdd.isEmpty()) {
+        contentImagePaths = uploadContentImages(event.getId(), imagesToAdd);
+      }
       
-    return event;
+      return event;
+
+    } catch (Exception e) {
+      // 5. 에러 발생 시 업로드된 파일 모두 삭제 (롤백)
+      if (mainImagePath != null) {
+        imageService.deletePhysicalFiles(mainImagePath, thumbnailImagePath);
+      }
+      if (!contentImagePaths.isEmpty()) {
+        imageService.deletePhysicalFiles(contentImagePaths.toArray(new String[0]));
+      }
+      
+      // 예외를 다시 던져서 DB 트랜잭션 롤백
+      throw new RuntimeException("이벤트 생성 중 오류가 발생했습니다: " + e.getMessage(), e);
+    }
   }
 
   public Event findById(Long eventId) {
     return eventRepository.findById(eventId)
       .orElseThrow(() -> new IllegalArgumentException("해당 이벤트가 존재하지 않습니다."));
+  }
+
+  // 상세 조회용 (이미지 포함한 모든 정보)
+  public EventDto.ResponseDetail findDetailById(Long eventId) {
+    Event event = findById(eventId);
+    List<Image> images = getContentImages(eventId);
+    List<String> contentImages = images.stream()
+      .map(Image::getPath)
+      .toList();
+    
+    return EventDto.ResponseDetail.from(event, contentImages);
   }
 
   public List<Event> findAll() {
@@ -81,13 +132,36 @@ public class EventService {
   public List<Event> search(EventSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.findByCondition(searchDto.getRegionDto());
+      try {
+        regions = regionService.findByCondition(searchDto.getRegionDto());
+        // 빈 리스트면 null로 처리
+        if (regions != null && regions.isEmpty()) {
+          regions = null;
+        }
+      } catch (Exception e) {
+        System.out.println("Region 검색 중 오류: " + e.getMessage());
+        regions = null;
+      }
     }
     
     EventType eventType = null;
     if (searchDto.hasEventType()) {
-      eventType = EventType.valueOf(searchDto.getEventType().toUpperCase());
+      try {
+        eventType = EventType.valueOf(searchDto.getEventType().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        System.out.println("잘못된 EventType: " + searchDto.getEventType());
+        eventType = null;
+      }
     }
+    
+    // 디버깅용 로그
+    System.out.println("=== EventService 검색 파라미터 ===");
+    System.out.println("keyword: " + (searchDto.hasKeyword() ? searchDto.getKeyword() : "null"));
+    System.out.println("regions: " + regions);
+    System.out.println("startDate: " + searchDto.getStartDate());
+    System.out.println("endDate: " + searchDto.getEndDate());
+    System.out.println("eventType: " + eventType);
+    System.out.println("=================================");
     
     // 새로운 통합 검색 Repository 메서드 사용
     return eventRepository.findBySearch(
@@ -101,9 +175,9 @@ public class EventService {
 
 
   @Transactional
-  public Event update(Long id, EventRequestDto requestDto) {
+  public Event update(Long id, EventDto.Request requestDto, MultipartFile mainImage, List<MultipartFile> imagesToAdd) {
     Event event = findById(id);
-    Region region = regionService.findExact(requestDto.getRegionDto());
+    Region region = requestDto.getRegionDto() != null ? regionService.findExact(requestDto.getRegionDto()) : null;
     
     event.setEventType(requestDto.getEventType());
     event.setTitle(requestDto.getTitle());
@@ -119,6 +193,37 @@ public class EventService {
 
     // 티켓 가격 업데이트 로직
     updateTicketPrices(event, requestDto.getTicketPriceDto());
+
+    // 메인 이미지 처리 (수정 시에는 기존 이미지 삭제 후 새 이미지 업로드)
+    if (mainImage != null && !mainImage.isEmpty()) {
+      try {
+        // 기존 메인 이미지 삭제
+        if (event.getThumbnailImagePath() != null || event.getMainImagePath() != null) {
+          imageService.deletePhysicalFiles(event.getThumbnailImagePath(), event.getMainImagePath());
+        }
+        
+        // 새 메인 이미지 업로드
+        String mainImagePath = imageService.uploadSingleImage(mainImage, ImageTarget.EVENT, "main");
+        String thumbnailImagePath = imageService.uploadThumbnail(mainImage, ImageTarget.EVENT);
+        
+        event.setMainImagePath(mainImagePath);
+        event.setThumbnailImagePath(thumbnailImagePath);
+      } catch (Exception e) {
+        throw new RuntimeException("메인 이미지 업로드 중 오류가 발생했습니다: " + e.getMessage(), e);
+      }
+    }
+
+    // 설명 이미지 삭제 처리
+    if (requestDto.getImagesToDelete() != null && !requestDto.getImagesToDelete().isEmpty()) {
+      for (String imagePath : requestDto.getImagesToDelete()) {
+        deleteContentImage(event.getId(), imagePath);
+      }
+    }
+
+    // 설명 이미지 추가 처리  
+    if (imagesToAdd != null && !imagesToAdd.isEmpty()) {
+      uploadContentImages(event.getId(), imagesToAdd);
+    }
     
     return event;
   }
@@ -162,6 +267,18 @@ public class EventService {
 
   @Transactional
   public void delete(Long eventId) {
+    Event event = findById(eventId);
+    
+    // 관련 이미지들 삭제
+    // 1. 메인 이미지 삭제
+    if (event.getThumbnailImagePath() != null || event.getMainImagePath() != null) {
+      imageService.deletePhysicalFiles(event.getThumbnailImagePath(), event.getMainImagePath());
+    }
+    
+    // 2. 내용 이미지들 삭제
+    imageService.deleteAllImagesByTarget(ImageTarget.EVENT_CONTENT, eventId);
+    
+    // 3. 이벤트 엔티티 삭제
     eventRepository.deleteById(eventId);
   }
 
@@ -189,5 +306,29 @@ public class EventService {
       return true; // 추가됨
     }
   }
+
+  // =========================== 이미지 관련 메서드 ===========================
+  // ℹ️ 메인 이미지 처리는 create/update 메서드에서 통합 처리
+
+  // 이벤트 설명 이미지 업로드 (다중)
+  @Transactional
+  public List<String> uploadContentImages(Long eventId, List<MultipartFile> imageFiles) {
+    Event event = findById(eventId);
+    return imageService.uploadMultipleImages(imageFiles, ImageTarget.EVENT_CONTENT, eventId);
+  }
+
+  // 이벤트 설명 이미지 목록 조회
+  public List<Image> getContentImages(Long eventId) {
+    return imageService.getImagesByTargetTypeAndId(ImageTarget.EVENT_CONTENT, eventId);
+  }
+
+  // 이벤트 설명 이미지 개별 삭제
+  @Transactional
+  public void deleteContentImage(Long eventId, String imagePath) {
+    // 권한 검증은 컨트롤러에서 처리
+    imageService.deleteImageByPath(imagePath);
+  }
+
+  // ℹ️ 전체 삭제는 update 메서드에서 imagesToDelete로 처리
 
 }
