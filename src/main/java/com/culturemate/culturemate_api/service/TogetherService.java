@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.service;
 
 import com.culturemate.culturemate_api.domain.Region;
+import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
@@ -9,6 +10,7 @@ import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.TogetherRequestDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
 import com.culturemate.culturemate_api.exceptions.together.*;
+import com.culturemate.culturemate_api.repository.ChatRoomRepository;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import com.culturemate.culturemate_api.repository.TogetherRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,8 @@ public class TogetherService {
   private final MemberService memberService;
   private final RegionService regionService;
   private final EventService eventService;
+  private final ChatService chatService; // 추가
+  private final ChatRoomRepository chatRoomRepository; // 추가
 
 
   @Transactional
@@ -54,6 +58,10 @@ public class TogetherService {
       .participant(host)
       .build();
     participantsRepository.save(hostParticipation);
+
+    // 채팅방 생성 및 호스트 추가
+    ChatRoom chatRoom = chatService.createChatRoom(savedTogether.getTitle(), savedTogether);
+    chatService.addMemberToRoom(chatRoom.getId(), host.getId());
 
     return savedTogether;
   }
@@ -191,6 +199,11 @@ public class TogetherService {
     if(together.getMaxParticipants() <= together.getParticipantCount()) {
       together.setRecruiting(false);
     }
+
+    // 채팅방에 멤버 추가
+    chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
+        chatService.addMemberToRoom(chatRoom.getId(), member.getId())
+    );
   }
 
   // 동행 참여 취소

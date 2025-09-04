@@ -22,7 +22,7 @@ public class ChatRoom {
   private String roomName;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "together_id", nullable = false)
+  @JoinColumn(name = "together_id", nullable = true)
   private Together together;
 
   @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
