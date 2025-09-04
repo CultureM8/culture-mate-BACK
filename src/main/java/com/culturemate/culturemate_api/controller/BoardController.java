@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.controller;
 import com.culturemate.culturemate_api.dto.BoardRequestDto;
 import com.culturemate.culturemate_api.dto.BoardResponseDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;
+import com.culturemate.culturemate_api.dto.ImageUploadRequestDto;
 import com.culturemate.culturemate_api.service.BoardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

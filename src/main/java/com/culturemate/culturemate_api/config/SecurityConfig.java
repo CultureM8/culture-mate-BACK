@@ -34,8 +34,8 @@ public class SecurityConfig {
 //    )
     http.csrf((csrf) -> csrf.disable());
     http.authorizeHttpRequests((authorize) ->
-      authorize.requestMatchers("/register", "/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-        .anyRequest().authenticated() // 로그인없이 접근할 수 있음
+      authorize.requestMatchers("/register", "/login", "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/**").permitAll()
+        .anyRequest().authenticated()
     );
     http.formLogin(formLogin -> formLogin
       .loginPage("/login")       // 로그인 페이지 지정

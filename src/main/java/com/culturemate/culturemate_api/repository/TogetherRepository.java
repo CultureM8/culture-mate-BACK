@@ -51,4 +51,8 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
 
   @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByIsRecruiting(boolean isRecruiting);
+
+  // 이미지 경로만 조회 (삭제 시 사용)
+  @Query("SELECT t.thumbnailImagePath, t.mainImagePath FROM Together t WHERE t.id = :id")
+  Object[] findImagePathsById(@Param("id") Long id);
 }

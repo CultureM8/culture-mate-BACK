@@ -1,9 +1,12 @@
 package com.culturemate.culturemate_api.domain.member;
 
+import com.culturemate.culturemate_api.domain.Image;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -22,8 +25,12 @@ public class MemberDetail {
   private Member member;
 
   private String nickname;
-  private Long profileImageId;
-  private Long backgroundImageId;
+  
+  // 이미지 경로
+  private String thumbnailImagePath;  // 프로필 썸네일 이미지 경로
+  private String mainImagePath;       // 프로필 메인 이미지 경로  
+  private String backgroundImagePath; // 배경 이미지 경로
+  
   private String intro;
   private String mbti;
   private Integer togetherScore;

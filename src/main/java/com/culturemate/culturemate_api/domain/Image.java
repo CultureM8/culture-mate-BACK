@@ -2,6 +2,7 @@ package com.culturemate.culturemate_api.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,9 +25,15 @@ public class Image {
 
   private String path;
 
-  private String contentType;
-
   private Instant createdAt;
+
+  //=== 생성자 ===//
+  @Builder
+  public Image(ImageTarget targetType, Long targetId, String path) {
+    this.targetType = targetType;
+    this.targetId = targetId;
+    this.path = path;
+  }
 
   //=== 메서드 ===//
   @PrePersist

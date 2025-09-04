@@ -10,11 +10,14 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
 
   List<Image> findByTargetTypeAndTargetId(ImageTarget targetType, Long targetId);
+  
+  Optional<Image> findByPath(String path);
   
   List<Image> findByTargetType(ImageTarget targetType);
   

@@ -17,8 +17,8 @@ import java.time.ZoneId;
 public class MemberDetailResponseDto {
   private Long id;
   private String nickname;
-  private Long profileImageId;
-  private Long backgroundImageId;
+  private String profileImagePath;
+  private String backgroundImagePath;
   private String intro;
   private String mbti;
   private Integer togetherScore;
@@ -31,8 +31,8 @@ public class MemberDetailResponseDto {
     return MemberDetailResponseDto.builder()
       .id(memberDetail.getId())
       .nickname(memberDetail.getNickname())
-      .profileImageId(memberDetail.getProfileImageId())
-      .backgroundImageId(memberDetail.getBackgroundImageId())
+      .profileImagePath(memberDetail.getMainImagePath())
+      .backgroundImagePath(memberDetail.getBackgroundImagePath())
       .intro(memberDetail.getIntro())
       .mbti(memberDetail.getMbti())
       .togetherScore(memberDetail.getTogetherScore())

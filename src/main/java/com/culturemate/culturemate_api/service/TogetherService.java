@@ -31,6 +31,7 @@ public class TogetherService {
   private final MemberService memberService;
   private final RegionService regionService;
   private final EventService eventService;
+  private final ImageService imageService;
   private final ChatService chatService; // 추가
   private final ChatRoomRepository chatRoomRepository; // 추가
 
@@ -143,7 +144,14 @@ public class TogetherService {
 
   @Transactional
   public void delete(Long togetherId) {
-    togetherRepository.deleteById(togetherId);
+    Together together = findById(togetherId);
+
+    // 썸네일/메인 이미지 파일들 삭제
+    imageService.deletePhysicalFiles(together.getThumbnailImagePath(),
+                                    together.getMainImagePath());
+
+    // Together 엔티티 삭제
+    togetherRepository.delete(together);
   }
 
   // 참여가 가능하면 반환
