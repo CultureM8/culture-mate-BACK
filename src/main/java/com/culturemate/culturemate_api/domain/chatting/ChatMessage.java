@@ -1,6 +1,5 @@
 package com.culturemate.culturemate_api.domain.chatting;
 
-import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,7 +22,7 @@ public class ChatMessage {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "member_id")
-  private Member author;
+  private ChatMember author;
 
   private String content;
   private Instant createAt;

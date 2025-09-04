@@ -1,57 +1,80 @@
 package com.culturemate.culturemate_api.service;
 
+import com.culturemate.culturemate_api.domain.chatting.ChatMember;
 import com.culturemate.culturemate_api.domain.chatting.ChatMessage;
 import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
+import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Together;
+import com.culturemate.culturemate_api.repository.ChatMemberRepository;
 import com.culturemate.culturemate_api.repository.ChatMessageRepository;
 import com.culturemate.culturemate_api.repository.ChatRoomRepository;
-import com.culturemate.culturemate_api.repository.TogetherRepository;
+import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final TogetherRepository togetherRepository; // '같이해요' 정보를 가져오기 위해 필요
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatMemberRepository chatMemberRepository;
+    private final MemberRepository memberRepository;
 
-    // 채팅방 생성
-    @Transactional
-    public ChatRoom createChatRoom(String roomName, Long togetherId) {
-        Together together = togetherRepository.findById(togetherId)
-          .orElseThrow(() -> new IllegalArgumentException("Invalid togetherId: " + togetherId));
-
+    public ChatRoom createChatRoom(String name, Together together) {
         ChatRoom chatRoom = ChatRoom.builder()
-          .roomName(roomName)
-          .together(together)
-          .build();
-
+                .roomName(name)
+                .together(together)
+                .build();
         return chatRoomRepository.save(chatRoom);
     }
 
-    // 메시지 저장
-    @Transactional
+    public void addMemberToRoom(Long roomId, Long memberId) {
+        ChatRoom chatRoom = findRoomById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid room Id:" + roomId));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("Could not find member with id: " + memberId));
+
+        if (chatMemberRepository.findByChatRoomAndMember(chatRoom, member).isPresent()) {
+            return;
+        }
+
+        ChatMember chatMember = ChatMember.builder()
+                .chatRoom(chatRoom)
+                .member(member)
+                .build();
+        chatMemberRepository.save(chatMember);
+    }
+
+    public List<ChatRoom> findAllRoom() {
+        return chatRoomRepository.findAll();
+    }
+
+    public Optional<ChatRoom> findRoomById(Long roomId) {
+        return chatRoomRepository.findById(roomId);
+    }
+
+    /**
+     * 채팅 메시지 저장 (Controller 호환용)
+     * @param chatMessage
+     * @return
+     */
     public ChatMessage saveMessage(ChatMessage chatMessage) {
         return chatMessageRepository.save(chatMessage);
     }
 
-    // 특정 채팅방의 모든 메시지 조회
+    /**
+     * 이전 대화 내역 불러오기
+     * @param roomId
+     * @return
+     */
     public List<ChatMessage> getMessagesByRoomId(Long roomId) {
-        // TODO: 페이징 처리 추가 고려
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-          .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
-        return chatMessageRepository.findByChatRoom(chatRoom);
-    }
-
-    // 채팅방 ID로 채팅방 조회
-    public ChatRoom findRoomById(Long roomId) {
-        return chatRoomRepository.findById(roomId)
-          .orElseThrow(() -> new IllegalArgumentException("Invalid roomId: " + roomId));
+        return chatMessageRepository.findByChatRoomId(roomId);
     }
 }
