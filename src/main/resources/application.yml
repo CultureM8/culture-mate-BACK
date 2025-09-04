@@ -10,7 +10,7 @@ spring:
     driver-class-name: ${DB_DRIVER}
   jpa:
     hibernate:
-      ddl-auto: create-drop # 개발시 update, 운영시 validate, 테스트시 create or create-drop
+      ddl-auto: update # 개발시 update, 운영시 validate, 테스트시 create or create-drop
     properties:
       hibernate:
        show_sql: true
@@ -18,4 +18,3 @@ spring:
 logging.level:
   org.hibernate.SQL: debug
   # org.hibernate.orm.jdbc.bind: trace
-
