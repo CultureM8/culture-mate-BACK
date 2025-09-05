@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.domain.community;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.time.Instant;
 
@@ -41,7 +42,10 @@ public class Comment {
 
   @Setter
   private Integer likeCount;
-  // private Integer dislikeCount; // TODO: 나중에 싫어요 기능 추가 시 활성화
+
+  // 대댓글 수 (동적 계산)
+  @Formula("(SELECT COUNT(*) FROM comments c WHERE c.parent_id = comment_id)")
+  private int replyCount;
 
   //=== 생성/수정 로직 ===//
   @PrePersist

@@ -34,15 +34,15 @@ public class CommentController {
   // 댓글 수정
   @PutMapping("/{commentId}")
   public ResponseEntity<CommentResponseDto> modify(@PathVariable Long commentId,
-                                                  @RequestParam String content) {
-    Comment updated = commentService.update(commentId, content);
+                                                  @RequestBody CommentRequestDto requestDto) {
+    Comment updated = commentService.update(commentId, requestDto.getComment(), requestDto.getAuthorId());
     return ResponseEntity.ok(CommentResponseDto.from(updated)); // 200 OK
   }
 
-  // 특정 게시글 댓글 조회
+  // 특정 게시글의 부모 댓글만 조회 (replyCount 포함)
   @GetMapping("/board/{boardId}")
-  public ResponseEntity<List<CommentResponseDto>> getByBoard(@PathVariable Long boardId) {
-    List<CommentResponseDto> comments = commentService.findByBoard(boardId)
+  public ResponseEntity<List<CommentResponseDto>> getParentCommentsByBoard(@PathVariable Long boardId) {
+    List<CommentResponseDto> comments = commentService.findParentCommentsByBoard(boardId)
       .stream()
       .map(CommentResponseDto::from)
       .collect(Collectors.toList());
@@ -50,7 +50,7 @@ public class CommentController {
   }
 
   // 특정 댓글의 대댓글 조회
-  @GetMapping("/reply/{parentId}")
+  @GetMapping("/{parentId}/replies")
   public ResponseEntity<List<CommentResponseDto>> getReplies(@PathVariable Long parentId) {
     List<CommentResponseDto> replies = commentService.findReplies(parentId)
       .stream()
@@ -61,8 +61,9 @@ public class CommentController {
 
   // 삭제
   @DeleteMapping("/{commentId}")
-  public ResponseEntity<Void> remove(@PathVariable Long commentId) {
-    commentService.delete(commentId);
+  public ResponseEntity<Void> remove(@PathVariable Long commentId,
+                                    @RequestParam Long requesterId) {
+    commentService.delete(commentId, requesterId);
     return ResponseEntity.noContent().build(); // 204 No Content
   }
 
@@ -79,15 +80,4 @@ public class CommentController {
     }
   }
 
-  // TODO: 나중에 싫어요 기능 구현
-  // @PostMapping("/{commentId}/dislike")
-  // public ResponseEntity<String> toggleCommentDislike(@PathVariable Long commentId,
-  //                                                   @RequestParam Long memberId) {
-  //   boolean disliked = commentService.toggleCommentDislike(commentId, memberId);
-  //   if (disliked) {
-  //     return ResponseEntity.ok("댓글 싫어요 성공");
-  //   } else {
-  //     return ResponseEntity.ok("댓글 싫어요 취소");
-  //   }
-  // }
 }

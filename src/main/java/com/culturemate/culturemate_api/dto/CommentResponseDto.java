@@ -15,26 +15,26 @@ public class CommentResponseDto {
   private Long id;
   private Long boardId;
   private Long authorId;
-  private Long parentId;
+  // parentId 제거: 대댓글은 별도 API로 조회
   private String content;
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate createdAt;
   @DateTimeFormat(pattern = "yyyy-MM-dd")  
   private LocalDate updatedAt;
   private Integer likeCount;
-  // private Integer dislikeCount; // TODO: 나중에 싫어요 기능 추가 시 활성화
+  private int replyCount; // 대댓글 수
 
   public static CommentResponseDto from(Comment comment) {
     return CommentResponseDto.builder()
       .id(comment.getId())
       .boardId(comment.getBoard().getId())
       .authorId(comment.getAuthor().getId())
-      .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
+      // parentId 제거
       .content(comment.getContent())
       .createdAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
       .updatedAt(comment.getUpdatedAt() != null ? comment.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate() : null)
       .likeCount(comment.getLikeCount())
-      // .dislikeCount(comment.getDislikeCount()) // TODO: 나중에 싫어요 기능 추가 시 활성화
+      .replyCount(comment.getReplyCount())
       .build();
   }
 }
