@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.controller;
 import com.culturemate.culturemate_api.CustomUser;
 import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.dto.chat.CreateChatRoomRequestDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import com.culturemate.culturemate_api.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,12 @@ public class ChatRoomController {
     @ResponseBody
     public ChatRoom createRoom(@RequestParam String name) {
         return chatService.createChatRoom(name, null);
+    }
+
+    @PostMapping("/room/general")
+    @ResponseBody
+    public ChatRoom createGeneralRoom(@RequestBody CreateChatRoomRequestDto requestDto) {
+        return chatService.createGeneralChatRoom(requestDto.getRoomName(), requestDto.getMemberIds());
     }
 
     @GetMapping("/room/enter/{roomId}")
