@@ -93,9 +93,9 @@ public class EventReviewService {
     
     event.recalculateAvgRating();
     if (type.equals("create")) {
-      event.setReviewCount(event.getReviewCount() + 1);
+      eventRepository.updateReviewCount(eventId, 1); // 원자적 증가
     } else if(type.equals("delete")) {
-      event.setReviewCount(event.getReviewCount() - 1);
+      eventRepository.updateReviewCount(eventId, -1); // 원자적 감소
     } else {}
   }
 }

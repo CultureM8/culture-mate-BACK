@@ -1,7 +1,9 @@
 package com.culturemate.culturemate_api.domain.community;
 
+import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.time.Instant;
 
@@ -19,6 +21,10 @@ public class Comment {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "member_id", nullable = false)
+  private Member author;
+
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "board_id", nullable = false)
   private Board board;
 
@@ -26,7 +32,9 @@ public class Comment {
   @JoinColumn(name = "parent_id")
   private Comment parent;
 
+  @Column(nullable = false)
   private Instant createdAt;
+  private Instant updatedAt;
 
   @Setter
   @Column(nullable = false)
@@ -34,12 +42,20 @@ public class Comment {
 
   @Setter
   private Integer likeCount;
-  private Integer dislikeCount;
+
+  // 대댓글 수 (동적 계산)
+  @Formula("(SELECT COUNT(*) FROM comments c WHERE c.parent_id = comment_id)")
+  private int replyCount;
 
   //=== 생성/수정 로직 ===//
   @PrePersist
   public void onCreate() {
     this.createdAt = Instant.now();
+  }
+
+  @PreUpdate
+  public void onUpdate() {
+    this.updatedAt = Instant.now();
   }
 
 }

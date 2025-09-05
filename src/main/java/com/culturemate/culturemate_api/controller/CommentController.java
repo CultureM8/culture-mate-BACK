@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.community.Comment;
+import com.culturemate.culturemate_api.dto.CommentRequestDto;
 import com.culturemate.culturemate_api.dto.CommentResponseDto;
 import com.culturemate.culturemate_api.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -11,33 +12,37 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/comments")
+@RequestMapping("/api/v1/board/{boardId}/comments")
 @RequiredArgsConstructor
 public class CommentController {
 
   private final CommentService commentService;
 
   // 댓글 생성
-  @PostMapping("/board/{boardId}")
+  @PostMapping
   public ResponseEntity<CommentResponseDto> add(@PathVariable Long boardId,
-                                                  @RequestParam(required = false) Long parentId,
-                                                  @RequestParam String content) {
-    Comment created = commentService.create(boardId, parentId, content);
+                                                  @RequestBody CommentRequestDto requestDto) {
+    Comment created = commentService.create(
+        boardId, 
+        requestDto.getAuthorId(), 
+        requestDto.getParentId(), 
+        requestDto.getComment()
+    );
     return ResponseEntity.status(201).body(CommentResponseDto.from(created)); // 201 Created
   }
 
   // 댓글 수정
   @PutMapping("/{commentId}")
   public ResponseEntity<CommentResponseDto> modify(@PathVariable Long commentId,
-                                                  @RequestParam String content) {
-    Comment updated = commentService.update(commentId, content);
+                                                  @RequestBody CommentRequestDto requestDto) {
+    Comment updated = commentService.update(commentId, requestDto.getComment(), requestDto.getAuthorId());
     return ResponseEntity.ok(CommentResponseDto.from(updated)); // 200 OK
   }
 
-  // 특정 게시글 댓글 조회
-  @GetMapping("/board/{boardId}")
-  public ResponseEntity<List<CommentResponseDto>> getByBoard(@PathVariable Long boardId) {
-    List<CommentResponseDto> comments = commentService.findByBoard(boardId)
+  // 부모 댓글만 조회 (replyCount 포함)
+  @GetMapping
+  public ResponseEntity<List<CommentResponseDto>> getParentCommentsByBoard(@PathVariable Long boardId) {
+    List<CommentResponseDto> comments = commentService.findParentCommentsByBoard(boardId)
       .stream()
       .map(CommentResponseDto::from)
       .collect(Collectors.toList());
@@ -45,7 +50,7 @@ public class CommentController {
   }
 
   // 특정 댓글의 대댓글 조회
-  @GetMapping("/reply/{parentId}")
+  @GetMapping("/{parentId}/replies")
   public ResponseEntity<List<CommentResponseDto>> getReplies(@PathVariable Long parentId) {
     List<CommentResponseDto> replies = commentService.findReplies(parentId)
       .stream()
@@ -56,8 +61,9 @@ public class CommentController {
 
   // 삭제
   @DeleteMapping("/{commentId}")
-  public ResponseEntity<Void> remove(@PathVariable Long commentId) {
-    commentService.delete(commentId);
+  public ResponseEntity<Void> remove(@PathVariable Long commentId,
+                                    @RequestParam Long requesterId) {
+    commentService.delete(commentId, requesterId);
     return ResponseEntity.noContent().build(); // 204 No Content
   }
 
@@ -74,10 +80,4 @@ public class CommentController {
     }
   }
 
-  // 싫어요
-//  @PostMapping("/{commentId}/dislike")
-//  public ResponseEntity<CommentDto> dislikeComment(@PathVariable Long commentId) {
-//    CommentDto updated = commentService.dislikeComment(commentId);
-//    return ResponseEntity.ok(updated); // 200 OK
-//  }
 }

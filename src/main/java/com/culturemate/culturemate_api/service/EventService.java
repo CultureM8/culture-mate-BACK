@@ -303,7 +303,7 @@ public class EventService {
     if (existing.isPresent()) {
       // 관심 표시 취소
       interestEventsRepository.delete(existing.get());
-      event.setInterestCount(event.getInterestCount() - 1);
+      eventRepository.updateInterestCount(eventId, -1); // 원자적 감소
       return false; // 취소됨
     } else {
       // 관심 표시 추가
@@ -312,7 +312,7 @@ public class EventService {
         .event(event)
         .build();
       interestEventsRepository.save(interestEvents);
-      event.setInterestCount(event.getInterestCount() + 1);
+      eventRepository.updateInterestCount(eventId, 1); // 원자적 증가
       return true; // 추가됨
     }
   }

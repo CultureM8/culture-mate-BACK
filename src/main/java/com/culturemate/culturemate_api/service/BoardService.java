@@ -121,7 +121,7 @@ public class BoardService {
     if (existing.isPresent()) {
       // 이미 좋아요 눌렀으면 취소
       boardLikeRepository.delete(existing.get());
-      board.setLikeCount(board.getLikeCount() - 1);
+      boardRepository.updateLikeCount(boardId, -1); // 원자적 감소
       return false; // 취소됨
     } else {
       // 좋아요 추가
@@ -130,7 +130,7 @@ public class BoardService {
         .member(member)
         .build();
       boardLikeRepository.save(boardLike);
-      board.setLikeCount(board.getLikeCount() + 1);
+      boardRepository.updateLikeCount(boardId, 1); // 원자적 증가
       return true; // 좋아요 성공
     }
   }

@@ -216,11 +216,7 @@ public class TogetherService {
         .participant(member)
         .build();
     participantsRepository.save(participation);
-    together.setParticipantCount(together.getParticipantCount() + 1);
-
-    if(together.getMaxParticipants() <= together.getParticipantCount()) {
-      together.setRecruiting(false);
-    }
+    togetherRepository.joinParticipantAndUpdateStatus(togetherId); // 원자적 참여 + 상태 변경
 
     // 채팅방에 멤버 추가
     chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
@@ -243,11 +239,7 @@ public class TogetherService {
       throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
     participantsRepository.delete(participation);
-    together.setParticipantCount(together.getParticipantCount() - 1);
-
-    if(together.getMaxParticipants() > together.getParticipantCount()) {
-      together.setRecruiting(true);
-    }
+    togetherRepository.leaveParticipantAndUpdateStatus(togetherId); // 원자적 탈퇴 + 상태 변경
   }
 
   // ===== 상태 관리 메서드 =====

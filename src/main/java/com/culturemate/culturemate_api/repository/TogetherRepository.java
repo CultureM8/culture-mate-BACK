@@ -7,6 +7,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Together;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -72,4 +73,28 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   // 이미지 경로만 조회 (삭제 시 사용)
   @Query("SELECT t.thumbnailImagePath, t.mainImagePath FROM Together t WHERE t.id = :id")
   Object[] findImagePathsById(@Param("id") Long id);
+
+  // 원자적 참여자 수 카운트 업데이트 (단순)
+  @Modifying
+  @Query("UPDATE Together t SET t.participantCount = t.participantCount + :increment WHERE t.id = :togetherId")
+  void updateParticipantCount(@Param("togetherId") Long togetherId, @Param("increment") int increment);
+
+  // 원자적 참여자 수 업데이트 + 모집 상태 자동 변경 (참여 시)
+  @Modifying
+  @Query("UPDATE Together t SET t.participantCount = t.participantCount + 1, " +
+         "t.isRecruiting = CASE WHEN (t.participantCount + 1) >= t.maxParticipants THEN false ELSE t.isRecruiting END " +
+         "WHERE t.id = :togetherId")
+  void joinParticipantAndUpdateStatus(@Param("togetherId") Long togetherId);
+
+  // 원자적 참여자 수 업데이트 + 모집 상태 자동 변경 (탈퇴 시)
+  @Modifying
+  @Query("UPDATE Together t SET t.participantCount = t.participantCount - 1, " +
+         "t.isRecruiting = CASE WHEN (t.participantCount - 1) < t.maxParticipants THEN true ELSE t.isRecruiting END " +
+         "WHERE t.id = :togetherId")
+  void leaveParticipantAndUpdateStatus(@Param("togetherId") Long togetherId);
+
+  // 원자적 관심수 카운트 업데이트
+  @Modifying
+  @Query("UPDATE Together t SET t.interestCount = t.interestCount + :increment WHERE t.id = :togetherId")
+  void updateInterestCount(@Param("togetherId") Long togetherId, @Param("increment") int increment);
 }

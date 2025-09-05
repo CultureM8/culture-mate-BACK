@@ -6,6 +6,7 @@ import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -44,4 +45,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
                           @Param("author") Member author,
                           @Param("event") Event event,
                           @Param("eventType") EventType eventType);
+
+  // 원자적 좋아요 카운트 업데이트
+  @Modifying
+  @Query("UPDATE Board b SET b.likeCount = b.likeCount + :increment WHERE b.id = :boardId")
+  void updateLikeCount(@Param("boardId") Long boardId, @Param("increment") int increment);
 }

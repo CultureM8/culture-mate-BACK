@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -40,4 +41,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                        @Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate,
                                        @Param("eventType") EventType eventType);
+
+  // 원자적 관심수 카운트 업데이트
+  @Modifying
+  @Query("UPDATE Event e SET e.interestCount = e.interestCount + :increment WHERE e.id = :eventId")
+  void updateInterestCount(@Param("eventId") Long eventId, @Param("increment") int increment);
+
+  // 원자적 리뷰수 카운트 업데이트
+  @Modifying
+  @Query("UPDATE Event e SET e.reviewCount = e.reviewCount + :increment WHERE e.id = :eventId")
+  void updateReviewCount(@Param("eventId") Long eventId, @Param("increment") int increment);
 }
