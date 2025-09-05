@@ -1,10 +1,8 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.CustomUser;
 import com.culturemate.culturemate_api.dto.RegisterDto;
 import com.culturemate.culturemate_api.service.MemberService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +21,7 @@ public class LoginController {
   }
 
   @PostMapping("/register")
-  String showRegisterForm(@ModelAttribute RegisterDto registerDto){
+  String showRegisterForm(@ModelAttribute RegisterDto registerDto) {
     memberService.create(registerDto);
 
     return "redirect:/login";

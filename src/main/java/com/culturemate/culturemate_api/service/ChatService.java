@@ -22,59 +22,61 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final ChatMessageRepository chatMessageRepository;
-    private final ChatRoomRepository chatRoomRepository;
-    private final ChatMemberRepository chatMemberRepository;
-    private final MemberRepository memberRepository;
+  private final ChatMessageRepository chatMessageRepository;
+  private final ChatRoomRepository chatRoomRepository;
+  private final ChatMemberRepository chatMemberRepository;
+  private final MemberRepository memberRepository;
 
-    public ChatRoom createChatRoom(String name, Together together) {
-        ChatRoom chatRoom = ChatRoom.builder()
-                .roomName(name)
-                .together(together)
-                .build();
-        return chatRoomRepository.save(chatRoom);
+  public ChatRoom createChatRoom(String name, Together together) {
+    ChatRoom chatRoom = ChatRoom.builder()
+      .roomName(name)
+      .together(together)
+      .build();
+    return chatRoomRepository.save(chatRoom);
+  }
+
+  public void addMemberToRoom(Long roomId, Long memberId) {
+    ChatRoom chatRoom = findRoomById(roomId)
+      .orElseThrow(() -> new IllegalArgumentException("Invalid room Id:" + roomId));
+    Member member = memberRepository.findById(memberId)
+      .orElseThrow(() -> new UsernameNotFoundException("Could not find member with id: " + memberId));
+
+    if (chatMemberRepository.findByChatRoomAndMember(chatRoom, member).isPresent()) {
+      return;
     }
 
-    public void addMemberToRoom(Long roomId, Long memberId) {
-        ChatRoom chatRoom = findRoomById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid room Id:" + roomId));
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("Could not find member with id: " + memberId));
+    ChatMember chatMember = ChatMember.builder()
+      .chatRoom(chatRoom)
+      .member(member)
+      .build();
+    chatMemberRepository.save(chatMember);
+  }
 
-        if (chatMemberRepository.findByChatRoomAndMember(chatRoom, member).isPresent()) {
-            return;
-        }
+  public List<ChatRoom> findAllRoom() {
+    return chatRoomRepository.findAll();
+  }
 
-        ChatMember chatMember = ChatMember.builder()
-                .chatRoom(chatRoom)
-                .member(member)
-                .build();
-        chatMemberRepository.save(chatMember);
-    }
+  public Optional<ChatRoom> findRoomById(Long roomId) {
+    return chatRoomRepository.findById(roomId);
+  }
 
-    public List<ChatRoom> findAllRoom() {
-        return chatRoomRepository.findAll();
-    }
+  /**
+   * 채팅 메시지 저장 (Controller 호환용)
+   *
+   * @param chatMessage
+   * @return
+   */
+  public ChatMessage saveMessage(ChatMessage chatMessage) {
+    return chatMessageRepository.save(chatMessage);
+  }
 
-    public Optional<ChatRoom> findRoomById(Long roomId) {
-        return chatRoomRepository.findById(roomId);
-    }
-
-    /**
-     * 채팅 메시지 저장 (Controller 호환용)
-     * @param chatMessage
-     * @return
-     */
-    public ChatMessage saveMessage(ChatMessage chatMessage) {
-        return chatMessageRepository.save(chatMessage);
-    }
-
-    /**
-     * 이전 대화 내역 불러오기
-     * @param roomId
-     * @return
-     */
-    public List<ChatMessage> getMessagesByRoomId(Long roomId) {
-        return chatMessageRepository.findByChatRoomId(roomId);
-    }
+  /**
+   * 이전 대화 내역 불러오기
+   *
+   * @param roomId
+   * @return
+   */
+  public List<ChatMessage> getMessagesByRoomId(Long roomId) {
+    return chatMessageRepository.findByChatRoomId(roomId);
+  }
 }

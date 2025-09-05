@@ -1,6 +1,6 @@
 package com.culturemate.culturemate_api.service;
 
-import com.culturemate.culturemate_api.CustomUser;
+import com.culturemate.culturemate_api.dto.CustomUser;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

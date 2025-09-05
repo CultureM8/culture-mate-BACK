@@ -35,11 +35,11 @@ public class ChatController {
     Member sender = memberRepository.findById(messageDto.getSenderId())
       .orElseThrow(() -> new IllegalArgumentException("Invalid sender Id: " + messageDto.getSenderId()));
     ChatRoom room = chatService.findRoomById(messageDto.getRoomId())
-            .orElseThrow(() -> new IllegalArgumentException("Invalid room Id: " + messageDto.getRoomId()));
+      .orElseThrow(() -> new IllegalArgumentException("Invalid room Id: " + messageDto.getRoomId()));
 
     // room과 sender(Member)로 ChatMember 찾기
     ChatMember author = chatMemberRepository.findByChatRoomAndMember(room, sender)
-            .orElseThrow(() -> new IllegalArgumentException("User is not in this chat room"));
+      .orElseThrow(() -> new IllegalArgumentException("User is not in this chat room"));
 
     ChatMessage savedMessage = chatService.saveMessage(
       ChatMessage.builder()
@@ -67,8 +67,8 @@ public class ChatController {
   public ResponseEntity<List<ChatMessageDto>> getPreviousMessages(@PathVariable Long roomId) {
     List<ChatMessage> messages = chatService.getMessagesByRoomId(roomId);
     List<ChatMessageDto> messageDtos = messages.stream()
-            .map(msg -> new ChatMessageDto(msg.getChatRoom().getId(), msg.getAuthor().getMember().getId(), msg.getContent()))
-            .collect(Collectors.toList());
+      .map(msg -> new ChatMessageDto(msg.getChatRoom().getId(), msg.getAuthor().getMember().getId(), msg.getContent()))
+      .collect(Collectors.toList());
     return ResponseEntity.ok(messageDtos);
   }
 }

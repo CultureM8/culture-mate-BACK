@@ -1,4 +1,4 @@
-package com.culturemate.culturemate_api;
+package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;

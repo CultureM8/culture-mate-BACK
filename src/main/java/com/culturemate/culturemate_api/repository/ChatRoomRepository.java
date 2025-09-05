@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
-    Optional<ChatRoom> findByTogether(Together together);
+  Optional<ChatRoom> findByTogether(Together together);
 }

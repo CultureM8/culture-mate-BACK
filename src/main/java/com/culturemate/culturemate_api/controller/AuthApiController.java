@@ -1,6 +1,6 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.CustomUser;
+import com.culturemate.culturemate_api.dto.CustomUser;
 import com.culturemate.culturemate_api.dto.LoginRequestDto;
 import com.culturemate.culturemate_api.dto.MemberResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -22,29 +22,29 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthApiController {
 
-    private final AuthenticationManager authenticationManager;
+  private final AuthenticationManager authenticationManager;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword())
-            );
+  @PostMapping("/login")
+  public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
+    try {
+      Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword())
+      );
 
-            CustomUser customUser = (CustomUser) authentication.getPrincipal();
-            MemberResponseDto responseDto = MemberResponseDto.builder()
-                .id(customUser.getMemberId())
-                .loginId(customUser.getUsername())
-                .role(customUser.getRole())
-                .build();
+      CustomUser customUser = (CustomUser) authentication.getPrincipal();
+      MemberResponseDto responseDto = MemberResponseDto.builder()
+        .id(customUser.getMemberId())
+        .loginId(customUser.getUsername())
+        .role(customUser.getRole())
+        .build();
 
-            return ResponseEntity.ok(responseDto);
+      return ResponseEntity.ok(responseDto);
 
-        } catch (AuthenticationException e) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("status", "error");
-            data.put("message", "아이디 또는 비밀번호가 일치하지 않습니다.");
-            return ResponseEntity.status(401).body(data);
-        }
+    } catch (AuthenticationException e) {
+      Map<String, Object> data = new HashMap<>();
+      data.put("status", "error");
+      data.put("message", "아이디 또는 비밀번호가 일치하지 않습니다.");
+      return ResponseEntity.status(401).body(data);
     }
+  }
 }
