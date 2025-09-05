@@ -29,16 +29,16 @@ public class LoginController {
     return "redirect:/login";
   }
 
-  @GetMapping("/login")
-  public String login(){
-    return "login";
-  }
-
-  @GetMapping("/my-page")
-  public String myPage(Authentication auth){
-    CustomUser result = (CustomUser) auth.getPrincipal();
-    System.out.println(result.status);
-    return "mypage";
-  }
+//  @GetMapping("/login")
+//  public String login(){
+//    return "login";
+//  }
+//
+//  @GetMapping("/my-page")
+//  public String myPage(Authentication auth){
+//    CustomUser result = (CustomUser) auth.getPrincipal();
+//    System.out.println(result.status);
+//    return "mypage";
+//  }
 
 }

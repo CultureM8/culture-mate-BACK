@@ -30,10 +30,15 @@ public class LoginService implements UserDetailsService {
     }
     var user = result.get();
     List<GrantedAuthority> authorities = new ArrayList<>();
-    authorities.add(new SimpleGrantedAuthority("MEMBER"));
-    var a = new CustomUser(user.getLoginId(),user.getPassword(),authorities);
-    a.status = user.getStatus();
-    return a;
+    authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
+    return new CustomUser(
+        user.getLoginId(),
+        user.getPassword(),
+        authorities,
+        user.getId(),
+        user.getRole(),
+        user.getStatus()
+    );
   }
 
 }
