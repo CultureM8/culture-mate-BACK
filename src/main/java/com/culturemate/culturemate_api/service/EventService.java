@@ -163,14 +163,25 @@ public class EventService {
     System.out.println("eventType: " + eventType);
     System.out.println("=================================");
     
-    // 새로운 통합 검색 Repository 메서드 사용
-    return eventRepository.findBySearch(
-      searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-      regions != null ? regions : List.of(),  // null을 빈 리스트로 변환
-      searchDto.getStartDate(),
-      searchDto.getEndDate(),
-      eventType
-    );
+    // 지역 조건에 따라 다른 Repository 메서드 사용
+    if (regions == null || regions.isEmpty()) {
+      // 지역 조건 없는 검색
+      return eventRepository.findBySearchWithoutRegion(
+        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+        searchDto.getStartDate(),
+        searchDto.getEndDate(),
+        eventType
+      );
+    } else {
+      // 지역 조건 있는 검색
+      return eventRepository.findBySearch(
+        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+        regions,
+        searchDto.getStartDate(),
+        searchDto.getEndDate(),
+        eventType
+      );
+    }
   }
 
   @Transactional

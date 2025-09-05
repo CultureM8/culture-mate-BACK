@@ -101,15 +101,29 @@ public class TogetherService {
       eventType = EventType.valueOf(searchDto.getEventType().toUpperCase());
     }
 
-    return togetherRepository.findBySearch(
-      searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-      regions != null ? regions : List.of(),  // null을 빈 리스트로 변환
-      searchDto.getStartDate(),
-      searchDto.getEndDate(),
-      eventType,
-      searchDto.getEventId(),
-      searchDto.hasRecruitingFilter() ? searchDto.getIsRecruiting() : null
-    );
+    // 지역 조건에 따라 다른 Repository 메서드 사용
+    if (regions == null || regions.isEmpty()) {
+      // 지역 조건 없는 검색
+      return togetherRepository.findBySearchWithoutRegion(
+        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+        searchDto.getStartDate(),
+        searchDto.getEndDate(),
+        eventType,
+        searchDto.getEventId(),
+        searchDto.hasRecruitingFilter() ? searchDto.getIsRecruiting() : null
+      );
+    } else {
+      // 지역 조건 있는 검색
+      return togetherRepository.findBySearch(
+        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+        regions,
+        searchDto.getStartDate(),
+        searchDto.getEndDate(),
+        eventType,
+        searchDto.getEventId(),
+        searchDto.hasRecruitingFilter() ? searchDto.getIsRecruiting() : null
+      );
+    }
   }
 
   // 수정

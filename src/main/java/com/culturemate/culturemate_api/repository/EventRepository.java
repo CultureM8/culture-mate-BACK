@@ -28,4 +28,16 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                           @Param("startDate") LocalDate startDate,
                           @Param("endDate") LocalDate endDate,
                           @Param("eventType") EventType eventType);
+
+  // 지역 조건 없는 검색
+  @EntityGraph(attributePaths = {"region", "ticketPrice"})
+  @Query("SELECT e FROM Event e WHERE " +
+         "(:keyword IS NULL OR :keyword = '' OR e.title LIKE CONCAT('%', :keyword, '%')) AND " +
+         "(:startDate IS NULL OR e.endDate >= :startDate) AND " +
+         "(:endDate IS NULL OR e.startDate <= :endDate) AND " +
+         "(:eventType IS NULL OR e.eventType = :eventType)")
+  List<Event> findBySearchWithoutRegion(@Param("keyword") String keyword,
+                                       @Param("startDate") LocalDate startDate,
+                                       @Param("endDate") LocalDate endDate,
+                                       @Param("eventType") EventType eventType);
 }
