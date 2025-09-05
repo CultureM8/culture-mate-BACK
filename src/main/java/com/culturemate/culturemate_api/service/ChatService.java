@@ -35,19 +35,6 @@ public class ChatService {
         return chatRoomRepository.save(chatRoom);
     }
 
-    public ChatRoom createGeneralChatRoom(String name, List<Long> memberIds) {
-        ChatRoom chatRoom = ChatRoom.builder()
-            .roomName(name)
-            .together(null) // 일반 채팅방이므로 together는 null
-            .build();
-        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
-
-        // 채팅방에 멤버 추가
-        memberIds.forEach(memberId -> addMemberToRoom(savedChatRoom.getId(), memberId));
-
-        return savedChatRoom;
-    }
-
     public void addMemberToRoom(Long roomId, Long memberId) {
         ChatRoom chatRoom = findRoomById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid room Id:" + roomId));

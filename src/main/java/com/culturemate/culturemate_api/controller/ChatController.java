@@ -29,6 +29,7 @@ public class ChatController {
   private final ChatMemberRepository chatMemberRepository;
   private final SimpMessagingTemplate messagingTemplate;
 
+  // 클라이언트 → 서버로 메시지 전송
   @MessageMapping("/chat.sendMessage")
   public void sendMessage(ChatMessageDto messageDto) {
     Member sender = memberRepository.findById(messageDto.getSenderId())
@@ -40,20 +41,24 @@ public class ChatController {
     ChatMember author = chatMemberRepository.findByChatRoomAndMember(room, sender)
             .orElseThrow(() -> new IllegalArgumentException("User is not in this chat room"));
 
-    // 메시지 전송
-    messagingTemplate.convertAndSend(
-      "/topic/chatroom/" + messageDto.getRoomId(),
-      messageDto
-    );
-
-    // 메시지 저장
-    chatService.saveMessage(
+    ChatMessage savedMessage = chatService.saveMessage(
       ChatMessage.builder()
         .chatRoom(room)
         .author(author) // ChatMember를 author로 설정
         .content(messageDto.getContent())
         .build()
     );
+
+    // 클라이언트에 DTO로 전송
+    messagingTemplate.convertAndSend(
+      "/topic/chatroom/" + messageDto.getRoomId(),
+      new ChatMessageDto(
+        savedMessage.getChatRoom().getId(),
+        savedMessage.getAuthor().getMember().getId(), // ChatMember에서 Member Id를 가져옴
+        savedMessage.getContent()
+      )
+    );
+
   }
 
   // 이전 대화내역 불러오기
