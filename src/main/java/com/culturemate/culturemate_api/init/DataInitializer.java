@@ -20,7 +20,7 @@ public class DataInitializer implements ApplicationRunner {
 //    regionInitializer.regionInit();
     
     // 관리자 데이터 초기화
-    adminInitializer.adminInit();
+//    adminInitializer.adminInit();
     
     System.out.println("=== 데이터 초기화 완료 ===");
   }

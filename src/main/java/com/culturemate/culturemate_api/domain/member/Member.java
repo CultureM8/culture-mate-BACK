@@ -29,6 +29,7 @@ public class Member {
   @Builder.Default
   private Role role = Role.MEMBER;
 
+
   private Instant joinedAt;
   private Instant updatedAt;
 

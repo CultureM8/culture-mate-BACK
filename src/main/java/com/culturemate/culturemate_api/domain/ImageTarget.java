@@ -1,12 +1,22 @@
 package com.culturemate.culturemate_api.domain;
 
 public enum ImageTarget {
-  TOGETHER,
-  EVENT,
-  EVENT_CONTENT,
-  BOARD,
-  CHAT_MESSAGE,
-  MEMBER_PROFILE,
-  MEMBER_BACKGROUND,
-  MEMBER_GALLERY
+  TOGETHER("together"),
+  EVENT("event"),
+  EVENT_CONTENT("event/content"),
+  BOARD_CONTENT("board"),
+  CHAT_MESSAGE("chat/message"),
+  MEMBER_PROFILE("member/profile"),
+  MEMBER_BACKGROUND("member/background"),
+  MEMBER_GALLERY("member/gallery");
+
+  private final String path;
+
+  ImageTarget(String path) {
+    this.path = path;
+  }
+
+  public String getPath() {
+    return path;
+  }
 }

@@ -49,6 +49,27 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
                               @Param("eventId") Long eventId,
                               @Param("isRecruiting") Boolean isRecruiting);
 
+  // 지역 조건 없는 검색 (기존 쿼리에서 region 조건만 제거)
+  @EntityGraph(attributePaths = {"event", "host"})
+  @Query("SELECT t FROM Together t " +
+    "JOIN t.event e " +
+    "WHERE (:keyword IS NULL OR :keyword = '' OR t.title LIKE %:keyword%) AND " +
+    "      (:startDate IS NULL OR t.meetingDate >= :startDate) AND " +
+    "      (:endDate IS NULL OR t.meetingDate <= :endDate) AND " +
+    "      (:eventType IS NULL OR e.eventType = :eventType) AND " +
+    "      (:eventId IS NULL OR e.id = :eventId) AND " +
+    "      (:isRecruiting IS NULL OR t.isRecruiting = :isRecruiting)")
+  List<Together> findBySearchWithoutRegion(@Param("keyword") String keyword,
+                              @Param("startDate") LocalDate startDate,
+                              @Param("endDate") LocalDate endDate,
+                              @Param("eventType") EventType eventType,
+                              @Param("eventId") Long eventId,
+                              @Param("isRecruiting") Boolean isRecruiting);
+
   @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByIsRecruiting(boolean isRecruiting);
+
+  // 이미지 경로만 조회 (삭제 시 사용)
+  @Query("SELECT t.thumbnailImagePath, t.mainImagePath FROM Together t WHERE t.id = :id")
+  Object[] findImagePathsById(@Param("id") Long id);
 }

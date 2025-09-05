@@ -5,8 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,6 +25,9 @@ public class RegionDto {
   }
 
   public static RegionDto from(Region region) {
+    if (region == null) {
+      return null;
+    }
     return RegionDto.builder()
       .level1(region.getLevel1())
       .level2(region.getLevel2())

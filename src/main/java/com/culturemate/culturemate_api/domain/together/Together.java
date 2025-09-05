@@ -86,6 +86,12 @@ public class Together {
   @Builder.Default
   private Integer interestCount = 0;
 
+  @Setter
+  private String thumbnailImagePath;  // 썸네일 이미지 경로
+
+  @Setter 
+  private String mainImagePath;       // 원본 이미지 경로
+
   private Instant createdAt;
   private Instant updatedAt;
 

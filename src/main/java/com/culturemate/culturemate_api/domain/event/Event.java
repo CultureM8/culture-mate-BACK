@@ -32,7 +32,7 @@ public class Event {
 
   @Setter
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "region_id", nullable = false)
+  @JoinColumn(name = "region_id")
   private Region region;           // 지역ID
 
   @Setter
@@ -59,6 +59,12 @@ public class Event {
   @Setter
   @Column(nullable = false)
   private String description;      // 요약설명
+
+  // 이미지 경로
+  @Setter
+  private String thumbnailImagePath;  // 썸네일 이미지 경로
+  @Setter
+  private String mainImagePath;       // 메인 이미지 경로
 
   @Builder.Default
   private BigDecimal avgRating = BigDecimal.ZERO;    // 평균 별점
