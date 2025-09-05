@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/comments")
+@RequestMapping("/api/v1/board/{boardId}/comments")
 @RequiredArgsConstructor
 public class CommentController {
 
   private final CommentService commentService;
 
   // 댓글 생성
-  @PostMapping("/board/{boardId}")
+  @PostMapping
   public ResponseEntity<CommentResponseDto> add(@PathVariable Long boardId,
                                                   @RequestBody CommentRequestDto requestDto) {
     Comment created = commentService.create(
@@ -39,8 +39,8 @@ public class CommentController {
     return ResponseEntity.ok(CommentResponseDto.from(updated)); // 200 OK
   }
 
-  // 특정 게시글의 부모 댓글만 조회 (replyCount 포함)
-  @GetMapping("/board/{boardId}")
+  // 부모 댓글만 조회 (replyCount 포함)
+  @GetMapping
   public ResponseEntity<List<CommentResponseDto>> getParentCommentsByBoard(@PathVariable Long boardId) {
     List<CommentResponseDto> comments = commentService.findParentCommentsByBoard(boardId)
       .stream()
