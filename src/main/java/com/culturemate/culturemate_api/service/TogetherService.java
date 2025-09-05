@@ -103,7 +103,7 @@ public class TogetherService {
 
     return togetherRepository.findBySearch(
       searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-      regions,
+      regions != null ? regions : List.of(),  // null을 빈 리스트로 변환
       searchDto.getStartDate(),
       searchDto.getEndDate(),
       eventType,

@@ -166,13 +166,12 @@ public class EventService {
     // 새로운 통합 검색 Repository 메서드 사용
     return eventRepository.findBySearch(
       searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-      regions,
+      regions != null ? regions : List.of(),  // null을 빈 리스트로 변환
       searchDto.getStartDate(),
       searchDto.getEndDate(),
       eventType
     );
   }
-
 
   @Transactional
   public Event update(Long id, EventDto.Request requestDto, MultipartFile mainImage, List<MultipartFile> imagesToAdd) {
