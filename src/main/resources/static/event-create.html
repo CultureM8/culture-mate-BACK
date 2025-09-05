@@ -1,4 +1,141 @@
-{
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이벤트 생성</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box; }
+        textarea { height: 100px; resize: vertical; }
+        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 3px; }
+        .error { color: red; }
+        .success { color: green; }
+        .image-preview { margin-top: 10px; }
+        .image-preview img { max-width: 200px; max-height: 200px; margin: 5px; border: 1px solid #ddd; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .form-row .form-group { flex: 1; margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 이벤트 생성</h1>
+        <a href="/event-test.html">이벤트 목록 및 검색으로 돌아가기</a>
+
+        <div class="section">
+            <form id="createForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventType">이벤트 타입</label>
+                        <select id="eventType" required>
+                            <option value="">선택하세요</option>
+                            <option value="MUSICAL">뮤지컬</option>
+                            <option value="MOVIE">영화</option>
+                            <option value="THEATER">연극</option>
+                            <option value="EXHIBITION">전시</option>
+                            <option value="Classical">클래식</option>
+                            <option value="DANCE">무용</option>
+                            <option value="CONCERT">콘서트</option>
+                            <option value="FESTIVAL">페스티벌</option>
+                            <option value="LOCAL_EVENT">지역 행사</option>
+                            <option value="OTHER">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="title">제목</label>
+                        <input type="text" id="title" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="level1">지역 Level 1</label>
+                        <select id="level1"><option value="">선택</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="level2">지역 Level 2</label>
+                        <select id="level2"><option value="">선택</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="level3">지역 Level 3</label>
+                        <select id="level3"><option value="">선택</option></select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventLocation">장소명</label>
+                        <input type="text" id="eventLocation" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">주소</label>
+                        <input type="text" id="address">
+                    </div>
+                    <div class="form-group">
+                        <label for="addressDetail">상세주소</label>
+                        <input type="text" id="addressDetail">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">시작일</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">종료일</label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="durationMin">소요시간(분)</label>
+                        <input type="number" id="durationMin" min="0" placeholder="예: 120">
+                    </div>
+                    <div class="form-group">
+                        <label for="minAge">최소 연령</label>
+                        <input type="number" id="minAge" min="0" placeholder="기본값: 0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">설명</label>
+                    <textarea id="description" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>가격 정보</label>
+                    <div id="ticketPrices">
+                        <!-- 동적 가격 입력 필드 -->
+                    </div>
+                    <button type="button" id="addPrice" style="width: auto; padding: 5px 10px; background-color: #28a745; margin-top: 5px;">가격 추가</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="mainImage">메인 이미지</label>
+                    <input type="file" id="mainImage" accept="image/*">
+                    <div id="mainImagePreview" class="image-preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contentImages">설명 이미지들</label>
+                    <input type="file" id="contentImages" accept="image/*" multiple>
+                    <div id="contentImagesPreview" class="image-preview"></div>
+                </div>
+
+                <button type="submit">이벤트 생성</button>
+            </form>
+            <div id="createResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const regionData = {
   "강원특별자치도": {
     "강릉시": ["강동면", "구정면", "금학동", "교동", "내곡동", "노암동", "담산동", "대신동", "두산동", "명주동", "병산동", "사천면", "성남동", "성산면", "송정동", "신석동", "안현동", "옥계면", "옥천동", "왕산면", "용강동", "운정동", "유산동", "입암동", "장현동", "저동", "주문진읍", "죽헌동", "중앙동", "청량동", "초당동", "포남동", "학동", "홍제동", "회산동"],
     "고성군": ["간성읍", "거진읍", "수동면", "죽왕면", "토성면", "현내면"],
@@ -48,7 +185,6 @@
     "평택시": ["고덕면", "군문동", "도일동", "동삭동", "모곡동", "비전동", "서정동", "세교동", "송탄동", "신대동", "신장동", "안중읍", "오성면", "용이동", "원평동", "이충동", "장당동", "죽백동", "지산동", "진위면", "청룡동", "청북읍", "칠원동", "팽성읍", "평택동", "포승읍", "합정동", "현덕면"],
     "포천시": ["가산면", "관인면", "군내면", "내촌면", "동교동", "선단동", "소흘읍", "신북면", "영북면", "영중면", "일동면", "창수면", "화현면", "포천동"],
     "하남시": ["감북동", "감일동", "감천동", "교산동", "덕풍동", "망월동", "미사동", "배알미동", "상사창동", "상산곡동", "선동", "신장동", "창우동", "천현동", "초이동", "춘궁동", "풍산동", "하사창동", "하산곡동", "학암동", "항동"],
-    "부천시": ["중동", "상동", "심곡동", "원미동", "소사동", "오정동", "춘의동", "역곡동", "괴안동", "삼정동", "여월동", "도당동", "약대동", "범박동", "작동"],
     "화성시": ["남양읍", "동탄면", "마도면", "매송면", "봉담읍", "비봉면", "서신면", "송산면", "양감면", "우정읍", "장안면", "정남면", "팔탄면", "향남읍"]
   },
   "광주광역시": {
@@ -117,8 +253,7 @@
     "용산구": ["갈월동", "남영동", "도원동", "동빙고동", "동자동", "문배동", "보광동", "산천동", "서빙고동", "신계동", "신창동", "이촌동", "이태원동", "주성동", "청파동", "한강로", "한남동", "효창동", "후암동"],
     "은평구": ["갈현동", "구산동", "녹번동", "대조동", "불광동", "수색동", "신사동", "역촌동", "응암동", "증산동", "진관동"],
     "종로구": ["가회동", "견지동", "경운동", "계동", "공평동", "관수동", "관철동", "관훈동", "교남동", "교북동", "구기동", "궁정동", "권농동", "낙원동", "내수동", "내자동", "누상동", "누하동", "당주동", "도렴동", "동숭동", "명륜가", "묘동", "무악동", "봉익동", "부암동", "사간동", "사직동", "삼청동", "서린동", "세종로", "소격동", "송월동", "송현동", "수송동", "숭인동", "신교동", "신문로", "신영동", "안국동", "연건동", "연지동", "예지동", "옥인동", "와룡동", "운니동", "원남동", "원서동", "이화동", "익선동", "인사동", "장사동", "재동", "적선동", "종로가", "중학동", "창성동", "창신동", "청운동", "청진동", "체부동", "충신동", "통의동", "통인동", "팔판동", "평동", "평창동", "필운동", "혜화동", "홍지동", "효자동", "효제동", "훈정동"],
-    "중구": ["광희동", "남대문로", "남산동", "남창동", "남학동", "다동", "만리동", "명동", "무교동", "묵정동", "방산동", "봉래동", "북창동", "산림동", "삼각동", "서소문동", "소공동", "수표동", "수하동", "신당동", "쌍림동", "예관동", "예장동", "오장동", "을지로", "의주로", "인현동", "입정동", "장교동", "장충동", "저동", "정동", "주교동", "주자동", "중림동", "초동", "충무로", "충정로", "태평로", "필동", "황학동", "회현동", "흥인동"],
-    "중랑구": ["면목동", "상봉동", "중화동", "묵동", "신내동", "망우동"]
+    "중구": ["광희동", "남대문로", "남산동", "남창동", "남학동", "다동", "만리동", "명동", "무교동", "묵정동", "방산동", "봉래동", "북창동", "산림동", "삼각동", "서소문동", "소공동", "수표동", "수하동", "신당동", "쌍림동", "예관동", "예장동", "오장동", "을지로", "의주로", "인현동", "입정동", "장교동", "장충동", "저동", "정동", "주교동", "주자동", "중림동", "초동", "충무로", "충정로", "태평로", "필동", "황학동", "회현동", "흥인동"]
   },
   "경상남도": {
     "거제시": ["고현동", "능포동", "두모동", "수월동", "아양동", "옥포동", "일운면", "장승포동", "하청면"],
@@ -262,4 +397,170 @@
     "울주군": ["두동면", "두서면", "범서읍", "삼남읍", "삼동면", "상북면", "언양읍", "온산읍", "온양읍", "웅촌면", "청량읍", "서생면"],
     "중구": ["교동", "남외동", "다운동", "동동", "반구동", "병영동", "복산동", "성남동", "성안동", "약사동", "옥교동", "우정동", "유곡동", "장현동", "태화동", "학산동", "학성동"]
   }
-}
+};
+
+        // Helper function to populate a dropdown
+        const populateDropdown = (selectElement, data, initialText) => {
+            selectElement.innerHTML = '';
+            const initialOption = document.createElement('option');
+            initialOption.value = "";
+            initialOption.textContent = initialText;
+            selectElement.appendChild(initialOption);
+            if (data) {
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    option.textContent = item;
+                    selectElement.appendChild(option);
+                });
+            }
+        };
+
+        // Function to set up a group of cascading dropdowns
+        const setupRegionGroup = (ids) => {
+            const [level1, level2, level3] = ids.map(id => document.getElementById(id));
+            const initialText = '선택';
+
+            // 1. Populate Level 1
+            populateDropdown(level1, Object.keys(regionData), initialText);
+
+            // 2. Add event listener to Level 1
+            level1.addEventListener('change', () => {
+                const level1Value = level1.value;
+                const level2Data = level1Value ? Object.keys(regionData[level1Value]) : [];
+                populateDropdown(level2, level2Data, initialText);
+                populateDropdown(level3, [], initialText); // Reset level 3
+            });
+
+            // 3. Add event listener to Level 2
+            level2.addEventListener('change', () => {
+                const level1Value = level1.value;
+                const level2Value = level2.value;
+                const level3Data = (level1Value && level2Value && regionData[level1Value][level2Value]) 
+                                   ? regionData[level1Value][level2Value] 
+                                   : [];
+                populateDropdown(level3, level3Data, initialText);
+            });
+        };
+
+        // Initialize the region dropdowns for the create form
+        setupRegionGroup(['level1', 'level2', 'level3']);
+
+        // --- All other functions remain the same ---
+
+        // 이미지 미리보기
+        document.getElementById('mainImage').addEventListener('change', function(e) {
+            previewImage(e.target.files[0], 'mainImagePreview');
+        });
+
+        document.getElementById('contentImages').addEventListener('change', function(e) {
+            previewImages(e.target.files, 'contentImagesPreview');
+        });
+
+        function previewImage(file, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewImages(files, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 가격 정보 추가/삭제
+        document.getElementById('addPrice').addEventListener('click', function() {
+            const pricesDiv = document.getElementById('ticketPrices');
+            const priceEntry = document.createElement('div');
+            priceEntry.style.display = 'flex';
+            priceEntry.style.gap = '10px';
+            priceEntry.style.marginBottom = '10px';
+            priceEntry.innerHTML = `
+                <input type="text" class="ticketType" placeholder="티켓 종류 (예: 성인)" style="width: 40%;">
+                <input type="number" class="price" placeholder="가격" style="width: 40%;">
+                <button type="button" class="removePrice" style="width: auto; background-color: #dc3545;">삭제</button>
+            `;
+            pricesDiv.appendChild(priceEntry);
+        });
+
+        document.getElementById('ticketPrices').addEventListener('click', function(e) {
+            if (e.target.classList.contains('removePrice')) {
+                e.target.parentElement.remove();
+            }
+        });
+
+        // 이벤트 생성
+        document.getElementById('createForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const regionDto = {
+                level1: document.getElementById('level1').value || null,
+                level2: document.getElementById('level2').value || null,
+                level3: document.getElementById('level3').value || null
+            };
+            const ticketPriceDto = Array.from(document.getElementById('ticketPrices').children).map(entry => ({
+                ticketType: entry.querySelector('.ticketType').value,
+                price: parseInt(entry.querySelector('.price').value)
+            })).filter(dto => dto.ticketType && !isNaN(dto.price));
+
+            const eventData = {
+                eventType: document.getElementById('eventType').value,
+                title: document.getElementById('title').value,
+                regionDto: (regionDto.level1 || regionDto.level2 || regionDto.level3) ? regionDto : null,
+                eventLocation: document.getElementById('eventLocation').value,
+                address: document.getElementById('address').value || null,
+                addressDetail: document.getElementById('addressDetail').value || null,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                durationMin: document.getElementById('durationMin').value ? parseInt(document.getElementById('durationMin').value) : null,
+                minAge: document.getElementById('minAge').value ? parseInt(document.getElementById('minAge').value) : null,
+                description: document.getElementById('description').value,
+                ticketPriceDto: ticketPriceDto
+            };
+
+            formData.append('eventRequestDto', new Blob([JSON.stringify(eventData)], {type: 'application/json'}));
+            const mainImage = document.getElementById('mainImage').files[0];
+            if (mainImage) formData.append('mainImage', mainImage);
+            const contentImages = document.getElementById('contentImages').files;
+            for (let file of contentImages) formData.append('imagesToAdd', file);
+
+            try {
+                const response = await fetch('/api/v1/events', { method: 'POST', body: formData });
+                const result = await response.json();
+                const resultDiv = document.getElementById('createResult');
+                resultDiv.style.display = 'block';
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<h4>✅ 이벤트 생성 성공!</h4><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h4>❌ 생성 실패</h4><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('createResult');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h4>❌ 네트워크 오류</h4><p>${error.message}</p>`;
+            }
+        });
+    });
+    </script>
+</body>
+</html>

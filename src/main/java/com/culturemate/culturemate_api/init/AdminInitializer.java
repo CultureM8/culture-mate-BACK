@@ -1,5 +1,7 @@
 package com.culturemate.culturemate_api.init;
 
+import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.RegisterDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import com.culturemate.culturemate_api.service.MemberService;
@@ -43,13 +45,11 @@ public class AdminInitializer {
         String loginId = adminData.get("loginId");
         System.out.println("처리 중인 관리자: " + loginId);
         
-        // 이미 존재하는 관리자인지 확인
         if (memberRepository.existsByLoginId(loginId)) {
           System.out.println("관리자 " + loginId + "는 이미 존재합니다.");
           continue;
         }
         
-        // RegisterDto 생성
         RegisterDto registerDto = RegisterDto.builder()
             .loginId(loginId)
             .password(adminData.get("password"))
@@ -61,9 +61,9 @@ public class AdminInitializer {
         
         System.out.println("RegisterDto 생성 완료: " + loginId);
         
-        // 컨트롤러와 동일한 방식으로 계정 생성
-        memberService.create(registerDto);
-        System.out.println("관리자 계정 생성 완료: " + loginId);
+        Member newAdmin = memberService.create(registerDto);
+        memberService.updateRole(newAdmin.getId(), Role.ADMIN);
+        System.out.println("관리자 계정 생성 및 권한 설정 완료: " + loginId);
       }
       
       System.out.println("관리자 데이터 초기화 완료");
