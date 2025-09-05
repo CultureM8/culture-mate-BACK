@@ -4,7 +4,6 @@ import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.community.Comment;
 import com.culturemate.culturemate_api.domain.community.CommentLike;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.CommentResponseDto;
 import com.culturemate.culturemate_api.repository.CommentLikeRepository;
 import com.culturemate.culturemate_api.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +24,9 @@ public class CommentService {
 
   // 댓글 생성
   @Transactional
-  public Comment create(Long boardId, Long parentId, String content) {
+  public Comment create(Long boardId, Long authorId, Long parentId, String content) {
     Board board = boardService.findById(boardId);
+    Member author = memberService.findById(authorId);
     Comment parent = null;
     if (parentId != null) {
       parent = commentRepository.findById(parentId)
@@ -34,11 +34,12 @@ public class CommentService {
     }
 
     Comment comment = Comment.builder()
+      .author(author)
       .board(board)
       .parent(parent)
       .content(content)
       .likeCount(0)
-//      .dislikeCount(0)
+      // .dislikeCount(0) // TODO: 나중에 싫어요 기능 추가 시 활성화
       .build();
 
     return commentRepository.save(comment);
@@ -95,11 +96,13 @@ public class CommentService {
     }
   }
 
-  // 싫어요
-//  public CommentDto dislikeComment(Long commentId) {
-//    Comment comment = commentRepository.findById(commentId)
-//      .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
-//    comment.getDislikeCount();
-//    return CommentDto.fromEntity(comment);
-//  }
+  // TODO: 나중에 싫어요 기능 구현
+  // @Transactional
+  // public boolean toggleCommentDislike(Long commentId, Long memberId) {
+  //   Comment comment = commentRepository.findById(commentId)
+  //     .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+  //   Member member = memberService.findById(memberId);
+  //   // 싫어요 토글 로직 구현 예정
+  //   return false;
+  // }
 }

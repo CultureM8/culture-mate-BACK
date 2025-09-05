@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.community.Comment;
+import com.culturemate.culturemate_api.dto.CommentRequestDto;
 import com.culturemate.culturemate_api.dto.CommentResponseDto;
 import com.culturemate.culturemate_api.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +21,13 @@ public class CommentController {
   // 댓글 생성
   @PostMapping("/board/{boardId}")
   public ResponseEntity<CommentResponseDto> add(@PathVariable Long boardId,
-                                                  @RequestParam(required = false) Long parentId,
-                                                  @RequestParam String content) {
-    Comment created = commentService.create(boardId, parentId, content);
+                                                  @RequestBody CommentRequestDto requestDto) {
+    Comment created = commentService.create(
+        boardId, 
+        requestDto.getAuthorId(), 
+        requestDto.getParentId(), 
+        requestDto.getComment()
+    );
     return ResponseEntity.status(201).body(CommentResponseDto.from(created)); // 201 Created
   }
 
@@ -74,10 +79,15 @@ public class CommentController {
     }
   }
 
-  // 싫어요
-//  @PostMapping("/{commentId}/dislike")
-//  public ResponseEntity<CommentDto> dislikeComment(@PathVariable Long commentId) {
-//    CommentDto updated = commentService.dislikeComment(commentId);
-//    return ResponseEntity.ok(updated); // 200 OK
-//  }
+  // TODO: 나중에 싫어요 기능 구현
+  // @PostMapping("/{commentId}/dislike")
+  // public ResponseEntity<String> toggleCommentDislike(@PathVariable Long commentId,
+  //                                                   @RequestParam Long memberId) {
+  //   boolean disliked = commentService.toggleCommentDislike(commentId, memberId);
+  //   if (disliked) {
+  //     return ResponseEntity.ok("댓글 싫어요 성공");
+  //   } else {
+  //     return ResponseEntity.ok("댓글 싫어요 취소");
+  //   }
+  // }
 }
