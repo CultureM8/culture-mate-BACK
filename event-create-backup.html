@@ -18,9 +18,6 @@
         .error { color: red; }
         .success { color: green; }
         .image-preview { margin-top: 10px; }
-        .image-preview img { max-width: 200px; max-height: 200px; margin: 5px; border: 1px solid #ddd; }
-        
-        /* 한 줄 단위 이미지 관리 스타일 */
         .image-list {
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -39,41 +36,35 @@
         .image-row:hover {
             background-color: #f0f0f0;
         }
+        .image-preview-thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-right: 15px;
+        }
         .image-info {
             flex: 1;
             display: flex;
             align-items: center;
         }
-        .image-preview-container {
-            width: 60px;
-            height: 60px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
+        .image-order {
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #f8f9fa;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
         }
-        .image-preview-thumb {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-        }
-        .file-info {
-            flex: 1;
-            margin-left: 10px;
-        }
-        .file-name {
+        .image-name {
             font-size: 14px;
             color: #333;
-            font-weight: 500;
-            word-break: break-all;
-        }
-        .file-size {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
         }
         .image-controls {
             display: flex;
@@ -83,20 +74,24 @@
             background: #6c757d;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 5px 8px;
             border-radius: 3px;
             cursor: pointer;
             font-size: 12px;
-            transition: background-color 0.2s;
         }
-        .control-btn:hover { background: #5a6268; }
-        .control-btn:disabled { background: #dee2e6; color: #6c757d; cursor: not-allowed; }
-        .control-btn.up-btn { background: #28a745; }
-        .control-btn.up-btn:hover { background: #218838; }
-        .control-btn.down-btn { background: #ffc107; color: #212529; }
-        .control-btn.down-btn:hover { background: #e0a800; }
-        .control-btn.remove-btn { background: #dc3545; }
-        .control-btn.remove-btn:hover { background: #c82333; }
+        .control-btn:hover {
+            background: #5a6268;
+        }
+        .control-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .control-btn.up { background: #28a745; }
+        .control-btn.up:hover { background: #218838; }
+        .control-btn.down { background: #ffc107; color: #212529; }
+        .control-btn.down:hover { background: #e0a800; }
+        .control-btn.remove { background: #dc3545; }
+        .control-btn.remove:hover { background: #c82333; }
         .add-image-section {
             margin-top: 10px;
             padding: 15px;
@@ -109,6 +104,7 @@
             border-color: #007bff;
             background-color: #e7f3ff;
         }
+
         .add-image-btn {
             background-color: #007bff;
             color: white;
@@ -119,10 +115,41 @@
             font-size: 14px;
             transition: background-color 0.2s;
         }
+
         .add-image-btn:hover {
             background-color: #0056b3;
         }
-        
+
+        .image-preview-container {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+
+        .file-info {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .file-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
         .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
         .form-row .form-group { flex: 1; margin-bottom: 0; }
     </style>
@@ -194,7 +221,7 @@
                     </div>
                     <div class="form-group">
                         <label for="endDate">종료일</label>
-                        <input type="date" id="endDate">
+                        <input type="date" id="endDate" required>
                     </div>
                     <div class="form-group">
                         <label for="durationMin">소요시간(분)</label>
@@ -208,7 +235,7 @@
 
                 <div class="form-group">
                     <label for="description">설명</label>
-                    <textarea id="description"></textarea>
+                    <textarea id="description" required></textarea>
                 </div>
 
                 <div class="form-group">
@@ -567,10 +594,11 @@
         });
 
         // 한 줄 단위 이미지 관리 시스템
+        const fileInput = document.getElementById('contentImages');
         let contentImagesArray = []; // 선택된 이미지 파일들을 순서대로 저장
         
         // 파일 선택 시 이미지 추가 (한 번에 하나씩)
-        document.getElementById('contentImages').addEventListener('change', function(e) {
+        fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0]; // 하나의 파일만 처리
             if (file && file.type.startsWith('image/')) {
                 addImageToList(file);
@@ -578,6 +606,20 @@
             // 파일 입력 초기화 (같은 파일 재선택 가능)
             e.target.value = '';
         });
+
+        function previewImage(file, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
 
         function addImageToList(file) {
             contentImagesArray.push(file);
@@ -668,21 +710,6 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        function previewImage(file, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    container.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-
         // 가격 정보 추가/삭제
         document.getElementById('addPrice').addEventListener('click', function() {
             const pricesDiv = document.getElementById('ticketPrices');
@@ -726,16 +753,22 @@
                 address: document.getElementById('address').value || null,
                 addressDetail: document.getElementById('addressDetail').value || null,
                 startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value || '9999-12-31',
+                endDate: document.getElementById('endDate').value,
                 durationMin: document.getElementById('durationMin').value ? parseInt(document.getElementById('durationMin').value) : null,
                 minAge: document.getElementById('minAge').value ? parseInt(document.getElementById('minAge').value) : null,
                 description: document.getElementById('description').value,
                 ticketPriceDto: ticketPriceDto
             };
 
+            // 이미지 순서 정보 추가
+            if (contentImagesArray.length > 0) {
+                eventData.imageOrders = contentImagesArray.map((_, index) => index + 1); // [1, 2, 3, ...]
+            }
+            
             formData.append('eventRequestDto', new Blob([JSON.stringify(eventData)], {type: 'application/json'}));
             const mainImage = document.getElementById('mainImage').files[0];
             if (mainImage) formData.append('mainImage', mainImage);
+            
             // 재정렬된 이미지 파일들을 순서대로 전송
             for (let file of contentImagesArray) {
                 formData.append('imagesToAdd', file);

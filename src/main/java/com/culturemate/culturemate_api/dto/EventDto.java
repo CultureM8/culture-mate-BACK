@@ -50,7 +50,6 @@ public class EventDto {
     private Integer durationMin;
     private Integer minAge;
 
-    @NotBlank(message = "설명은 필수입니다.")
     private String description;
 
     private List<TicketPriceDto> ticketPriceDto;
