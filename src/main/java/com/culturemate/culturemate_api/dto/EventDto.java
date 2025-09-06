@@ -113,6 +113,7 @@ public class EventDto {
     private Integer durationMin;
     private Integer minAge;
     private String description;
+    private List<TicketPriceDto> ticketPrices;
     private String thumbnailImagePath;
     private String mainImagePath;
     private List<String> contentImages;
@@ -123,6 +124,10 @@ public class EventDto {
     private LocalDateTime updatedAt;
 
     public static ResponseDetail from(Event event, List<String> contentImages) {
+      List<TicketPriceDto> ticketPriceDtos = event.getTicketPrice().stream()
+              .map(TicketPriceDto::from)
+              .toList();
+
       return ResponseDetail.builder()
         .id(event.getId())
         .eventType(event.getEventType())
@@ -136,6 +141,7 @@ public class EventDto {
         .durationMin(event.getDurationMin())
         .minAge(event.getMinAge())
         .description(event.getDescription())
+        .ticketPrices(ticketPriceDtos)
         .thumbnailImagePath(event.getThumbnailImagePath())
         .mainImagePath(event.getMainImagePath())
         .contentImages(contentImages)
