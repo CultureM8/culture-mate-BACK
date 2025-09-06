@@ -30,7 +30,6 @@ public class RegionInitializer {
         = mapper.readValue(jsonFile, new TypeReference<Map<String, Map<String, List<String>>>>() {});
 
       // 1단계: 모든 지역 데이터를 Set으로 수집 (중복 자동 제거)
-      Set<List<String>> uniqueRegions = new HashSet<>();
       String level1, level2, level3;
 
       for (Map.Entry<String, Map<String, List<String>>> level1Val : regions.entrySet()) {
@@ -40,32 +39,15 @@ public class RegionInitializer {
           level2 = level2Val.getKey();
           List<String> level3List = level2Val.getValue();
           
-          // level2가 "전체"이면 건너뛰기
-          if ("전체".equals(level2)) {
-            continue;
-          }
-          
           for (String level3Val : level3List) {
             level3 = level3Val;
-            // level3가 "전체"이면 건너뛰기
-            if ("전체".equals(level3)) {
-              continue;
-            }
-            
-            // 계층별로 분해해서 Set에 추가 (중복 자동 제거)
-            uniqueRegions.add(Arrays.asList(level1, null, null));      // 1단계
-            uniqueRegions.add(Arrays.asList(level1, level2, null));    // 2단계  
-            uniqueRegions.add(Arrays.asList(level1, level2, level3));  // 3단계
+
+            regionService.create(level1, level2, level3);
+
           }
         }
       }
       
-      // 2단계: Set에서 RegionService로 저장
-      System.out.println("총 " + uniqueRegions.size() + "개 지역 데이터 저장 시작");
-      for (List<String> regionData : uniqueRegions) {
-        regionService.create(regionData.get(0), regionData.get(1), regionData.get(2));
-      }
-
 //      System.out.println(stb.toString());
       System.out.println("지역 데이터 초기화 완료");
     } catch (Exception e) {

@@ -28,6 +28,7 @@ public class Comment {
   @JoinColumn(name = "board_id", nullable = false)
   private Board board;
 
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "parent_id")
   private Comment parent;

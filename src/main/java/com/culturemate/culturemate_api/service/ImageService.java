@@ -174,9 +174,9 @@ public class ImageService {
   private void createThumbnail(MultipartFile originalFile, Path thumbnailPath) throws IOException {
     BufferedImage originalImage = ImageIO.read(originalFile.getInputStream());
     
-    // 썸네일 크기 설정 (최대 300x300)
-    int thumbnailWidth = 300;
-    int thumbnailHeight = 300;
+    // 썸네일 크기 설정 (최대 200x200)
+    int thumbnailWidth = 200;
+    int thumbnailHeight = 200;
     
     // 비율 유지하면서 리사이즈
     double scaleX = (double) thumbnailWidth / originalImage.getWidth();

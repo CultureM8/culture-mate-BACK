@@ -1,8 +1,6 @@
 package com.culturemate.culturemate_api.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -17,8 +15,9 @@ public class Region {
   @Id @GeneratedValue
   private long id;
 
-  private String level1; // 시/도
-  private String level2; // 시/군/구
-  private String level3; // 읍/면/동
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Region parent; // 상위 지역
+
+  private String regionName;
 
 }
