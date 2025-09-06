@@ -93,7 +93,7 @@ public class TogetherService {
   public List<Together> search(TogetherSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.findByCondition(searchDto.getRegionDto());
+      regions = regionService.findByHierarchy(searchDto.getRegionDto());
     }
 
     EventType eventType = null;

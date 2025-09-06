@@ -28,10 +28,32 @@ public class RegionDto {
     if (region == null) {
       return null;
     }
+    
+    // 계층구조를 따라 올라가면서 level1, level2, level3 구성
+    String level1 = null, level2 = null, level3 = null;
+    
+    Region current = region;
+    Region parent1 = current.getParent();
+    Region parent2 = parent1 != null ? parent1.getParent() : null;
+    
+    if (parent2 != null) {
+      // 3레벨: current가 level3, parent1이 level2, parent2가 level1
+      level3 = current.getRegionName();
+      level2 = parent1.getRegionName();
+      level1 = parent2.getRegionName();
+    } else if (parent1 != null) {
+      // 2레벨: current가 level2, parent1이 level1
+      level2 = current.getRegionName();
+      level1 = parent1.getRegionName();
+    } else {
+      // 1레벨: current가 level1
+      level1 = current.getRegionName();
+    }
+    
     return RegionDto.builder()
-      .level1(region.getLevel1())
-      .level2(region.getLevel2())
-      .level3(region.getLevel3())
+      .level1(level1)
+      .level2(level2)
+      .level3(level3)
       .build();
   }
 }
