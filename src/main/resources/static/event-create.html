@@ -19,6 +19,110 @@
         .success { color: green; }
         .image-preview { margin-top: 10px; }
         .image-preview img { max-width: 200px; max-height: 200px; margin: 5px; border: 1px solid #ddd; }
+        
+        /* 한 줄 단위 이미지 관리 스타일 */
+        .image-list {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .image-row {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+        .image-row:last-child {
+            border-bottom: none;
+        }
+        .image-row:hover {
+            background-color: #f0f0f0;
+        }
+        .image-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .image-preview-container {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+        .image-preview-thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+        }
+        .file-info {
+            flex: 1;
+            margin-left: 10px;
+        }
+        .file-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .file-size {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        .image-controls {
+            display: flex;
+            gap: 5px;
+        }
+        .control-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .control-btn:hover { background: #5a6268; }
+        .control-btn:disabled { background: #dee2e6; color: #6c757d; cursor: not-allowed; }
+        .control-btn.up-btn { background: #28a745; }
+        .control-btn.up-btn:hover { background: #218838; }
+        .control-btn.down-btn { background: #ffc107; color: #212529; }
+        .control-btn.down-btn:hover { background: #e0a800; }
+        .control-btn.remove-btn { background: #dc3545; }
+        .control-btn.remove-btn:hover { background: #c82333; }
+        .add-image-section {
+            margin-top: 10px;
+            padding: 15px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+        .add-image-section:hover {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+        }
+        .add-image-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .add-image-btn:hover {
+            background-color: #0056b3;
+        }
+        
         .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
         .form-row .form-group { flex: 1; margin-bottom: 0; }
     </style>
@@ -90,7 +194,7 @@
                     </div>
                     <div class="form-group">
                         <label for="endDate">종료일</label>
-                        <input type="date" id="endDate" required>
+                        <input type="date" id="endDate">
                     </div>
                     <div class="form-group">
                         <label for="durationMin">소요시간(분)</label>
@@ -104,7 +208,7 @@
 
                 <div class="form-group">
                     <label for="description">설명</label>
-                    <textarea id="description" required></textarea>
+                    <textarea id="description"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -122,9 +226,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="contentImages">설명 이미지들</label>
-                    <input type="file" id="contentImages" accept="image/*" multiple>
-                    <div id="contentImagesPreview" class="image-preview"></div>
+                    <label>설명 이미지들</label>
+                    <div class="image-list" id="imageList">
+                        <!-- 이미지 행들이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                    
+                    <div class="add-image-section">
+                        <input type="file" id="contentImages" accept="image/*" style="display: none;">
+                        <button type="button" class="add-image-btn" onclick="document.getElementById('contentImages').click()">
+                            📷 이미지 추가
+                        </button>
+                        <small style="color: #666; margin-left: 10px;">한 번에 하나의 이미지를 추가할 수 있습니다</small>
+                    </div>
                 </div>
 
                 <button type="submit">이벤트 생성</button>
@@ -453,9 +566,107 @@
             previewImage(e.target.files[0], 'mainImagePreview');
         });
 
+        // 한 줄 단위 이미지 관리 시스템
+        let contentImagesArray = []; // 선택된 이미지 파일들을 순서대로 저장
+        
+        // 파일 선택 시 이미지 추가 (한 번에 하나씩)
         document.getElementById('contentImages').addEventListener('change', function(e) {
-            previewImages(e.target.files, 'contentImagesPreview');
+            const file = e.target.files[0]; // 하나의 파일만 처리
+            if (file && file.type.startsWith('image/')) {
+                addImageToList(file);
+            }
+            // 파일 입력 초기화 (같은 파일 재선택 가능)
+            e.target.value = '';
         });
+
+        function addImageToList(file) {
+            contentImagesArray.push(file);
+            renderImageList();
+        }
+
+        function renderImageList() {
+            const container = document.getElementById('imageList');
+            container.innerHTML = '';
+            
+            contentImagesArray.forEach((file, index) => {
+                const imageRow = createImageRow(file, index);
+                container.appendChild(imageRow);
+            });
+        }
+
+        function createImageRow(file, index) {
+            const row = document.createElement('div');
+            row.className = 'image-row';
+            row.dataset.index = index;
+            
+            // 파일 정보와 썸네일을 동기적으로 처리
+            row.innerHTML = `
+                <div class="image-info">
+                    <div class="image-preview-container">
+                        <img class="image-preview-thumb" src="" alt="미리보기">
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${formatFileSize(file.size)}</div>
+                    </div>
+                </div>
+                <div class="image-controls">
+                    <button type="button" class="control-btn up-btn" ${index === 0 ? 'disabled' : ''}>↑</button>
+                    <button type="button" class="control-btn down-btn" ${index === contentImagesArray.length - 1 ? 'disabled' : ''}>↓</button>
+                    <button type="button" class="control-btn remove-btn">삭제</button>
+                </div>
+            `;
+            
+            // 썸네일 이미지 로드
+            const img = row.querySelector('.image-preview-thumb');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // 이벤트 리스너 추가
+            const upBtn = row.querySelector('.up-btn');
+            const downBtn = row.querySelector('.down-btn');
+            const removeBtn = row.querySelector('.remove-btn');
+            
+            upBtn.addEventListener('click', () => moveImageUp(index));
+            downBtn.addEventListener('click', () => moveImageDown(index));
+            removeBtn.addEventListener('click', () => removeImage(index));
+            
+            return row;
+        }
+
+        function moveImageUp(index) {
+            if (index > 0) {
+                // 배열에서 위치 교환
+                [contentImagesArray[index], contentImagesArray[index - 1]] = 
+                [contentImagesArray[index - 1], contentImagesArray[index]];
+                renderImageList();
+            }
+        }
+
+        function moveImageDown(index) {
+            if (index < contentImagesArray.length - 1) {
+                // 배열에서 위치 교환
+                [contentImagesArray[index], contentImagesArray[index + 1]] = 
+                [contentImagesArray[index + 1], contentImagesArray[index]];
+                renderImageList();
+            }
+        }
+
+        function removeImage(index) {
+            contentImagesArray.splice(index, 1);
+            renderImageList();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
 
         function previewImage(file, containerId) {
             const container = document.getElementById(containerId);
@@ -471,19 +682,6 @@
             }
         }
 
-        function previewImages(files, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    container.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
 
         // 가격 정보 추가/삭제
         document.getElementById('addPrice').addEventListener('click', function() {
@@ -528,7 +726,7 @@
                 address: document.getElementById('address').value || null,
                 addressDetail: document.getElementById('addressDetail').value || null,
                 startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value,
+                endDate: document.getElementById('endDate').value || '9999-12-31',
                 durationMin: document.getElementById('durationMin').value ? parseInt(document.getElementById('durationMin').value) : null,
                 minAge: document.getElementById('minAge').value ? parseInt(document.getElementById('minAge').value) : null,
                 description: document.getElementById('description').value,
@@ -538,8 +736,10 @@
             formData.append('eventRequestDto', new Blob([JSON.stringify(eventData)], {type: 'application/json'}));
             const mainImage = document.getElementById('mainImage').files[0];
             if (mainImage) formData.append('mainImage', mainImage);
-            const contentImages = document.getElementById('contentImages').files;
-            for (let file of contentImages) formData.append('imagesToAdd', file);
+            // 재정렬된 이미지 파일들을 순서대로 전송
+            for (let file of contentImagesArray) {
+                formData.append('imagesToAdd', file);
+            }
 
             try {
                 const response = await fetch('/api/v1/events', { method: 'POST', body: formData });

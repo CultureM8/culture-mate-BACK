@@ -57,7 +57,6 @@ public class Event {
   @Builder.Default
   private Integer minAge = 0;      // 최소 연령
   @Setter
-  @Column(nullable = false)
   private String description;      // 요약설명
 
   // 이미지 경로

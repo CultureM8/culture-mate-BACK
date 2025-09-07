@@ -66,13 +66,14 @@ public class EventController {
 
   // 이벤트 등록
   @PostMapping(consumes = {"multipart/form-data"})
-  public ResponseEntity<EventDto.Response> add(
+  public ResponseEntity<EventDto.ResponseDetail> add(
       @RequestPart(value = "eventRequestDto") EventDto.Request eventRequestDto,
       @RequestParam(value = "mainImage", required = false) MultipartFile mainImage,
       @RequestParam(value = "imagesToAdd", required = false) List<MultipartFile> imagesToAdd) {
     
     Event createdEvent = eventService.create(eventRequestDto, mainImage, imagesToAdd);
-    return ResponseEntity.status(201).body(EventDto.Response.from(createdEvent));
+    EventDto.ResponseDetail responseDetail = eventService.findDetailById(createdEvent.getId());
+    return ResponseEntity.status(201).body(responseDetail);
   }
 
   // 이벤트 정보 수정

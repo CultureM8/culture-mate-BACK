@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -240,38 +241,41 @@ public class EventService {
 
   private void updateTicketPrices(Event event, List<TicketPriceDto> ticketPriceDtos) {
     List<TicketPrice> existingTickets = ticketPriceRepository.findByEvent(event);
-    
-    // 1. DTO에서 ID가 있는 것들을 Set으로 수집 (수정/유지 대상)
-    Set<Long> dtoIds = ticketPriceDtos.stream()
-      .map(TicketPriceDto::getId)
-      .filter(id -> id != null)
-      .collect(Collectors.toSet());
-    
-    // 2. 기존 티켓들 중 삭제 대상 처리
-    for (TicketPrice existingTicket : existingTickets) {
-      if (!dtoIds.contains(existingTicket.getId())) {
-        ticketPriceRepository.delete(existingTicket);
-      }
+    Map<String, TicketPrice> existingTicketsMap = existingTickets.stream()
+            .collect(Collectors.toMap(TicketPrice::getTicketType, t -> t));
+
+    // request DTO 가 null 이거나 비어있다면, 해당 이벤트의 티켓가격 데이터 전체 삭제
+    if (ticketPriceDtos == null || ticketPriceDtos.isEmpty()) {
+        for (TicketPrice existingTicket : existingTickets) {
+            ticketPriceRepository.delete(existingTicket);
+        }
+        return;
     }
-    
-    // 3. DTO 처리: 수정 또는 생성
+
+    Set<String> dtoTicketTypes = ticketPriceDtos.stream()
+            .map(TicketPriceDto::getTicketType)
+            .collect(Collectors.toSet());
+
+    // 1. DB에는 있지만 DTO에는 없는 티켓 삭제
+    for (TicketPrice existingTicket : existingTickets) {
+        if (!dtoTicketTypes.contains(existingTicket.getTicketType())) {
+            ticketPriceRepository.delete(existingTicket);
+        }
+    }
+
+    // 2. 타입명이 동일한 티켓은 가격데이터 확인후 업데이트. 없는건 새로 생성.
     for (TicketPriceDto dto : ticketPriceDtos) {
-      if (dto.getId() == null) {
-        // 새로 생성
-        TicketPrice newTicket = TicketPrice.builder()
-          .event(event)
-          .ticketType(dto.getTicketType())
-          .price(dto.getPrice())
-          .build();
-        ticketPriceRepository.save(newTicket);
-      } else {
-        // 기존 티켓 수정
-        TicketPrice existingTicket = ticketPriceRepository.findById(dto.getId())
-          .orElseThrow(() -> new IllegalArgumentException("해당 티켓 가격이 존재하지 않습니다."));
-        
-        existingTicket.setTicketType(dto.getTicketType());
-        existingTicket.setPrice(dto.getPrice());
-      }
+        TicketPrice ticketToUpdate = existingTicketsMap.get(dto.getTicketType());
+        if (ticketToUpdate != null) {
+            ticketToUpdate.setPrice(dto.getPrice());
+        } else {
+            TicketPrice newTicket = TicketPrice.builder()
+                    .event(event)
+                    .ticketType(dto.getTicketType())
+                    .price(dto.getPrice())
+                    .build();
+            ticketPriceRepository.save(newTicket);
+        }
     }
   }
 
