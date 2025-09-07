@@ -25,5 +25,13 @@ public interface ParticipantsRepository extends JpaRepository<Participants, Long
 //  Spring Data JPA 메서드명 규칙 사용 (더 간단)
   boolean existsByTogetherIdAndParticipantId(Long togetherId, Long participantId);
 
+//  모든 신청자 조회 (상태 무관)
+  @EntityGraph(attributePaths = {"participant"})
+  List<Participants> findAllByTogetherId(Long togetherId);
+
+//  특정 상태의 참여자만 조회
+  @EntityGraph(attributePaths = {"participant"})
+  @Query("SELECT p FROM Participants p WHERE p.together.id = :togetherId AND p.status = :status")
+  List<Participants> findByTogetherIdAndStatus(@Param("togetherId") Long togetherId, @Param("status") String status);
 
 }

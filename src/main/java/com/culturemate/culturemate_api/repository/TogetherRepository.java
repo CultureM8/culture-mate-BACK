@@ -21,15 +21,22 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByHost(Member host);
   
-  @EntityGraph(attributePaths = {"event", "host", "region"})
-  List<Together> findByEvent(Event event);
-  
+  // 참여자의 모든 참여 내역 (상태 무관)
   @EntityGraph(attributePaths = {"event", "host", "region"})
   @Query("SELECT t FROM Together t " +
          "JOIN t.participants p " +
          "WHERE p.participant = :member " +
          "ORDER BY p.id DESC")
-  List<Together> findByParticipant(@Param("member") Member participant);
+  List<Together> findByParticipantAll(@Param("member") Member participant);
+
+  // 참여자의 특정 상태 참여 내역
+  @EntityGraph(attributePaths = {"event", "host", "region"})
+  @Query("SELECT t FROM Together t " +
+         "JOIN t.participants p " +
+         "WHERE p.participant = :member " +
+         "AND p.status = :status " +
+         "ORDER BY p.id DESC")
+  List<Together> findByParticipantAndStatus(@Param("member") Member participant, @Param("status") String status);
 
 //  통합 검색
   @EntityGraph(attributePaths = {"event", "host", "region"})
@@ -40,15 +47,13 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
          "      (:startDate IS NULL OR t.meetingDate >= :startDate) AND " +
          "      (:endDate IS NULL OR t.meetingDate <= :endDate) AND " +
          "      (:eventType IS NULL OR e.eventType = :eventType) AND " +
-         "      (:eventId IS NULL OR e.id = :eventId) AND " +
-         "      (:isRecruiting IS NULL OR t.isRecruiting = :isRecruiting)")
+         "      (:eventId IS NULL OR e.id = :eventId)")
   List<Together> findBySearch(@Param("keyword") String keyword,
                               @Param("regions") List<Region> regions,
                               @Param("startDate") LocalDate startDate,
                               @Param("endDate") LocalDate endDate,
                               @Param("eventType") EventType eventType,
-                              @Param("eventId") Long eventId,
-                              @Param("isRecruiting") Boolean isRecruiting);
+                              @Param("eventId") Long eventId);
 
   // 지역 조건 없는 검색 (기존 쿼리에서 region 조건만 제거)
   @EntityGraph(attributePaths = {"event", "host"})
@@ -58,17 +63,14 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
     "      (:startDate IS NULL OR t.meetingDate >= :startDate) AND " +
     "      (:endDate IS NULL OR t.meetingDate <= :endDate) AND " +
     "      (:eventType IS NULL OR e.eventType = :eventType) AND " +
-    "      (:eventId IS NULL OR e.id = :eventId) AND " +
-    "      (:isRecruiting IS NULL OR t.isRecruiting = :isRecruiting)")
+    "      (:eventId IS NULL OR e.id = :eventId)")
   List<Together> findBySearchWithoutRegion(@Param("keyword") String keyword,
                               @Param("startDate") LocalDate startDate,
                               @Param("endDate") LocalDate endDate,
                               @Param("eventType") EventType eventType,
-                              @Param("eventId") Long eventId,
-                              @Param("isRecruiting") Boolean isRecruiting);
+                              @Param("eventId") Long eventId);
 
-  @EntityGraph(attributePaths = {"event", "host", "region"})
-  List<Together> findByIsRecruiting(boolean isRecruiting);
+  // findByIsRecruiting 제거 - 서비스에서 isActive()로 필터링
 
   // 이미지 경로만 조회 (삭제 시 사용)
   @Query("SELECT t.thumbnailImagePath, t.mainImagePath FROM Together t WHERE t.id = :id")

@@ -25,10 +25,10 @@ public class TogetherController {
   private final MemberService memberService;
 
   @GetMapping
-  public ResponseEntity<List<TogetherResponseDto>> get() {
+  public ResponseEntity<List<TogetherResponseDto>> getAll() {
     return ResponseEntity.ok().body(
       togetherService.findAll().stream()
-        .map(TogetherResponseDto::from)
+        .map(togetherService::toResponseDto)
         .collect(Collectors.toList())
     );
   }
@@ -36,7 +36,7 @@ public class TogetherController {
   @GetMapping("/{id}")
   public ResponseEntity<TogetherResponseDto> getById(@PathVariable Long id) {
     Together together = togetherService.findById(id);
-    return ResponseEntity.ok().body(TogetherResponseDto.from(together));
+    return ResponseEntity.ok().body(togetherService.toResponseDto(together));
   }
 
   // 특정 회원이 호스트인 모집글 조회
@@ -46,17 +46,17 @@ public class TogetherController {
     List<Together> togethers = togetherService.findByHost(host);
     return ResponseEntity.ok().body(
       togethers.stream()
-      .map(TogetherResponseDto::from)
+      .map(togetherService::toResponseDto)
       .collect(Collectors.toList()));
   }
-  // 특정 회원이 참여하는 모집글 조회
+  // 특정 회원이 실제 참여 중인 모집글 조회 (승인된 것만)
   @GetMapping("/with/{memberId}")
   public ResponseEntity<List<TogetherResponseDto>> getByMemberId(@PathVariable Long memberId) {
     Member member = memberService.findById(memberId);
-    List<Together> togethers = togetherService.findByMember(member);
+    List<Together> togethers = togetherService.findByMemberAndStatus(member, "APPROVED");
     return ResponseEntity.ok().body(
       togethers.stream()
-      .map(TogetherResponseDto::from)
+      .map(togetherService::toResponseDto)
       .collect(Collectors.toList()));
   }
   // 모집글 통합 검색
@@ -66,14 +66,14 @@ public class TogetherController {
       List<Together> togethers = togetherService.findAll();
       return ResponseEntity.ok().body(
         togethers.stream()
-        .map(TogetherResponseDto::from)
+        .map(togetherService::toResponseDto)
         .collect(Collectors.toList()));
     }
 
     List<Together> togethers = togetherService.search(searchDto);
     return ResponseEntity.ok().body(
       togethers.stream()
-      .map(TogetherResponseDto::from)
+      .map(togetherService::toResponseDto)
       .collect(Collectors.toList()));
   }
 
@@ -81,14 +81,14 @@ public class TogetherController {
   @PostMapping
   public ResponseEntity<TogetherResponseDto> add(@Valid @RequestBody TogetherRequestDto togetherRequestDto) {
     Together together = togetherService.create(togetherRequestDto);
-    return ResponseEntity.ok().body(TogetherResponseDto.from(together));
+    return ResponseEntity.ok().body(togetherService.toResponseDto(together));
   }
 
   // 모집글 수정
   @PutMapping("/{id}")
   public ResponseEntity<TogetherResponseDto> modify(@PathVariable Long id, @Valid @RequestBody TogetherRequestDto togetherRequestDto) {
     Together updatedTogether = togetherService.update(id, togetherRequestDto);
-    return ResponseEntity.ok().body(TogetherResponseDto.from(updatedTogether));
+    return ResponseEntity.ok().body(togetherService.toResponseDto(updatedTogether));
   }
 
   // 모집글 삭제
@@ -98,10 +98,10 @@ public class TogetherController {
     return ResponseEntity.noContent().build();
   }
 
-  // 동행 참여 요청
-  @PostMapping("/{id}/join")
-  public ResponseEntity<Void> joinTogether(@PathVariable Long id, @AuthenticationPrincipal CustomUser customUser) {
-    togetherService.joinTogether(id, customUser.getMemberId());
+  // 동행 신청 (승인 대기)
+  @PostMapping("/{id}/apply")
+  public ResponseEntity<Void> applyTogether(@PathVariable Long id, @AuthenticationPrincipal CustomUser customUser) {
+    togetherService.applyTogether(id, customUser.getMemberId());
     return ResponseEntity.ok().build();
   }
 
@@ -117,6 +117,56 @@ public class TogetherController {
   public ResponseEntity<Void> rejectParticipation(@PathVariable Long togetherId, @PathVariable Long participantId, @AuthenticationPrincipal CustomUser customUser) {
     togetherService.rejectParticipation(togetherId, participantId, customUser.getMemberId());
     return ResponseEntity.ok().build();
+  }
+
+  // 참여자 목록 조회 (상태별 필터링 가능)
+  @GetMapping("/{togetherId}/participants")
+  public ResponseEntity<List<Member>> getParticipants(@PathVariable Long togetherId, @RequestParam(required = false) String status) {
+    List<Member> participants;
+    if (status == null) {
+      participants = togetherService.getAllParticipants(togetherId);
+    } else {
+      participants = togetherService.getParticipantsByStatus(togetherId, status);
+    }
+    return ResponseEntity.ok().body(participants);
+  }
+
+  // 참여 취소 (본인)
+  @DeleteMapping("/{togetherId}/participants/cancel")
+  public ResponseEntity<Void> cancelParticipation(@PathVariable Long togetherId, @AuthenticationPrincipal CustomUser customUser) {
+    togetherService.leaveTogether(togetherId, customUser.getMemberId());
+    return ResponseEntity.ok().build();
+  }
+
+  // 호스트 모집상태 변경
+  @PatchMapping("/{togetherId}/recruiting/{status}")
+  public ResponseEntity<Void> changeRecruitingStatus(@PathVariable Long togetherId, @PathVariable String status, @AuthenticationPrincipal CustomUser customUser) {
+    if ("close".equals(status)) {
+      togetherService.closeTogether(togetherId, customUser.getMemberId());
+    } else if ("reopen".equals(status)) {
+      togetherService.reopenTogether(togetherId, customUser.getMemberId());
+    } else {
+      throw new IllegalArgumentException("상태는 'close' 또는 'reopen'이어야 합니다.");
+    }
+    return ResponseEntity.ok().build();
+  }
+
+  // 내 신청 목록 조회 (상태별 필터링 가능)
+  @GetMapping("/my-applications")
+  public ResponseEntity<List<TogetherResponseDto>> getMyApplications(@RequestParam(required = false) String status, @AuthenticationPrincipal CustomUser customUser) {
+    Member member = memberService.findById(customUser.getMemberId());
+    List<Together> togethers;
+    
+    if (status == null) {
+      togethers = togetherService.findByMemberAll(member);
+    } else {
+      togethers = togetherService.findByMemberAndStatus(member, status);
+    }
+    
+    return ResponseEntity.ok().body(
+      togethers.stream()
+      .map(togetherService::toResponseDto)
+      .collect(Collectors.toList()));
   }
 
 }

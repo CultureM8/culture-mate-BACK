@@ -9,7 +9,11 @@ import com.culturemate.culturemate_api.domain.together.Participants;
 import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.TogetherRequestDto;
+import com.culturemate.culturemate_api.dto.TogetherResponseDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
+import com.culturemate.culturemate_api.dto.RegionDto;
+
+import java.time.ZoneId;
 import com.culturemate.culturemate_api.exceptions.together.*;
 import com.culturemate.culturemate_api.repository.ChatRoomRepository;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
@@ -77,17 +81,18 @@ public class TogetherService {
         .orElseThrow(() -> new TogetherNotFoundException(togetherId));
   }
 
-  public List<Together> findByEvent(Event event) {
-    return togetherRepository.findByEvent(event);
-  }
-
   // 해당 멤버가 호스트인 모집글
   public List<Together> findByHost(Member host) {
     return togetherRepository.findByHost(host);
   }
-  // 호스트이든 동행인이든 상관없이 참여하는 동행을 불러옴
-  public List<Together> findByMember(Member member) {
-    return togetherRepository.findByParticipant(member);
+  // 호스트이든 동행인이든 상관없이 참여하는 동행을 불러옴 (모든 상태)
+  public List<Together> findByMemberAll(Member member) {
+    return togetherRepository.findByParticipantAll(member);
+  }
+  
+  // 특정 상태의 신청 동행만 조회
+  public List<Together> findByMemberAndStatus(Member member, String status) {
+    return togetherRepository.findByParticipantAndStatus(member, status);
   }
 
   // 통합 검색 기능
@@ -103,28 +108,37 @@ public class TogetherService {
     }
 
     // 지역 조건에 따라 다른 Repository 메서드 사용
+    List<Together> results;
     if (regions == null || regions.isEmpty()) {
       // 지역 조건 없는 검색
-      return togetherRepository.findBySearchWithoutRegion(
+      results = togetherRepository.findBySearchWithoutRegion(
         searchDto.hasKeyword() ? searchDto.getKeyword() : null,
         searchDto.getStartDate(),
         searchDto.getEndDate(),
         eventType,
-        searchDto.getEventId(),
-        searchDto.hasRecruitingFilter() ? searchDto.getIsRecruiting() : null
+        searchDto.getEventId()
       );
     } else {
       // 지역 조건 있는 검색
-      return togetherRepository.findBySearch(
+      results = togetherRepository.findBySearch(
         searchDto.hasKeyword() ? searchDto.getKeyword() : null,
         regions,
         searchDto.getStartDate(),
         searchDto.getEndDate(),
         eventType,
-        searchDto.getEventId(),
-        searchDto.hasRecruitingFilter() ? searchDto.getIsRecruiting() : null
+        searchDto.getEventId()
       );
     }
+
+    // isActive 필터링 (Service에서 처리)
+    if (searchDto.hasActiveFilter()) {
+      Boolean activeFilter = searchDto.getIsActive();
+      results = results.stream()
+        .filter(together -> isActive(together) == activeFilter)
+        .collect(Collectors.toList());
+    }
+
+    return results;
   }
 
   // 수정
@@ -191,20 +205,28 @@ public class TogetherService {
     return participantsRepository.existsByTogetherIdAndParticipantId(togetherId, memberId);
   }
 
-  // 참여자 목록 조회
-  public List<Member> getParticipants(Long togetherId) {
-    List<Participants> participantsList = participantsRepository.findByTogetherId(togetherId);
+  // 모든 참여자 목록 조회 (상태 무관)
+  public List<Member> getAllParticipants(Long togetherId) {
+    List<Participants> participantsList = participantsRepository.findAllByTogetherId(togetherId);
     return participantsList.stream()
-      .map(Participants::getParticipant) //Participants 객체에서 Member객체를 호출
+      .map(Participants::getParticipant)
+      .collect(Collectors.toList());
+  }
+  
+  // 특정 상태 참여자 목록 조회
+  public List<Member> getParticipantsByStatus(Long togetherId, String status) {
+    List<Participants> participantsList = participantsRepository.findByTogetherIdAndStatus(togetherId, status);
+    return participantsList.stream()
+      .map(Participants::getParticipant)
       .collect(Collectors.toList());
   }
 
-  // 동행 참여
+  // 동행 신청 (승인 대기 상태로 생성)
   @Transactional
-  public void joinTogether(Long togetherId, Long memberId) {
+  public void applyTogether(Long togetherId, Long memberId) {
     Together together = findByIdIfAvailable(togetherId);
 
-    if (!together.isRecruiting()) {
+    if (!isActive(together)) {
       throw new TogetherClosedException(togetherId);
     }
     if (isParticipating(togetherId, memberId)) {
@@ -215,27 +237,25 @@ public class TogetherService {
     Participants participation = Participants.builder()
         .together(together)
         .participant(member)
+        .status(ParticipationStatus.PENDING) // 명시적으로 대기 상태 설정
         .build();
     participantsRepository.save(participation);
-    togetherRepository.joinParticipantAndUpdateStatus(togetherId); // 원자적 참여 + 상태 변경
-
-    // 채팅방에 멤버 추가
-    chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
-        chatService.addMemberToRoom(chatRoom.getId(), member.getId())
-    );
+    
+    // 신청 단계에서는 채팅방에 추가하지 않음 (승인 후에만 추가)
+    // 필요시 알림 로직 추가 가능
   }
 
   // 동행 참여 거절
   @Transactional
-  public void rejectParticipation(Long togetherId, Long participantId, Long ownerId) {
+  public void rejectParticipation(Long togetherId, Long participantId, Long requesterId) {
     Together together = findById(togetherId);
-    if (!together.getHost().getId().equals(ownerId)) {
-      throw new SecurityException("You are not the host of this together.");
+    if (!together.getHost().getId().equals(requesterId)) {
+      throw new SecurityException("해당 모집글의 호스트가 아닙니다.");
     }
 
     Participants participation = participantsRepository.findByTogetherIdAndParticipantId(togetherId, participantId);
     if (participation == null) {
-      throw new IllegalArgumentException("Participation request not found.");
+      throw new IllegalArgumentException("참여 신청을 찾을 수 없습니다.");
     }
 
     participation.setStatus(ParticipationStatus.REJECTED);
@@ -243,18 +263,21 @@ public class TogetherService {
 
   // 동행 참여 승인
   @Transactional
-  public void approveParticipation(Long togetherId, Long participantId, Long ownerId) {
+  public void approveParticipation(Long togetherId, Long participantId, Long requesterId) {
     Together together = findById(togetherId);
-    if (!together.getHost().getId().equals(ownerId)) {
-      throw new SecurityException("You are not the host of this together.");
+    if (!together.getHost().getId().equals(requesterId)) {
+      throw new SecurityException("해당 모집글의 호스트가 아닙니다.");
     }
 
     Participants participation = participantsRepository.findByTogetherIdAndParticipantId(togetherId, participantId);
     if (participation == null) {
-      throw new IllegalArgumentException("Participation request not found.");
+      throw new IllegalArgumentException("참여 신청을 찾을 수 없습니다.");
     }
 
     participation.setStatus(ParticipationStatus.APPROVED);
+
+    // 승인 시 참여자 수 증가
+    togetherRepository.updateParticipantCount(togetherId, 1);
 
     // 채팅방에 멤버 추가
     chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
@@ -282,16 +305,69 @@ public class TogetherService {
 
   // ===== 상태 관리 메서드 =====
 
-  @Transactional
-  public void closeTogether(Long togetherId) {
-    Together together = findByIdIfAvailable(togetherId);
-    together.setRecruiting(false);
+  // 실제 모집 가능 여부 확인 (종합 판단)
+  public boolean isActive(Together together) {
+    // 1. 호스트가 모집을 비활성화한 경우
+    if (!together.isHostRecruitingEnabled()) {
+      return false;
+    }
+    
+    // 2. 날짜가 지난 경우
+    if (together.getMeetingDate().isBefore(LocalDate.now())) {
+      return false;
+    }
+    
+    // 3. 정원이 다 찬 경우
+    if (together.getParticipantCount() >= together.getMaxParticipants()) {
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // 오버로드 메서드
+  public boolean isActive(Long togetherId) {
+    Together together = findById(togetherId);
+    return isActive(together);
   }
 
   @Transactional
-  public void reopenTogether(Long togetherId) {
-    Together together = findByIdIfAvailable(togetherId);
-    together.setRecruiting(true);
+  public void closeTogether(Long togetherId, Long requesterId) {
+    Together together = findById(togetherId);
+    if (!together.getHost().getId().equals(requesterId)) {
+      throw new SecurityException("호스트만 모집을 종료할 수 있습니다.");
+    }
+    together.setHostRecruitingEnabled(false);
+  }
+
+  @Transactional
+  public void reopenTogether(Long togetherId, Long requesterId) {
+    Together together = findById(togetherId);
+    if (!together.getHost().getId().equals(requesterId)) {
+      throw new SecurityException("호스트만 모집을 재개할 수 있습니다.");
+    }
+    together.setHostRecruitingEnabled(true);
+  }
+
+  // DTO 생성 헬퍼 메서드
+  public TogetherResponseDto toResponseDto(Together together) {
+    return TogetherResponseDto.builder()
+      .id(together.getId())
+      .eventId(together.getEvent().getId())
+      .hostId(together.getHost().getId())
+      .title(together.getTitle())
+      .regionDto(RegionDto.from(together.getRegion()))
+      .address(together.getAddress())
+      .addressDetail(together.getAddressDetail())
+      .meetingDate(together.getMeetingDate())
+      .maxParticipants(together.getMaxParticipants())
+      .currentParticipants(together.getParticipantCount())
+      .content(together.getContent())
+      .active(isActive(together)) // 실제 isActive 계산
+      .createdAt(together.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+      .updatedAt(together.getUpdatedAt() != null ? 
+                 together.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
+      .build();
   }
 
 }

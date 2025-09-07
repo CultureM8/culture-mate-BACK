@@ -46,7 +46,7 @@ public class TogetherResponseDto {
       .maxParticipants(together.getMaxParticipants())
       .currentParticipants(together.getParticipantCount())
       .content(together.getContent())
-      .active(together.isRecruiting())
+      .active(false) // 임시값, TogetherService에서 isActive() 계산 후 설정
       .createdAt(together.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
       .updatedAt(together.getUpdatedAt() != null ? 
                  together.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
