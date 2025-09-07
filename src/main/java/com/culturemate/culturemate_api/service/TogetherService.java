@@ -6,6 +6,7 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Participants;
+import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.TogetherRequestDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
@@ -221,6 +222,43 @@ public class TogetherService {
     // 채팅방에 멤버 추가
     chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
         chatService.addMemberToRoom(chatRoom.getId(), member.getId())
+    );
+  }
+
+  // 동행 참여 거절
+  @Transactional
+  public void rejectParticipation(Long togetherId, Long participantId, Long ownerId) {
+    Together together = findById(togetherId);
+    if (!together.getHost().getId().equals(ownerId)) {
+      throw new SecurityException("You are not the host of this together.");
+    }
+
+    Participants participation = participantsRepository.findByTogetherIdAndParticipantId(togetherId, participantId);
+    if (participation == null) {
+      throw new IllegalArgumentException("Participation request not found.");
+    }
+
+    participation.setStatus(ParticipationStatus.REJECTED);
+  }
+
+  // 동행 참여 승인
+  @Transactional
+  public void approveParticipation(Long togetherId, Long participantId, Long ownerId) {
+    Together together = findById(togetherId);
+    if (!together.getHost().getId().equals(ownerId)) {
+      throw new SecurityException("You are not the host of this together.");
+    }
+
+    Participants participation = participantsRepository.findByTogetherIdAndParticipantId(togetherId, participantId);
+    if (participation == null) {
+      throw new IllegalArgumentException("Participation request not found.");
+    }
+
+    participation.setStatus(ParticipationStatus.APPROVED);
+
+    // 채팅방에 멤버 추가
+    chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
+        chatService.addMemberToRoom(chatRoom.getId(), participantId)
     );
   }
 
