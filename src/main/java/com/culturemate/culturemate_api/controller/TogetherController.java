@@ -1,8 +1,8 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Together;
+import com.culturemate.culturemate_api.dto.CustomUser;
 import com.culturemate.culturemate_api.dto.TogetherRequestDto;
 import com.culturemate.culturemate_api.dto.TogetherResponseDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
@@ -11,9 +11,9 @@ import com.culturemate.culturemate_api.service.TogetherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -96,6 +96,27 @@ public class TogetherController {
   public ResponseEntity<Void> remove(@PathVariable Long id) {
     togetherService.delete(id);
     return ResponseEntity.noContent().build();
+  }
+
+  // 동행 참여 요청
+  @PostMapping("/{id}/join")
+  public ResponseEntity<Void> joinTogether(@PathVariable Long id, @AuthenticationPrincipal CustomUser customUser) {
+    togetherService.joinTogether(id, customUser.getMemberId());
+    return ResponseEntity.ok().build();
+  }
+
+  // 동행 참여 승인
+  @PostMapping("/{togetherId}/participants/{participantId}/approve")
+  public ResponseEntity<Void> approveParticipation(@PathVariable Long togetherId, @PathVariable Long participantId, @AuthenticationPrincipal CustomUser customUser) {
+    togetherService.approveParticipation(togetherId, participantId, customUser.getMemberId());
+    return ResponseEntity.ok().build();
+  }
+
+  // 동행 참여 거절
+  @PostMapping("/{togetherId}/participants/{participantId}/reject")
+  public ResponseEntity<Void> rejectParticipation(@PathVariable Long togetherId, @PathVariable Long participantId, @AuthenticationPrincipal CustomUser customUser) {
+    togetherService.rejectParticipation(togetherId, participantId, customUser.getMemberId());
+    return ResponseEntity.ok().build();
   }
 
 }
