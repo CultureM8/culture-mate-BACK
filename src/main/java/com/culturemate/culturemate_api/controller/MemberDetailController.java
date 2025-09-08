@@ -37,7 +37,7 @@ public class MemberDetailController {
   // 생성
   @PostMapping("/{memberId}")
   public ResponseEntity<MemberDto.DetailResponse> createMemberDetail(@PathVariable Long memberId,
-                                                     @Valid @RequestBody MemberDto.ProfileRequest dto) {
+                                                     @Valid @RequestBody MemberDto.DetailRequest dto) {
     Member member = memberService.findById(memberId);
     MemberDetail created = memberDetailService.create(member, dto);
     return ResponseEntity.status(201).body(MemberDto.DetailResponse.from(created));  // HTTP 201 Created + 데이터 반환
@@ -46,7 +46,7 @@ public class MemberDetailController {
   // 수정
   @PutMapping("/{memberId}")
   public ResponseEntity<MemberDto.DetailResponse> updateMemberDetail(@PathVariable Long memberId,
-                                                       @Valid @RequestBody MemberDto.ProfileRequest dto) {
+                                                       @Valid @RequestBody MemberDto.DetailRequest dto) {
     MemberDetail updated = memberDetailService.update(memberId, dto);
     return ResponseEntity.ok(MemberDto.DetailResponse.from(updated));  // HTTP 200 OK + 데이터 반환
   }

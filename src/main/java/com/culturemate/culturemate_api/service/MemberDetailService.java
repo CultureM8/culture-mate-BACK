@@ -26,7 +26,7 @@ public class MemberDetailService {
   }
 
   // 생성 (Member 객체와 DTO 사용) - @MapsId 활용
-  public MemberDetail create(Member member, MemberDto.ProfileRequest dto) {
+  public MemberDetail create(Member member, MemberDto.DetailRequest dto) {
     MemberDetail memberDetail = MemberDetail.builder()
       .member(member)  // @MapsId에 의해 ID 자동 매핑
       .nickname(dto.getNickname())
@@ -39,7 +39,7 @@ public class MemberDetailService {
   }
 
   // 수정
-  public MemberDetail update(Long memberId, MemberDto.ProfileRequest dto) {
+  public MemberDetail update(Long memberId, MemberDto.DetailRequest dto) {
     MemberDetail memberDetail = memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
 

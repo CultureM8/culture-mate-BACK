@@ -8,9 +8,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Participants;
 import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
-import com.culturemate.culturemate_api.dto.TogetherDto;
-import com.culturemate.culturemate_api.dto.TogetherSearchDto;
-import com.culturemate.culturemate_api.dto.RegionDto;
+import com.culturemate.culturemate_api.dto.*;
 
 import java.time.ZoneId;
 import com.culturemate.culturemate_api.exceptions.together.*;
@@ -376,10 +374,10 @@ public class TogetherService {
   public TogetherDto.Response toResponseDto(Together together) {
     return TogetherDto.Response.builder()
       .id(together.getId())
-      .eventId(together.getEvent().getId())
-      .hostId(together.getHost().getId())
+      .event(EventDto.ResponseCard.from(together.getEvent()))
+      .host(MemberDto.ProfileResponse.from(together.getHost()))
       .title(together.getTitle())
-      .regionDto(RegionDto.from(together.getRegion()))
+      .region(RegionDto.from(together.getRegion()))
       .address(together.getAddress())
       .addressDetail(together.getAddressDetail())
       .meetingDate(together.getMeetingDate())

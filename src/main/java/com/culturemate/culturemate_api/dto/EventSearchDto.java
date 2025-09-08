@@ -17,7 +17,7 @@ import java.time.LocalDate;
 public class EventSearchDto {
   
   private String keyword;
-  private RegionDto regionDto;
+  private RegionDto region;
   private String eventType;
 
   @DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -31,7 +31,7 @@ public class EventSearchDto {
   }
   
   public boolean hasRegion() {
-    return regionDto != null && regionDto.hasRegion();
+    return region != null && region.hasRegion();
   }
   
   public boolean hasDateRange() {

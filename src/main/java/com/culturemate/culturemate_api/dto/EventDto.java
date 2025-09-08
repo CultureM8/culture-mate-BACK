@@ -64,7 +64,7 @@ public class EventDto {
     private Long id;
     private EventType eventType;
     private String title;
-    private RegionDto regionDto;
+    private RegionDto region;
     private String eventLocation;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
@@ -81,7 +81,7 @@ public class EventDto {
         .id(event.getId())
         .eventType(event.getEventType())
         .title(event.getTitle())
-        .regionDto(RegionDto.from(event.getRegion()))
+        .region(RegionDto.from(event.getRegion()))
         .eventLocation(event.getEventLocation())
         .startDate(event.getStartDate())
         .endDate(event.getEndDate())

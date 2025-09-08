@@ -52,7 +52,7 @@ public class EventController {
     System.out.println("=== 검색 파라미터 ===");
     System.out.println("keyword: " + searchDto.getKeyword());
     System.out.println("eventType: " + searchDto.getEventType());
-    System.out.println("regionDto: " + searchDto.getRegionDto());
+    System.out.println("regionDto: " + searchDto.getRegion());
     System.out.println("isEmpty(): " + searchDto.isEmpty());
     System.out.println("hasKeyword(): " + searchDto.hasKeyword());
     System.out.println("==================");

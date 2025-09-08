@@ -39,7 +39,7 @@ public class MemberService {
       .build();
 
     Member savedMember = memberRepository.save(member);
-    memberDetailService.create(savedMember, MemberDto.ProfileRequest.from(registerDto));
+    memberDetailService.create(savedMember, MemberDto.DetailRequest.from(registerDto));
 
     return savedMember;
   }

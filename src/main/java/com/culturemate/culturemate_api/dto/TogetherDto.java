@@ -64,17 +64,17 @@ public class TogetherDto {
   public static class Response {
 
     private Long id;
-    private Long eventId;
-    private Long hostId;
+    private EventDto.ResponseCard event;
+    private MemberDto.ProfileResponse host;
     private String title;
-    private RegionDto regionDto;
+    private String content;
+    private RegionDto region;
     private String address;
     private String addressDetail;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate meetingDate;
     private Integer maxParticipants;
     private Integer currentParticipants;
-    private String content;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
