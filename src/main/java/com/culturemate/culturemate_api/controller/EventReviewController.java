@@ -20,7 +20,7 @@ public class EventReviewController {
 
   // 특정 이벤트의 리뷰 데이터 조회
   @GetMapping
-  public ResponseEntity<List<EventReviewResponseDto>> get(@RequestParam Long eventId) {
+  public ResponseEntity<List<EventReviewResponseDto>> getEventReviews(@RequestParam Long eventId) {
     return ResponseEntity.ok(
       eventReviewService.findByEventId(eventId).stream()
         .map(EventReviewResponseDto::from)
@@ -30,21 +30,21 @@ public class EventReviewController {
 
   // 이벤트 리뷰 등록
   @PostMapping
-  public ResponseEntity<EventReviewResponseDto> add(@Valid @RequestBody EventReviewRequestDto reviewDto) {
+  public ResponseEntity<EventReviewResponseDto> createEventReview(@Valid @RequestBody EventReviewRequestDto reviewDto) {
     EventReview createdReview = eventReviewService.create(reviewDto);
     return ResponseEntity.status(201).body(EventReviewResponseDto.from(createdReview));
   }
 
   // 이벤트 리뷰 수정
   @PutMapping("/{id}")
-  public ResponseEntity<EventReviewResponseDto> update(@PathVariable Long id, @Valid @RequestBody EventReviewRequestDto reviewDto) {
+  public ResponseEntity<EventReviewResponseDto> updateEventReview(@PathVariable Long id, @Valid @RequestBody EventReviewRequestDto reviewDto) {
     EventReview updatedEventReview = eventReviewService.update(id, reviewDto);
     return ResponseEntity.ok(EventReviewResponseDto.from(updatedEventReview));
   }
 
   // 이벤트 리뷰 ID로 삭제
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> remove(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteEventReview(@PathVariable Long id) {
     eventReviewService.delete(id);
     return ResponseEntity.noContent().build();
   }

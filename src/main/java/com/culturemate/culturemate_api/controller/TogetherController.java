@@ -35,7 +35,7 @@ public class TogetherController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
   })
   @GetMapping
-  public ResponseEntity<List<TogetherDto.Response>> getAll() {
+  public ResponseEntity<List<TogetherDto.Response>> getAllTogethers() {
     return ResponseEntity.ok().body(
       togetherService.findAll().stream()
         .map(togetherService::toResponseDto)
@@ -49,7 +49,7 @@ public class TogetherController {
     @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없음")
   })
   @GetMapping("/{id}")
-  public ResponseEntity<TogetherDto.Response> getById(
+  public ResponseEntity<TogetherDto.Response> getTogetherById(
     @Parameter(description = "모임 ID", required = true) @PathVariable Long id) {
     Together together = togetherService.findById(id);
     return ResponseEntity.ok().body(togetherService.toResponseDto(together));
@@ -61,7 +61,7 @@ public class TogetherController {
     @ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음")
   })
   @GetMapping("/hosted-by/{hostId}")
-  public ResponseEntity<List<TogetherDto.Response>> getByHostId(
+  public ResponseEntity<List<TogetherDto.Response>> getTogethersByHostId(
     @Parameter(description = "호스트 회원 ID", required = true) @PathVariable Long hostId) {
     Member host = memberService.findById(hostId);
     List<Together> togethers = togetherService.findByHost(host);
@@ -72,7 +72,7 @@ public class TogetherController {
   }
   // 특정 회원이 실제 참여 중인 모집글 조회 (승인된 것만)
   @GetMapping("/with/{memberId}")
-  public ResponseEntity<List<TogetherDto.Response>> getByMemberId(@PathVariable Long memberId) {
+  public ResponseEntity<List<TogetherDto.Response>> getTogethersByMemberId(@PathVariable Long memberId) {
     Member member = memberService.findById(memberId);
     List<Together> togethers = togetherService.findByMemberAndStatus(member, "APPROVED");
     return ResponseEntity.ok().body(
@@ -82,7 +82,7 @@ public class TogetherController {
   }
   // 모집글 통합 검색
   @GetMapping("/search")
-  public ResponseEntity<List<TogetherDto.Response>> search(@RequestParam TogetherSearchDto searchDto) {
+  public ResponseEntity<List<TogetherDto.Response>> searchTogethers(@RequestParam TogetherSearchDto searchDto) {
     if (searchDto.isEmpty()) {
       List<Together> togethers = togetherService.findAll();
       return ResponseEntity.ok().body(
@@ -100,21 +100,21 @@ public class TogetherController {
 
   // 모집글 생성
   @PostMapping
-  public ResponseEntity<TogetherDto.Response> add(@Valid @RequestBody TogetherDto.Request togetherRequestDto) {
+  public ResponseEntity<TogetherDto.Response> createTogether(@Valid @RequestBody TogetherDto.Request togetherRequestDto) {
     Together together = togetherService.create(togetherRequestDto);
     return ResponseEntity.ok().body(togetherService.toResponseDto(together));
   }
 
   // 모집글 수정
   @PutMapping("/{id}")
-  public ResponseEntity<TogetherDto.Response> modify(@PathVariable Long id, @Valid @RequestBody TogetherDto.Request togetherRequestDto) {
+  public ResponseEntity<TogetherDto.Response> updateTogether(@PathVariable Long id, @Valid @RequestBody TogetherDto.Request togetherRequestDto) {
     Together updatedTogether = togetherService.update(id, togetherRequestDto);
     return ResponseEntity.ok().body(togetherService.toResponseDto(updatedTogether));
   }
 
   // 모집글 삭제
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> remove(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteTogether(@PathVariable Long id) {
     togetherService.delete(id);
     return ResponseEntity.noContent().build();
   }
@@ -142,7 +142,7 @@ public class TogetherController {
 
   // 참여자 목록 조회 (상태별 필터링 가능)
   @GetMapping("/{togetherId}/participants")
-  public ResponseEntity<List<MemberDto.Response>> getParticipants(@PathVariable Long togetherId, @RequestParam(required = false) String status) {
+  public ResponseEntity<List<MemberDto.Response>> getTogetherParticipants(@PathVariable Long togetherId, @RequestParam(required = false) String status) {
     List<Member> participants;
     if (status == null) {
       participants = togetherService.getAllParticipants(togetherId);
@@ -166,7 +166,7 @@ public class TogetherController {
 
   // 호스트의 참여자 강제 퇴출
   @DeleteMapping("/{togetherId}/participants/{participantId}")
-  public ResponseEntity<Void> removeMember(@PathVariable Long togetherId, @PathVariable Long participantId, @AuthenticationPrincipal CustomUser customUser) {
+  public ResponseEntity<Void> removeTogetherMember(@PathVariable Long togetherId, @PathVariable Long participantId, @AuthenticationPrincipal CustomUser customUser) {
     togetherService.removeMember(togetherId, participantId, customUser.getMemberId());
     return ResponseEntity.ok().build();
   }

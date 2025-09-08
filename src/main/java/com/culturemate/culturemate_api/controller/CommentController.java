@@ -30,7 +30,7 @@ public class CommentController {
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
   })
   @PostMapping
-  public ResponseEntity<CommentResponseDto> add(
+  public ResponseEntity<CommentResponseDto> createComment(
     @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
     @Parameter(description = "댓글 내용", required = true) @RequestBody CommentRequestDto requestDto) {
     Comment created = commentService.create(
@@ -44,7 +44,7 @@ public class CommentController {
 
   // 댓글 수정
   @PutMapping("/{commentId}")
-  public ResponseEntity<CommentResponseDto> modify(@PathVariable Long commentId,
+  public ResponseEntity<CommentResponseDto> updateComment(@PathVariable Long commentId,
                                                   @RequestBody CommentRequestDto requestDto) {
     Comment updated = commentService.update(commentId, requestDto.getComment(), requestDto.getAuthorId());
     return ResponseEntity.ok(CommentResponseDto.from(updated)); // 200 OK
@@ -52,7 +52,7 @@ public class CommentController {
 
   // 부모 댓글만 조회 (replyCount 포함)
   @GetMapping
-  public ResponseEntity<List<CommentResponseDto>> getParentCommentsByBoard(@PathVariable Long boardId) {
+  public ResponseEntity<List<CommentResponseDto>> getBoardParentComments(@PathVariable Long boardId) {
     List<CommentResponseDto> comments = commentService.findParentCommentsByBoard(boardId)
       .stream()
       .map(CommentResponseDto::from)
@@ -62,7 +62,7 @@ public class CommentController {
 
   // 특정 댓글의 대댓글 조회
   @GetMapping("/{parentId}/replies")
-  public ResponseEntity<List<CommentResponseDto>> getReplies(@PathVariable Long parentId) {
+  public ResponseEntity<List<CommentResponseDto>> getCommentReplies(@PathVariable Long parentId) {
     List<CommentResponseDto> replies = commentService.findReplies(parentId)
       .stream()
       .map(CommentResponseDto::from)
@@ -72,7 +72,7 @@ public class CommentController {
 
   // 삭제
   @DeleteMapping("/{commentId}")
-  public ResponseEntity<Void> remove(@PathVariable Long commentId,
+  public ResponseEntity<Void> deleteComment(@PathVariable Long commentId,
                                     @RequestParam Long requesterId) {
     commentService.delete(commentId, requesterId);
     return ResponseEntity.noContent().build(); // 204 No Content

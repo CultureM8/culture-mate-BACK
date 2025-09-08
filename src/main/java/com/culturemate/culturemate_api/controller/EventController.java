@@ -30,7 +30,7 @@ public class EventController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
   })
   @GetMapping
-  public ResponseEntity<List<EventDto.Response>> get() {
+  public ResponseEntity<List<EventDto.Response>> getAllEvents() {
     List<Event> events = eventService.findAll();
     List<EventDto.Response> responseDtos = events.stream()
       .map(EventDto.Response::from)
@@ -40,14 +40,14 @@ public class EventController {
 
   // 이벤트 ID로 데이터 조회 (상세 정보)
   @GetMapping("/{id}")
-  public ResponseEntity<EventDto.ResponseDetail> getById(@PathVariable Long id) {
+  public ResponseEntity<EventDto.ResponseDetail> getEventById(@PathVariable Long id) {
     EventDto.ResponseDetail event = eventService.findDetailById(id);
     return ResponseEntity.ok(event);
   }
 
   // 통합 이벤트 검색 (제목, 지역, 날짜, 타입 모두 지원)
   @GetMapping("/search")
-  public ResponseEntity<List<EventDto.Response>> search(EventSearchDto searchDto) {
+  public ResponseEntity<List<EventDto.Response>> searchEvents(EventSearchDto searchDto) {
     // 디버깅용 로그
     System.out.println("=== 검색 파라미터 ===");
     System.out.println("keyword: " + searchDto.getKeyword());
@@ -75,7 +75,7 @@ public class EventController {
 
   // 이벤트 등록
   @PostMapping(consumes = {"multipart/form-data"})
-  public ResponseEntity<EventDto.ResponseDetail> add(
+  public ResponseEntity<EventDto.ResponseDetail> createEvent(
       @RequestPart(value = "eventRequestDto") EventDto.Request eventRequestDto,
       @RequestParam(value = "mainImage", required = false) MultipartFile mainImage,
       @RequestParam(value = "imagesToAdd", required = false) List<MultipartFile> imagesToAdd) {
@@ -87,7 +87,7 @@ public class EventController {
 
   // 이벤트 정보 수정
   @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
-  public ResponseEntity<EventDto.Response> update(
+  public ResponseEntity<EventDto.Response> updateEvent(
       @PathVariable Long id,
       @RequestPart(value = "eventRequestDto") EventDto.Request eventRequestDto,
       @RequestParam(value = "mainImage", required = false) MultipartFile mainImage,
@@ -99,7 +99,7 @@ public class EventController {
 
   // 관심 설정
   @PostMapping("/{eventId}/interest")
-  public ResponseEntity<String> toggleInterest(@PathVariable Long eventId,
+  public ResponseEntity<String> toggleEventInterest(@PathVariable Long eventId,
                                                   @RequestParam Long memberId) {
     boolean interest = eventService.toggleEventInterest(eventId, memberId);
 
@@ -112,7 +112,7 @@ public class EventController {
 
   // 이벤트 삭제
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
     eventService.delete(id);
     return ResponseEntity.noContent().build();
   }
@@ -121,7 +121,7 @@ public class EventController {
 
   // 이벤트 설명 이미지 목록 조회
   @GetMapping("/{eventId}/content-images")
-  public ResponseEntity<List<String>> getContentImages(@PathVariable Long eventId) {
+  public ResponseEntity<List<String>> getEventContentImages(@PathVariable Long eventId) {
     List<Image> images = eventService.getContentImages(eventId);
     List<String> imagePaths = images.stream().map(Image::getPath).toList();
     return ResponseEntity.ok(imagePaths);

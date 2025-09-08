@@ -29,14 +29,14 @@ public class MemberDetailController {
 
   // 상세 조회
   @GetMapping("/{memberId}")
-  public ResponseEntity<MemberDto.DetailResponse> getByMemberId(@PathVariable Long memberId) {
+  public ResponseEntity<MemberDto.DetailResponse> getMemberDetail(@PathVariable Long memberId) {
     MemberDetail memberDetail = memberDetailService.findByMemberId(memberId);
     return ResponseEntity.ok(MemberDto.DetailResponse.from(memberDetail));
   }
 
   // 생성
   @PostMapping("/{memberId}")
-  public ResponseEntity<MemberDto.DetailResponse> add(@PathVariable Long memberId,
+  public ResponseEntity<MemberDto.DetailResponse> createMemberDetail(@PathVariable Long memberId,
                                                      @Valid @RequestBody MemberDto.ProfileRequest dto) {
     Member member = memberService.findById(memberId);
     MemberDetail created = memberDetailService.create(member, dto);
@@ -45,7 +45,7 @@ public class MemberDetailController {
 
   // 수정
   @PutMapping("/{memberId}")
-  public ResponseEntity<MemberDto.DetailResponse> modify(@PathVariable Long memberId,
+  public ResponseEntity<MemberDto.DetailResponse> updateMemberDetail(@PathVariable Long memberId,
                                                        @Valid @RequestBody MemberDto.ProfileRequest dto) {
     MemberDetail updated = memberDetailService.update(memberId, dto);
     return ResponseEntity.ok(MemberDto.DetailResponse.from(updated));  // HTTP 200 OK + 데이터 반환
@@ -53,7 +53,7 @@ public class MemberDetailController {
 
   // 삭제
   @DeleteMapping("/{memberId}")
-  public ResponseEntity<Void> remove(@PathVariable Long memberId) {
+  public ResponseEntity<Void> deleteMemberDetail(@PathVariable Long memberId) {
     memberDetailService.delete(memberId);
     return ResponseEntity.noContent().build();  // HTTP 204 No Content
   }
@@ -62,7 +62,7 @@ public class MemberDetailController {
   
   // 통합 이미지 업로드/수정 (프로필, 배경)
   @PatchMapping("/{memberId}/image")
-  public ResponseEntity<Void> updateImage(@PathVariable Long memberId,
+  public ResponseEntity<Void> updateMemberImage(@PathVariable Long memberId,
                                           @RequestParam("image") MultipartFile imageFile,
                                           @RequestParam("type") String imageType) {
     switch (imageType.toLowerCase()) {
@@ -80,7 +80,7 @@ public class MemberDetailController {
 
   // 통합 이미지 삭제 (프로필, 배경)
   @DeleteMapping("/{memberId}/image")
-  public ResponseEntity<Void> deleteImage(@PathVariable Long memberId,
+  public ResponseEntity<Void> deleteMemberImage(@PathVariable Long memberId,
                                           @RequestParam("type") String imageType) {
     switch (imageType.toLowerCase()) {
       case "profile":
@@ -99,7 +99,7 @@ public class MemberDetailController {
 
   // 갤러리 이미지 업로드 (다중)
   @PostMapping("/{memberId}/gallery")
-  public ResponseEntity<Void> uploadGalleryImages(@PathVariable Long memberId,
+  public ResponseEntity<Void> uploadMemberGalleryImages(@PathVariable Long memberId,
                                                  @RequestParam("images") List<MultipartFile> images) {
     imageService.uploadMultipleImages(images, ImageTarget.MEMBER_GALLERY, memberId);
     return ResponseEntity.status(201).build();
@@ -107,7 +107,7 @@ public class MemberDetailController {
 
   // 갤러리 이미지 목록 조회 (경로만 반환)
   @GetMapping("/{memberId}/gallery")
-  public ResponseEntity<List<String>> getGalleryImages(@PathVariable Long memberId) {
+  public ResponseEntity<List<String>> getMemberGalleryImages(@PathVariable Long memberId) {
     List<Image> images = imageService.getImagesByTargetTypeAndId(ImageTarget.MEMBER_GALLERY, memberId);
     List<String> imagePaths = images.stream()
         .map(Image::getPath)
@@ -117,7 +117,7 @@ public class MemberDetailController {
 
   // 갤러리 이미지 삭제 (경로 기반)
   @DeleteMapping("/{memberId}/gallery")
-  public ResponseEntity<Void> deleteGalleryImage(@PathVariable Long memberId,
+  public ResponseEntity<Void> deleteMemberGalleryImage(@PathVariable Long memberId,
                                                  @RequestParam String imagePath) {
     // 1. 권한 검증
     imagePermissionService.validateDeletePermission(imagePath, memberId);
@@ -130,7 +130,7 @@ public class MemberDetailController {
 
   // 갤러리 이미지 전체 삭제
   @DeleteMapping("/{memberId}/gallery/all")
-  public ResponseEntity<Void> deleteAllGalleryImages(@PathVariable Long memberId) {
+  public ResponseEntity<Void> deleteAllMemberGalleryImages(@PathVariable Long memberId) {
     Long requesterId = memberId; // 명확성을 위해 변수명 분리
     
     // 1. 권한 검증

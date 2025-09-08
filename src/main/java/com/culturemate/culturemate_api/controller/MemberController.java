@@ -34,7 +34,7 @@ public class MemberController {
     @ApiResponse(responseCode = "409", description = "이미 존재하는 회원")
   })
   @PostMapping
-  public ResponseEntity<MemberDto.Response> add(
+  public ResponseEntity<MemberDto.Response> registerMember(
     @Parameter(description = "회원 가입 정보", required = true) @Valid @RequestBody MemberDto.Register registerDto) {
     Member savedMember = memberService.create(registerDto);
     return ResponseEntity.status(201).body(MemberDto.Response.from(savedMember));
@@ -42,14 +42,14 @@ public class MemberController {
 
   // 회원 삭제
   @DeleteMapping("/{memberId}")
-  public ResponseEntity<Void> remove(@PathVariable Long memberId) {
+  public ResponseEntity<Void> deleteMember(@PathVariable Long memberId) {
     memberService.delete(memberId);
     return ResponseEntity.noContent().build();
   }
 
   // 통합 회원 조회 API (쿼리 파라미터 기반)
   @GetMapping
-  public ResponseEntity<?> get(
+  public ResponseEntity<?> getMember(
       @RequestParam(required = false) Long id,
       @RequestParam(required = false) String loginId,
       @RequestParam(required = false) MemberStatus status
@@ -85,7 +85,7 @@ public class MemberController {
 
   // 회원 상태 변경 (관리자용)
   @PatchMapping("/{id}/status")
-  public ResponseEntity<MemberDto.Response> modifyStatus(
+  public ResponseEntity<MemberDto.Response> updateMemberStatus(
     @PathVariable Long id,
     @RequestParam MemberStatus status
   ) {
@@ -95,7 +95,7 @@ public class MemberController {
 
   // 비밀번호 변경
   @PatchMapping("/{id}/password")
-  public ResponseEntity<MemberDto.Response> modifyPassword(
+  public ResponseEntity<MemberDto.Response> updateMemberPassword(
     @PathVariable Long id,
     @RequestParam String newPassword
   ) {
@@ -105,7 +105,7 @@ public class MemberController {
 
   // 권한 변경 (관리자용)
   @PatchMapping("/{id}/role")
-  public ResponseEntity<MemberDto.Response> modifyRole(
+  public ResponseEntity<MemberDto.Response> updateMemberRole(
     @PathVariable Long id,
     @RequestParam Role role
   ) {

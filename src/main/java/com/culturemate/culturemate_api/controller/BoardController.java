@@ -62,7 +62,7 @@ public class BoardController {
 
   // 통합 검색
   @GetMapping("/search")
-  public ResponseEntity<List<BoardDto.Response>> search(BoardSearchDto searchDto) {
+  public ResponseEntity<List<BoardDto.Response>> searchBoards(BoardSearchDto searchDto) {
     if (searchDto.isEmpty()) {
       throw new IllegalArgumentException("검색 조건을 하나 이상 입력해주세요.");
     }
@@ -79,7 +79,7 @@ public class BoardController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청")
   })
   @PostMapping
-  public ResponseEntity<BoardDto.Response> add(
+  public ResponseEntity<BoardDto.Response> createBoard(
     @Parameter(description = "게시글 작성 정보", required = true) @Valid @RequestBody BoardDto.Request requestDto) {
     return ResponseEntity.ok(
       BoardDto.Response.from(boardService.create(requestDto))
@@ -88,7 +88,7 @@ public class BoardController {
 
   // 게시글 수정
   @PutMapping("/{boardId}")
-  public ResponseEntity<BoardDto.Response> modify(@PathVariable Long boardId,
+  public ResponseEntity<BoardDto.Response> updateBoard(@PathVariable Long boardId,
                                                       @Valid @RequestBody BoardDto.Request requestDto) {
     return ResponseEntity.ok(
       BoardDto.Response.from(boardService.update(boardId, requestDto))
@@ -97,14 +97,14 @@ public class BoardController {
 
   // 게시글 삭제
   @DeleteMapping("/{boardId}")
-  public ResponseEntity<Void> remove(@PathVariable Long boardId) {
+  public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId) {
     boardService.delete(boardId);
     return ResponseEntity.noContent().build();
   }
 
   // 좋아요 토글 (추가/취소)
   @PostMapping("/{boardId}/like")
-  public ResponseEntity<String> toggleLike(@PathVariable Long boardId,
+  public ResponseEntity<String> toggleBoardLike(@PathVariable Long boardId,
                                            @RequestParam Long memberId) {
     boolean liked = boardService.toggleBoardLike(boardId, memberId);
 
