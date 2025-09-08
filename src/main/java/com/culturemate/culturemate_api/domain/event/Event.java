@@ -24,6 +24,7 @@ public class Event {
 
   @Setter
   @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
   private EventType eventType;     // 이벤트 유형
 
   @Setter
