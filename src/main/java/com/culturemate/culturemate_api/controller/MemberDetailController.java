@@ -2,8 +2,7 @@ package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
-import com.culturemate.culturemate_api.dto.MemberDetailRequestDto;
-import com.culturemate.culturemate_api.dto.MemberDetailResponseDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.service.ImageService;
@@ -30,26 +29,26 @@ public class MemberDetailController {
 
   // 상세 조회
   @GetMapping("/{memberId}")
-  public ResponseEntity<MemberDetailResponseDto> getByMemberId(@PathVariable Long memberId) {
+  public ResponseEntity<MemberDto.DetailResponse> getByMemberId(@PathVariable Long memberId) {
     MemberDetail memberDetail = memberDetailService.findByMemberId(memberId);
-    return ResponseEntity.ok(MemberDetailResponseDto.from(memberDetail));  // HTTP 200 + MemberDetailResponseDto 반환
+    return ResponseEntity.ok(MemberDto.DetailResponse.from(memberDetail));
   }
 
   // 생성
   @PostMapping("/{memberId}")
-  public ResponseEntity<MemberDetailResponseDto> add(@PathVariable Long memberId,
-                                                     @Valid @RequestBody MemberDetailRequestDto dto) {
+  public ResponseEntity<MemberDto.DetailResponse> add(@PathVariable Long memberId,
+                                                     @Valid @RequestBody MemberDto.ProfileRequest dto) {
     Member member = memberService.findById(memberId);
     MemberDetail created = memberDetailService.create(member, dto);
-    return ResponseEntity.status(201).body(MemberDetailResponseDto.from(created));  // HTTP 201 Created + 데이터 반환
+    return ResponseEntity.status(201).body(MemberDto.DetailResponse.from(created));  // HTTP 201 Created + 데이터 반환
   }
 
   // 수정
   @PutMapping("/{memberId}")
-  public ResponseEntity<MemberDetailResponseDto> modify(@PathVariable Long memberId,
-                                                       @Valid @RequestBody MemberDetailRequestDto dto) {
+  public ResponseEntity<MemberDto.DetailResponse> modify(@PathVariable Long memberId,
+                                                       @Valid @RequestBody MemberDto.ProfileRequest dto) {
     MemberDetail updated = memberDetailService.update(memberId, dto);
-    return ResponseEntity.ok(MemberDetailResponseDto.from(updated));  // HTTP 200 OK + 데이터 반환
+    return ResponseEntity.ok(MemberDto.DetailResponse.from(updated));  // HTTP 200 OK + 데이터 반환
   }
 
   // 삭제

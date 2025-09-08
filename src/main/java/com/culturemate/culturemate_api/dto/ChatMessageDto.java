@@ -1,4 +1,4 @@
-package com.culturemate.culturemate_api.dto.chat;
+package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.chatting.ChatMessage;
 import lombok.AllArgsConstructor;

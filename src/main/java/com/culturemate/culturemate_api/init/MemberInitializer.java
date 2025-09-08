@@ -2,7 +2,7 @@ package com.culturemate.culturemate_api.init;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
-import com.culturemate.culturemate_api.dto.RegisterDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,7 +37,7 @@ public class MemberInitializer {
           continue;
         }
         
-        RegisterDto registerDto = RegisterDto.builder()
+        MemberDto.Register registerDto = MemberDto.Register.builder()
             .loginId(loginId)
             .password("user@1234")
             .nickname(loginId)

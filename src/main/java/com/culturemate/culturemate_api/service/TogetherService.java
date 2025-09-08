@@ -286,6 +286,44 @@ public class TogetherService {
     }
     participantsRepository.delete(participation);
     togetherRepository.updateParticipantCount(togetherId, -1); // 참여자 수만 감소
+
+    // 채팅방 나가기
+    chatRoomService.removeMemberFromRoomByTogether(together, memberId);
+  }
+
+  // 호스트의 멤버 강제 퇴출
+  @Transactional
+  public void removeMember(Long togetherId, Long participantId, Long hostId) {
+    Together together = findById(togetherId);
+    
+    // 호스트 권한 확인
+    if (!together.getHost().getId().equals(hostId)) {
+      throw new SecurityException("해당 모집글의 호스트가 아닙니다.");
+    }
+    
+    // 참여자 존재 확인
+    Participants participation = participantsRepository.findByTogetherIdAndParticipantId(togetherId, participantId);
+    if (participation == null) {
+      throw new IllegalArgumentException("해당 참여자를 찾을 수 없습니다.");
+    }
+    
+    // 호스트는 자기 자신을 내보낼 수 없음
+    if (hostId.equals(participantId)) {
+      throw new IllegalArgumentException("호스트는 자신을 내보낼 수 없습니다.");
+    }
+    
+    // 승인된 상태였다면 참여자 수 감소
+    boolean wasApproved = participation.getStatus() == ParticipationStatus.APPROVED;
+    
+    // 참여 상태를 REJECTED로 변경
+    participation.setStatus(ParticipationStatus.REJECTED);
+    
+    if (wasApproved) {
+      togetherRepository.updateParticipantCount(togetherId, -1);
+    }
+    
+    // 채팅방에서 제거
+    chatRoomService.removeMemberFromRoomByTogether(together, participantId);
   }
 
   // ===== 상태 관리 메서드 =====

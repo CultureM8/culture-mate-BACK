@@ -1,10 +1,9 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.chatting.ChatMessage;
-import com.culturemate.culturemate_api.dto.chat.ChatMessageDto;
+import com.culturemate.culturemate_api.dto.ChatMessageDto;
 import com.culturemate.culturemate_api.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;

@@ -3,7 +3,7 @@ package com.culturemate.culturemate_api.controller;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.CustomUser;
-import com.culturemate.culturemate_api.dto.MemberResponseDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.dto.TogetherDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
 import com.culturemate.culturemate_api.service.MemberService;
@@ -121,7 +121,7 @@ public class TogetherController {
 
   // 참여자 목록 조회 (상태별 필터링 가능)
   @GetMapping("/{togetherId}/participants")
-  public ResponseEntity<List<MemberResponseDto>> getParticipants(@PathVariable Long togetherId, @RequestParam(required = false) String status) {
+  public ResponseEntity<List<MemberDto.Response>> getParticipants(@PathVariable Long togetherId, @RequestParam(required = false) String status) {
     List<Member> participants;
     if (status == null) {
       participants = togetherService.getAllParticipants(togetherId);
@@ -129,8 +129,8 @@ public class TogetherController {
       participants = togetherService.getParticipantsByStatus(togetherId, status);
     }
     
-    List<MemberResponseDto> participantDtos = participants.stream()
-      .map(MemberResponseDto::from)
+    List<MemberDto.Response> participantDtos = participants.stream()
+      .map(MemberDto.Response::from)
       .collect(Collectors.toList());
     
     return ResponseEntity.ok().body(participantDtos);
@@ -140,6 +140,13 @@ public class TogetherController {
   @DeleteMapping("/{togetherId}/participants/cancel")
   public ResponseEntity<Void> cancelParticipation(@PathVariable Long togetherId, @AuthenticationPrincipal CustomUser customUser) {
     togetherService.leaveTogether(togetherId, customUser.getMemberId());
+    return ResponseEntity.ok().build();
+  }
+
+  // 호스트의 참여자 강제 퇴출
+  @DeleteMapping("/{togetherId}/participants/{participantId}")
+  public ResponseEntity<Void> removeMember(@PathVariable Long togetherId, @PathVariable Long participantId, @AuthenticationPrincipal CustomUser customUser) {
+    togetherService.removeMember(togetherId, participantId, customUser.getMemberId());
     return ResponseEntity.ok().build();
   }
 

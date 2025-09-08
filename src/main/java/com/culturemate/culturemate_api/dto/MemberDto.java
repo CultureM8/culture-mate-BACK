@@ -19,7 +19,7 @@ public class MemberDto {
 
   @Getter
   @Setter
-  public static class LoginRequest {
+  public static class Login {
     private String loginId;
     private String password;
   }
@@ -28,7 +28,7 @@ public class MemberDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class RegisterRequest {
+  public static class Register {
     
     @NotBlank
     @Size(min = 4, max = 20, message = "로그인 아이디는 4자 이상 20자 이하여야 합니다.")
@@ -67,7 +67,7 @@ public class MemberDto {
 
     private VisibleType visibility;
     
-    public static ProfileRequest from(RegisterRequest registerRequest) {
+    public static ProfileRequest from(Register registerRequest) {
       return ProfileRequest.builder()
         .nickname(registerRequest.getNickname())
         .intro(registerRequest.getIntro())

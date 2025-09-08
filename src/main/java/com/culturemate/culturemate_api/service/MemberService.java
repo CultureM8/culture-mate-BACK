@@ -4,8 +4,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;
-import com.culturemate.culturemate_api.dto.MemberDetailRequestDto;
-import com.culturemate.culturemate_api.dto.RegisterDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,9 +24,9 @@ public class MemberService {
   private final MemberDetailService memberDetailService;
 
 
-  // 회원 가입 (RegisterDto 사용)
+  // 회원 가입
   @Transactional
-  public Member create(RegisterDto registerDto) {
+  public Member create(MemberDto.Register registerDto) {
     if (memberRepository.existsByLoginId(registerDto.getLoginId())) {
       throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
     }
@@ -40,7 +39,7 @@ public class MemberService {
       .build();
 
     Member savedMember = memberRepository.save(member);
-    memberDetailService.create(savedMember, MemberDetailRequestDto.from(registerDto));
+    memberDetailService.create(savedMember, MemberDto.ProfileRequest.from(registerDto));
 
     return savedMember;
   }

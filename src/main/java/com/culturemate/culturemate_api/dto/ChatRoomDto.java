@@ -1,7 +1,6 @@
-package com.culturemate.culturemate_api.dto.chat;
+package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
-import com.culturemate.culturemate_api.dto.MemberDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,19 +20,16 @@ public class ChatRoomDto {
   public static class Response {
     private Long id;
     private String roomName;
-    private int participantCount;
+    private Integer chatMemberCount;
     private LocalDateTime createdAt;
-    private LocalDateTime lastMessageAt;
 
     public static Response from(ChatRoom chatRoom) {
       return Response.builder()
         .id(chatRoom.getId())
         .roomName(chatRoom.getRoomName())
-        .participantCount(chatRoom.getParticipantCount())
+        .chatMemberCount(chatRoom.getChatMembers().size())
         .createdAt(chatRoom.getCreatedAt() != null ? 
                    chatRoom.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
-        .lastMessageAt(chatRoom.getLastMessageAt() != null ? 
-                       chatRoom.getLastMessageAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
         .build();
     }
   }
@@ -45,10 +41,9 @@ public class ChatRoomDto {
   public static class ResponseDetail {
     private Long id;
     private String roomName;
-    private int participantCount;
+    private Integer chatMemberCount;
     private List<MemberDto.ProfileResponse> participants;
     private LocalDateTime createdAt;
-    private LocalDateTime lastMessageAt;
 
     public static ResponseDetail from(ChatRoom chatRoom) {
       List<MemberDto.ProfileResponse> participants = chatRoom.getChatMembers().stream()
@@ -58,12 +53,10 @@ public class ChatRoomDto {
       return ResponseDetail.builder()
         .id(chatRoom.getId())
         .roomName(chatRoom.getRoomName())
-        .participantCount(chatRoom.getParticipantCount())
+        .chatMemberCount(chatRoom.getChatMembers().size())
         .participants(participants)
         .createdAt(chatRoom.getCreatedAt() != null ? 
                    chatRoom.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
-        .lastMessageAt(chatRoom.getLastMessageAt() != null ? 
-                       chatRoom.getLastMessageAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
         .build();
     }
   }

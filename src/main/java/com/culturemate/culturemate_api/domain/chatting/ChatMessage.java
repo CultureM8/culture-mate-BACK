@@ -28,13 +28,13 @@ public class ChatMessage {
   private String content;
 
   @Column(nullable = false)
-  private Instant createAt;
+  private Instant createdAt;
 
 
   //=== 생성/수정 로직 ===//
   @PrePersist
   public void onCreate() {
-    this.createAt = Instant.now();
+    this.createdAt = Instant.now();
   }
 
 }
