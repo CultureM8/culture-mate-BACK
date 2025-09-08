@@ -80,7 +80,7 @@ public class Together {
 
   @Setter
   @Builder.Default
-  private boolean isRecruiting = true;
+  private boolean hostRecruitingEnabled = true; // 호스트가 명시적으로 설정한 모집 상태
 
   @Setter
   @Builder.Default

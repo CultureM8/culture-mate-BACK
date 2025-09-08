@@ -4,7 +4,9 @@ import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.together.Together;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,4 +30,13 @@ public class ChatRoom {
   @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @Builder.Default
   private List<ChatMember> chatMembers = new ArrayList<>();
+
+  @Column(nullable = false)
+  private Instant createdAt;
+
+  //=== 생성/수정 로직 ===//
+  @PrePersist
+  public void onCreate() {
+    this.createdAt = Instant.now();
+  }
 }

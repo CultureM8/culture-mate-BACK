@@ -98,8 +98,8 @@ public class ImageService {
       } catch (IOException e) {
         StringBuilder stb = new StringBuilder();
         stb.append("========== 이미지 업로드 실패 ==========").append("\n")
-          .append("fileName: ").append(file.getOriginalFilename()).append("\n")
-          .append("error: ").append(e.getMessage()).append("\n");
+          .append("파일명: ").append(file.getOriginalFilename()).append("\n")
+          .append("오류: ").append(e.getMessage()).append("\n");
         System.out.println(stb.toString());
       }
     }

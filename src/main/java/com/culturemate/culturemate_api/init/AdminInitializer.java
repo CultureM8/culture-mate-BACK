@@ -2,7 +2,7 @@ package com.culturemate.culturemate_api.init;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
-import com.culturemate.culturemate_api.dto.RegisterDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -50,7 +50,7 @@ public class AdminInitializer {
           continue;
         }
         
-        RegisterDto registerDto = RegisterDto.builder()
+        MemberDto.Register registerDto = MemberDto.Register.builder()
             .loginId(loginId)
             .password(adminData.get("password"))
             .nickname(adminData.get("nickname"))
@@ -59,7 +59,7 @@ public class AdminInitializer {
             .email(adminData.get("email"))
             .build();
         
-        System.out.println("RegisterDto 생성 완료: " + loginId);
+        System.out.println("Register 생성 완료: " + loginId);
         
         Member newAdmin = memberService.create(registerDto);
         memberService.updateRole(newAdmin.getId(), Role.ADMIN);

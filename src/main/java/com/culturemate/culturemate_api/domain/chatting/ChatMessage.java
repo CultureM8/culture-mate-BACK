@@ -17,21 +17,24 @@ public class ChatMessage {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "room_id")
+  @JoinColumn(name = "room_id", nullable = false)
   private ChatRoom chatRoom;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private ChatMember author;
 
+  @Column(nullable = false)
   private String content;
-  private Instant createAt;
+
+  @Column(nullable = false)
+  private Instant createdAt;
 
 
   //=== 생성/수정 로직 ===//
   @PrePersist
   public void onCreate() {
-    this.createAt = Instant.now();
+    this.createdAt = Instant.now();
   }
 
 }

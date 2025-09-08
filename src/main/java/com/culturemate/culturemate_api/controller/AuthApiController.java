@@ -1,8 +1,7 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.dto.CustomUser;
-import com.culturemate.culturemate_api.dto.LoginRequestDto;
-import com.culturemate.culturemate_api.dto.MemberResponseDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,14 +24,14 @@ public class AuthApiController {
   private final AuthenticationManager authenticationManager;
 
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
+  public ResponseEntity<?> login(@RequestBody MemberDto.Login loginRequest) {
     try {
       Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword())
       );
 
       CustomUser customUser = (CustomUser) authentication.getPrincipal();
-      MemberResponseDto responseDto = MemberResponseDto.builder()
+      MemberDto.Response responseDto = MemberDto.Response.builder()
         .id(customUser.getMemberId())
         .loginId(customUser.getUsername())
         .role(customUser.getRole())

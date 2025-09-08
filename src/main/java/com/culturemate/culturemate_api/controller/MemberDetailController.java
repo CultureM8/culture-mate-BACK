@@ -2,8 +2,7 @@ package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
-import com.culturemate.culturemate_api.dto.MemberDetailRequestDto;
-import com.culturemate.culturemate_api.dto.MemberDetailResponseDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.service.ImageService;
@@ -30,26 +29,26 @@ public class MemberDetailController {
 
   // 상세 조회
   @GetMapping("/{memberId}")
-  public ResponseEntity<MemberDetailResponseDto> getByMemberId(@PathVariable Long memberId) {
+  public ResponseEntity<MemberDto.DetailResponse> getByMemberId(@PathVariable Long memberId) {
     MemberDetail memberDetail = memberDetailService.findByMemberId(memberId);
-    return ResponseEntity.ok(MemberDetailResponseDto.from(memberDetail));  // HTTP 200 + MemberDetailResponseDto 반환
+    return ResponseEntity.ok(MemberDto.DetailResponse.from(memberDetail));
   }
 
   // 생성
   @PostMapping("/{memberId}")
-  public ResponseEntity<MemberDetailResponseDto> add(@PathVariable Long memberId,
-                                                     @Valid @RequestBody MemberDetailRequestDto dto) {
+  public ResponseEntity<MemberDto.DetailResponse> add(@PathVariable Long memberId,
+                                                     @Valid @RequestBody MemberDto.ProfileRequest dto) {
     Member member = memberService.findById(memberId);
     MemberDetail created = memberDetailService.create(member, dto);
-    return ResponseEntity.status(201).body(MemberDetailResponseDto.from(created));  // HTTP 201 Created + 데이터 반환
+    return ResponseEntity.status(201).body(MemberDto.DetailResponse.from(created));  // HTTP 201 Created + 데이터 반환
   }
 
   // 수정
   @PutMapping("/{memberId}")
-  public ResponseEntity<MemberDetailResponseDto> modify(@PathVariable Long memberId,
-                                                       @Valid @RequestBody MemberDetailRequestDto dto) {
+  public ResponseEntity<MemberDto.DetailResponse> modify(@PathVariable Long memberId,
+                                                       @Valid @RequestBody MemberDto.ProfileRequest dto) {
     MemberDetail updated = memberDetailService.update(memberId, dto);
-    return ResponseEntity.ok(MemberDetailResponseDto.from(updated));  // HTTP 200 OK + 데이터 반환
+    return ResponseEntity.ok(MemberDto.DetailResponse.from(updated));  // HTTP 200 OK + 데이터 반환
   }
 
   // 삭제
@@ -61,33 +60,38 @@ public class MemberDetailController {
 
   // =========================== 이미지 관련 API ===========================
   
-  // 프로필 이미지 업로드/수정 (썸네일 + 메인)
-  @PatchMapping("/{memberId}/profile-image")
-  public ResponseEntity<Void> updateProfileImage(@PathVariable Long memberId,
-                                                 @RequestParam("image") MultipartFile imageFile) {
-    memberDetailService.updateProfileImage(memberId, imageFile);
+  // 통합 이미지 업로드/수정 (프로필, 배경)
+  @PatchMapping("/{memberId}/image")
+  public ResponseEntity<Void> updateImage(@PathVariable Long memberId,
+                                          @RequestParam("image") MultipartFile imageFile,
+                                          @RequestParam("type") String imageType) {
+    switch (imageType.toLowerCase()) {
+      case "profile":
+        memberDetailService.updateProfileImage(memberId, imageFile);
+        break;
+      case "background":
+        memberDetailService.updateBackgroundImage(memberId, imageFile);
+        break;
+      default:
+        throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");
+    }
     return ResponseEntity.ok().build();
   }
 
-  // 배경 이미지 업로드/수정
-  @PatchMapping("/{memberId}/background-image") 
-  public ResponseEntity<Void> updateBackgroundImage(@PathVariable Long memberId,
-                                                    @RequestParam("image") MultipartFile imageFile) {
-    memberDetailService.updateBackgroundImage(memberId, imageFile);
-    return ResponseEntity.ok().build();
-  }
-
-  // 프로필 이미지 삭제
-  @DeleteMapping("/{memberId}/profile-image")
-  public ResponseEntity<Void> deleteProfileImage(@PathVariable Long memberId) {
-    memberDetailService.deleteProfileImage(memberId);
-    return ResponseEntity.noContent().build();
-  }
-
-  // 배경 이미지 삭제  
-  @DeleteMapping("/{memberId}/background-image")
-  public ResponseEntity<Void> deleteBackgroundImage(@PathVariable Long memberId) {
-    memberDetailService.deleteBackgroundImage(memberId);
+  // 통합 이미지 삭제 (프로필, 배경)
+  @DeleteMapping("/{memberId}/image")
+  public ResponseEntity<Void> deleteImage(@PathVariable Long memberId,
+                                          @RequestParam("type") String imageType) {
+    switch (imageType.toLowerCase()) {
+      case "profile":
+        memberDetailService.deleteProfileImage(memberId);
+        break;
+      case "background":
+        memberDetailService.deleteBackgroundImage(memberId);
+        break;
+      default:
+        throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");
+    }
     return ResponseEntity.noContent().build();
   }
 

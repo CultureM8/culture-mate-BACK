@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-@Transactional(readOnly=true)
+@Transactional(readOnly = true)
 public class EventService {
 
   private final EventRepository eventRepository;

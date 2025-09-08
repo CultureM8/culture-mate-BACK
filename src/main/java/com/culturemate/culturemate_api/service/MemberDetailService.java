@@ -3,7 +3,7 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
-import com.culturemate.culturemate_api.dto.MemberDetailRequestDto;
+import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberDetailRepository;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import jakarta.transaction.Transactional;
@@ -26,7 +26,7 @@ public class MemberDetailService {
   }
 
   // 생성 (Member 객체와 DTO 사용) - @MapsId 활용
-  public MemberDetail create(Member member, MemberDetailRequestDto dto) {
+  public MemberDetail create(Member member, MemberDto.ProfileRequest dto) {
     MemberDetail memberDetail = MemberDetail.builder()
       .member(member)  // @MapsId에 의해 ID 자동 매핑
       .nickname(dto.getNickname())
@@ -39,7 +39,7 @@ public class MemberDetailService {
   }
 
   // 수정
-  public MemberDetail update(Long memberId, MemberDetailRequestDto dto) {
+  public MemberDetail update(Long memberId, MemberDto.ProfileRequest dto) {
     MemberDetail memberDetail = memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
 
