@@ -4,6 +4,11 @@ import com.culturemate.culturemate_api.domain.community.Comment;
 import com.culturemate.culturemate_api.dto.CommentRequestDto;
 import com.culturemate.culturemate_api.dto.CommentResponseDto;
 import com.culturemate.culturemate_api.service.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Comment API", description = "댓글 관리 API")
 @RestController
 @RequestMapping("/api/v1/board/{boardId}/comments")
 @RequiredArgsConstructor
@@ -18,10 +24,15 @@ public class CommentController {
 
   private final CommentService commentService;
 
-  // 댓글 생성
+  @Operation(summary = "댓글 생성", description = "게시글에 댓글을 생성합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "댓글 생성 성공"),
+    @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+  })
   @PostMapping
-  public ResponseEntity<CommentResponseDto> add(@PathVariable Long boardId,
-                                                  @RequestBody CommentRequestDto requestDto) {
+  public ResponseEntity<CommentResponseDto> add(
+    @Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
+    @Parameter(description = "댓글 내용", required = true) @RequestBody CommentRequestDto requestDto) {
     Comment created = commentService.create(
         boardId, 
         requestDto.getAuthorId(), 

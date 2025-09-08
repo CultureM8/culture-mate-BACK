@@ -33,6 +33,7 @@ public class Participants {
   @Setter
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
+  @Builder.Default
   private ParticipationStatus status = ParticipationStatus.PENDING;
 
 }

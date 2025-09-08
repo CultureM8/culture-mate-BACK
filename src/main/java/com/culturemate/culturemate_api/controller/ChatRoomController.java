@@ -8,6 +8,11 @@ import com.culturemate.culturemate_api.dto.ChatMessageDto;
 import com.culturemate.culturemate_api.dto.ChatRoomDto;
 import com.culturemate.culturemate_api.service.ChatRoomService;
 import com.culturemate.culturemate_api.service.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "ChatRoom API", description = "채팅방 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/chatroom")

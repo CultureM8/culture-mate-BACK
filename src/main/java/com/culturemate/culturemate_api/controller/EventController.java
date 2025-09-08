@@ -5,6 +5,11 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.dto.EventDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
 import com.culturemate.culturemate_api.service.EventService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,13 +18,17 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Tag(name = "Event API", description = "문화 이벤트 관리 API")
 @RestController
 @RequestMapping("/api/v1/events")
 @RequiredArgsConstructor
 public class EventController {
   private final EventService eventService;
 
-  // 이벤트 전체 데이터 조회하기
+  @Operation(summary = "전체 이벤트 조회", description = "모든 문화 이벤트를 조회합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+  })
   @GetMapping
   public ResponseEntity<List<EventDto.Response>> get() {
     List<Event> events = eventService.findAll();

@@ -4,6 +4,11 @@ import com.culturemate.culturemate_api.dto.BoardDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;
 import com.culturemate.culturemate_api.dto.ImageUploadRequestDto;
 import com.culturemate.culturemate_api.service.BoardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Board API", description = "게시판 관리 API")
 @RestController
 @RequestMapping("/api/v1/board")
 @RequiredArgsConstructor
@@ -19,7 +25,10 @@ public class BoardController {
 
   private final BoardService boardService;
 
-  // 전체 게시물 조회
+  @Operation(summary = "전체 게시물 조회", description = "모든 게시물을 조회합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+  })
   @GetMapping
   public ResponseEntity<List<BoardDto.Response>> getAllBoards() {
     return ResponseEntity.ok().body(
@@ -28,9 +37,14 @@ public class BoardController {
         .collect(Collectors.toList()));
   }
 
-  // 특정 게시물 조회
+  @Operation(summary = "특정 게시물 조회", description = "ID로 특정 게시물을 조회합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "조회 성공"),
+    @ApiResponse(responseCode = "404", description = "게시물을 찾을 수 없음")
+  })
   @GetMapping("/{boardId}")
-  public ResponseEntity<BoardDto.Response> getBoard(@PathVariable Long boardId) {
+  public ResponseEntity<BoardDto.Response> getBoard(
+    @Parameter(description = "게시물 ID", required = true) @PathVariable Long boardId) {
     return ResponseEntity.ok().body(
       BoardDto.Response.from(boardService.findById(boardId))
     );
@@ -59,9 +73,14 @@ public class BoardController {
     return ResponseEntity.ok(boards);
   }
 
-  // 게시글 생성
+  @Operation(summary = "게시글 생성", description = "새로운 게시글을 작성합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "생성 성공"),
+    @ApiResponse(responseCode = "400", description = "잘못된 요청")
+  })
   @PostMapping
-  public ResponseEntity<BoardDto.Response> add(@Valid @RequestBody BoardDto.Request requestDto) {
+  public ResponseEntity<BoardDto.Response> add(
+    @Parameter(description = "게시글 작성 정보", required = true) @Valid @RequestBody BoardDto.Request requestDto) {
     return ResponseEntity.ok(
       BoardDto.Response.from(boardService.create(requestDto))
     );

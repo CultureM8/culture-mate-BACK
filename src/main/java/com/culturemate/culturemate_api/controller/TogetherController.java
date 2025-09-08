@@ -8,6 +8,11 @@ import com.culturemate.culturemate_api.dto.TogetherDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.culturemate.culturemate_api.service.TogetherService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Together API", description = "그룹 모임 관리 API")
 @RestController
 @RequestMapping("/api/v1/together")
 @RequiredArgsConstructor
@@ -24,6 +30,10 @@ public class TogetherController {
   private final TogetherService togetherService;
   private final MemberService memberService;
 
+  @Operation(summary = "전체 모임 조회", description = "모든 모임 목록을 조회합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+  })
   @GetMapping
   public ResponseEntity<List<TogetherDto.Response>> getAll() {
     return ResponseEntity.ok().body(
@@ -33,15 +43,26 @@ public class TogetherController {
     );
   }
 
+  @Operation(summary = "특정 모임 조회", description = "ID로 특정 모임을 조회합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "조회 성공"),
+    @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없음")
+  })
   @GetMapping("/{id}")
-  public ResponseEntity<TogetherDto.Response> getById(@PathVariable Long id) {
+  public ResponseEntity<TogetherDto.Response> getById(
+    @Parameter(description = "모임 ID", required = true) @PathVariable Long id) {
     Together together = togetherService.findById(id);
     return ResponseEntity.ok().body(togetherService.toResponseDto(together));
   }
 
-  // 특정 회원이 호스트인 모집글 조회
+  @Operation(summary = "호스트별 모임 조회", description = "특정 회원이 호스트인 모임을 조회합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "조회 성공"),
+    @ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음")
+  })
   @GetMapping("/hosted-by/{hostId}")
-  public ResponseEntity<List<TogetherDto.Response>> getByHostId(@PathVariable Long hostId) {
+  public ResponseEntity<List<TogetherDto.Response>> getByHostId(
+    @Parameter(description = "호스트 회원 ID", required = true) @PathVariable Long hostId) {
     Member host = memberService.findById(hostId);
     List<Together> togethers = togetherService.findByHost(host);
     return ResponseEntity.ok().body(

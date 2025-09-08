@@ -5,7 +5,7 @@ public enum EventType {
     MOVIE,          // 영화
     THEATER,        // 연극
     EXHIBITION,     // 전시
-    Classical,      // 클래식
+    CLASSIC,      // 클래식
     DANCE,          // 무용
     CONCERT,        // 콘서트
     FESTIVAL,       // 패스티벌
