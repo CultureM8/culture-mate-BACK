@@ -8,14 +8,12 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Participants;
 import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
-import com.culturemate.culturemate_api.dto.TogetherRequestDto;
-import com.culturemate.culturemate_api.dto.TogetherResponseDto;
+import com.culturemate.culturemate_api.dto.TogetherDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
 import com.culturemate.culturemate_api.dto.RegionDto;
 
 import java.time.ZoneId;
 import com.culturemate.culturemate_api.exceptions.together.*;
-import com.culturemate.culturemate_api.repository.ChatRoomRepository;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import com.culturemate.culturemate_api.repository.TogetherRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly=true)
+@Transactional(readOnly = true)
 public class TogetherService {
 
   private final TogetherRepository togetherRepository;
@@ -37,12 +35,11 @@ public class TogetherService {
   private final RegionService regionService;
   private final EventService eventService;
   private final ImageService imageService;
-  private final ChatService chatService; // 추가
-  private final ChatRoomRepository chatRoomRepository; // 추가
+  private final ChatRoomService chatRoomService;
 
 
   @Transactional
-  public Together create(TogetherRequestDto requestDto) {
+  public Together create(TogetherDto.Request requestDto) {
     Event event = eventService.findById(requestDto.getEventId());
     Member host = memberService.findById(requestDto.getHostId());
     Together together = Together.builder()
@@ -66,8 +63,8 @@ public class TogetherService {
     participantsRepository.save(hostParticipation);
 
     // 채팅방 생성 및 호스트 추가
-    ChatRoom chatRoom = chatService.createChatRoom(savedTogether.getTitle(), savedTogether);
-    chatService.addMemberToRoom(chatRoom.getId(), host.getId());
+    ChatRoom chatRoom = chatRoomService.createChatRoom(savedTogether.getTitle(), savedTogether);
+    chatRoomService.addMemberToRoom(chatRoom.getId(), host.getId());
 
     return savedTogether;
   }
@@ -143,7 +140,7 @@ public class TogetherService {
 
   // 수정
   @Transactional
-  public Together update(Long id, TogetherRequestDto requestDto) {
+  public Together update(Long id, TogetherDto.Request requestDto) {
     Together together = findById(id);
     Event event = eventService.findById(requestDto.getEventId());
     Region region = regionService.findExact(requestDto.getRegionDto());
@@ -183,21 +180,6 @@ public class TogetherService {
     togetherRepository.delete(together);
   }
 
-  // 참여가 가능하면 반환
-  public Together findByIdIfAvailable(Long togetherId) {
-    Together together = findById(togetherId);
-    
-    if (together.getMeetingDate().isBefore(LocalDate.now())) {
-      throw new TogetherExpiredException(togetherId, together.getMeetingDate());
-    }
-    
-    Integer currentParticipants = together.getParticipantCount();
-    if (together.getMaxParticipants() <= currentParticipants) {
-      throw new TogetherFullException(togetherId, together.getMaxParticipants());
-    }
-    
-    return together;
-  }
 
   // ===== 참여자 관리 메서드 =====
   // 참여 여부 확인
@@ -224,7 +206,7 @@ public class TogetherService {
   // 동행 신청 (승인 대기 상태로 생성)
   @Transactional
   public void applyTogether(Long togetherId, Long memberId) {
-    Together together = findByIdIfAvailable(togetherId);
+    Together together = findById(togetherId);
 
     if (!isActive(together)) {
       throw new TogetherClosedException(togetherId);
@@ -269,6 +251,11 @@ public class TogetherService {
       throw new SecurityException("해당 모집글의 호스트가 아닙니다.");
     }
 
+    // 승인 시점에도 모집 가능 상태 확인 (정원, 날짜, 호스트 설정)
+    if (!isActive(together)) {
+      throw new TogetherClosedException(togetherId);
+    }
+
     Participants participation = participantsRepository.findByTogetherIdAndParticipantId(togetherId, participantId);
     if (participation == null) {
       throw new IllegalArgumentException("참여 신청을 찾을 수 없습니다.");
@@ -280,9 +267,7 @@ public class TogetherService {
     togetherRepository.updateParticipantCount(togetherId, 1);
 
     // 채팅방에 멤버 추가
-    chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
-        chatService.addMemberToRoom(chatRoom.getId(), participantId)
-    );
+    chatRoomService.addMemberToRoomByTogether(together, participantId);
   }
 
   // 동행 참여 취소
@@ -300,7 +285,7 @@ public class TogetherService {
       throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
     participantsRepository.delete(participation);
-    togetherRepository.leaveParticipantAndUpdateStatus(togetherId); // 원자적 탈퇴 + 상태 변경
+    togetherRepository.updateParticipantCount(togetherId, -1); // 참여자 수만 감소
   }
 
   // ===== 상태 관리 메서드 =====
@@ -350,8 +335,8 @@ public class TogetherService {
   }
 
   // DTO 생성 헬퍼 메서드
-  public TogetherResponseDto toResponseDto(Together together) {
-    return TogetherResponseDto.builder()
+  public TogetherDto.Response toResponseDto(Together together) {
+    return TogetherDto.Response.builder()
       .id(together.getId())
       .eventId(together.getEvent().getId())
       .hostId(together.getHost().getId())

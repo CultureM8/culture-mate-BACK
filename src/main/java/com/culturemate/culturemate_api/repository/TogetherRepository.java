@@ -21,7 +21,7 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   @EntityGraph(attributePaths = {"event", "host", "region"})
   List<Together> findByHost(Member host);
   
-  // 참여자의 모든 참여 내역 (상태 무관)
+  // 참여자의 모든 참여 내역 (상태 무관) => 특정 참여자의 신청내역을 조회할 때 사용
   @EntityGraph(attributePaths = {"event", "host", "region"})
   @Query("SELECT t FROM Together t " +
          "JOIN t.participants p " +
@@ -70,30 +70,10 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
                               @Param("eventType") EventType eventType,
                               @Param("eventId") Long eventId);
 
-  // findByIsRecruiting 제거 - 서비스에서 isActive()로 필터링
-
-  // 이미지 경로만 조회 (삭제 시 사용)
-  @Query("SELECT t.thumbnailImagePath, t.mainImagePath FROM Together t WHERE t.id = :id")
-  Object[] findImagePathsById(@Param("id") Long id);
-
   // 원자적 참여자 수 카운트 업데이트 (단순)
   @Modifying
   @Query("UPDATE Together t SET t.participantCount = t.participantCount + :increment WHERE t.id = :togetherId")
   void updateParticipantCount(@Param("togetherId") Long togetherId, @Param("increment") int increment);
-
-  // 원자적 참여자 수 업데이트 + 모집 상태 자동 변경 (참여 시)
-  @Modifying
-  @Query("UPDATE Together t SET t.participantCount = t.participantCount + 1, " +
-         "t.isRecruiting = CASE WHEN (t.participantCount + 1) >= t.maxParticipants THEN false ELSE t.isRecruiting END " +
-         "WHERE t.id = :togetherId")
-  void joinParticipantAndUpdateStatus(@Param("togetherId") Long togetherId);
-
-  // 원자적 참여자 수 업데이트 + 모집 상태 자동 변경 (탈퇴 시)
-  @Modifying
-  @Query("UPDATE Together t SET t.participantCount = t.participantCount - 1, " +
-         "t.isRecruiting = CASE WHEN (t.participantCount - 1) < t.maxParticipants THEN true ELSE t.isRecruiting END " +
-         "WHERE t.id = :togetherId")
-  void leaveParticipantAndUpdateStatus(@Param("togetherId") Long togetherId);
 
   // 원자적 관심수 카운트 업데이트
   @Modifying

@@ -17,14 +17,17 @@ public class ChatMessage {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "room_id")
+  @JoinColumn(name = "room_id", nullable = false)
   private ChatRoom chatRoom;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private ChatMember author;
 
+  @Column(nullable = false)
   private String content;
+
+  @Column(nullable = false)
   private Instant createAt;
 
 

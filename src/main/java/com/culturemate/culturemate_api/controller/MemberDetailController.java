@@ -61,33 +61,38 @@ public class MemberDetailController {
 
   // =========================== 이미지 관련 API ===========================
   
-  // 프로필 이미지 업로드/수정 (썸네일 + 메인)
-  @PatchMapping("/{memberId}/profile-image")
-  public ResponseEntity<Void> updateProfileImage(@PathVariable Long memberId,
-                                                 @RequestParam("image") MultipartFile imageFile) {
-    memberDetailService.updateProfileImage(memberId, imageFile);
+  // 통합 이미지 업로드/수정 (프로필, 배경)
+  @PatchMapping("/{memberId}/image")
+  public ResponseEntity<Void> updateImage(@PathVariable Long memberId,
+                                          @RequestParam("image") MultipartFile imageFile,
+                                          @RequestParam("type") String imageType) {
+    switch (imageType.toLowerCase()) {
+      case "profile":
+        memberDetailService.updateProfileImage(memberId, imageFile);
+        break;
+      case "background":
+        memberDetailService.updateBackgroundImage(memberId, imageFile);
+        break;
+      default:
+        throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");
+    }
     return ResponseEntity.ok().build();
   }
 
-  // 배경 이미지 업로드/수정
-  @PatchMapping("/{memberId}/background-image") 
-  public ResponseEntity<Void> updateBackgroundImage(@PathVariable Long memberId,
-                                                    @RequestParam("image") MultipartFile imageFile) {
-    memberDetailService.updateBackgroundImage(memberId, imageFile);
-    return ResponseEntity.ok().build();
-  }
-
-  // 프로필 이미지 삭제
-  @DeleteMapping("/{memberId}/profile-image")
-  public ResponseEntity<Void> deleteProfileImage(@PathVariable Long memberId) {
-    memberDetailService.deleteProfileImage(memberId);
-    return ResponseEntity.noContent().build();
-  }
-
-  // 배경 이미지 삭제  
-  @DeleteMapping("/{memberId}/background-image")
-  public ResponseEntity<Void> deleteBackgroundImage(@PathVariable Long memberId) {
-    memberDetailService.deleteBackgroundImage(memberId);
+  // 통합 이미지 삭제 (프로필, 배경)
+  @DeleteMapping("/{memberId}/image")
+  public ResponseEntity<Void> deleteImage(@PathVariable Long memberId,
+                                          @RequestParam("type") String imageType) {
+    switch (imageType.toLowerCase()) {
+      case "profile":
+        memberDetailService.deleteProfileImage(memberId);
+        break;
+      case "background":
+        memberDetailService.deleteBackgroundImage(memberId);
+        break;
+      default:
+        throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");
+    }
     return ResponseEntity.noContent().build();
   }
 

@@ -19,7 +19,7 @@ public class DataInitializer implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
-    System.out.println("=== 데이터 초기화 시작 ===");
+//    System.out.println("=== 데이터 초기화 시작 ===");
     
     // 지역 데이터 초기화
 //    regionInitializer.regionInit();
@@ -30,6 +30,6 @@ public class DataInitializer implements ApplicationRunner {
     // 회원 데이터 20개 추가
 //    memberInitializer.memberInit(20);
     
-    System.out.println("=== 데이터 초기화 완료 ===");
+//    System.out.println("=== 데이터 초기화 완료 ===");
   }
 }
