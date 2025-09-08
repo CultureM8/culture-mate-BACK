@@ -105,4 +105,66 @@ public class RegionController {
     regionService.delete(id);
     return ResponseEntity.ok().build();
   }
+
+  /**
+   * 드롭다운을 위한 Level1 지역 목록 조회 (시/도)
+   */
+  @GetMapping("/dropdown/level1")
+  public ResponseEntity<List<String>> getLevel1Regions() {
+    List<Region> allRegions = regionService.findAll();
+    List<String> level1Names = allRegions.stream()
+      .filter(region -> region.getParent() == null) // 최상위 지역만
+      .map(Region::getRegionName)
+      .distinct()
+      .sorted()
+      .collect(Collectors.toList());
+    
+    return ResponseEntity.ok(level1Names);
+  }
+
+  /**
+   * 드롭다운을 위한 Level2 지역 목록 조회 (시/군/구)
+   */
+  @GetMapping("/dropdown/level2")
+  public ResponseEntity<List<String>> getLevel2Regions(@RequestParam String level1) {
+    RegionDto.Request searchDto = RegionDto.Request.builder()
+      .level1(level1)
+      .build();
+    
+    List<Region> regions = regionService.findByHierarchy(searchDto);
+    List<String> level2Names = regions.stream()
+      .filter(region -> region.getParent() != null && 
+                       region.getParent().getParent() == null) // level2 지역만
+      .map(Region::getRegionName)
+      .distinct()
+      .sorted()
+      .collect(Collectors.toList());
+    
+    return ResponseEntity.ok(level2Names);
+  }
+
+  /**
+   * 드롭다운을 위한 Level3 지역 목록 조회 (읍/면/동)
+   */
+  @GetMapping("/dropdown/level3")
+  public ResponseEntity<List<String>> getLevel3Regions(
+    @RequestParam String level1,
+    @RequestParam String level2
+  ) {
+    RegionDto.Request searchDto = RegionDto.Request.builder()
+      .level1(level1)
+      .level2(level2)
+      .build();
+    
+    List<Region> regions = regionService.findByHierarchy(searchDto);
+    List<String> level3Names = regions.stream()
+      .filter(region -> region.getParent() != null && 
+                       region.getParent().getParent() != null) // level3 지역만
+      .map(Region::getRegionName)
+      .distinct()
+      .sorted()
+      .collect(Collectors.toList());
+    
+    return ResponseEntity.ok(level3Names);
+  }
 }
