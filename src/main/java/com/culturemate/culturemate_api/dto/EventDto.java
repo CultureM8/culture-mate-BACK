@@ -98,6 +98,34 @@ public class EventDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  public static class ResponseCard {
+    private Long id;
+    private EventType eventType;
+    private String title;
+    private String description;
+    private String thumbnailImagePath;
+    private BigDecimal avgRating;
+    private Integer reviewCount;
+    private Integer interestCount;
+
+    public static ResponseCard from(Event event) {
+      return ResponseCard.builder()
+        .id(event.getId())
+        .eventType(event.getEventType())
+        .title(event.getTitle())
+        .description(event.getDescription())
+        .thumbnailImagePath(event.getThumbnailImagePath())
+        .avgRating(event.getAvgRating())
+        .reviewCount(event.getReviewCount())
+        .interestCount(event.getInterestCount())
+        .build();
+    }
+  }
+
+  @Getter
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class ResponseDetail {
     private Long id;
     private EventType eventType;

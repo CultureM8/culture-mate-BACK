@@ -1,7 +1,6 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.dto.BoardRequestDto;
-import com.culturemate.culturemate_api.dto.BoardResponseDto;
+import com.culturemate.culturemate_api.dto.BoardDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;
 import com.culturemate.culturemate_api.dto.ImageUploadRequestDto;
 import com.culturemate.culturemate_api.service.BoardService;
@@ -20,51 +19,60 @@ public class BoardController {
 
   private final BoardService boardService;
 
+  // 전체 게시물 조회
   @GetMapping
-  public ResponseEntity<List<BoardResponseDto>> get() {
+  public ResponseEntity<List<BoardDto.Response>> getAllBoards() {
     return ResponseEntity.ok().body(
       boardService.findAll().stream()
-        .map(BoardResponseDto::from)
+        .map(BoardDto.Response::from)
         .collect(Collectors.toList()));
+  }
+
+  // 특정 게시물 조회
+  @GetMapping("/{boardId}")
+  public ResponseEntity<BoardDto.Response> getBoard(@PathVariable Long boardId) {
+    return ResponseEntity.ok().body(
+      BoardDto.Response.from(boardService.findById(boardId))
+    );
   }
 
   // 작성자 기준 게시글 조회
   @GetMapping("/author/{memberId}")
-  public ResponseEntity<List<BoardResponseDto>> getByAuthor(@PathVariable Long memberId) {
+  public ResponseEntity<List<BoardDto.Response>> getByAuthor(@PathVariable Long memberId) {
     return ResponseEntity.ok(
       boardService.findByAuthor(memberId).stream()
-        .map(BoardResponseDto::from)
+        .map(BoardDto.Response::from)
         .collect(Collectors.toList())
     );
   }
 
   // 통합 검색
   @GetMapping("/search")
-  public ResponseEntity<List<BoardResponseDto>> search(BoardSearchDto searchDto) {
+  public ResponseEntity<List<BoardDto.Response>> search(BoardSearchDto searchDto) {
     if (searchDto.isEmpty()) {
       throw new IllegalArgumentException("검색 조건을 하나 이상 입력해주세요.");
     }
     
-    List<BoardResponseDto> boards = boardService.search(searchDto).stream()
-      .map(BoardResponseDto::from)
+    List<BoardDto.Response> boards = boardService.search(searchDto).stream()
+      .map(BoardDto.Response::from)
       .collect(Collectors.toList());
     return ResponseEntity.ok(boards);
   }
 
   // 게시글 생성
   @PostMapping
-  public ResponseEntity<BoardResponseDto> add(@Valid @RequestBody BoardRequestDto requestDto) {
+  public ResponseEntity<BoardDto.Response> add(@Valid @RequestBody BoardDto.Request requestDto) {
     return ResponseEntity.ok(
-      BoardResponseDto.from(boardService.create(requestDto))
+      BoardDto.Response.from(boardService.create(requestDto))
     );
   }
 
   // 게시글 수정
   @PutMapping("/{boardId}")
-  public ResponseEntity<BoardResponseDto> modify(@PathVariable Long boardId,
-                                                      @Valid @RequestBody BoardRequestDto requestDto) {
+  public ResponseEntity<BoardDto.Response> modify(@PathVariable Long boardId,
+                                                      @Valid @RequestBody BoardDto.Request requestDto) {
     return ResponseEntity.ok(
-      BoardResponseDto.from(boardService.update(boardId, requestDto))
+      BoardDto.Response.from(boardService.update(boardId, requestDto))
     );
   }
 

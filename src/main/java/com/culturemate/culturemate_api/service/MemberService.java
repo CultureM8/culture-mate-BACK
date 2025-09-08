@@ -72,6 +72,11 @@ public class MemberService {
     return memberRepository.findByStatus(status);
   }
 
+  // 닉네임으로 회원 검색 (부분 검색)
+  public List<Member> findByNicknameContaining(String nickname) {
+    return memberRepository.findByNicknameContaining(nickname);
+  }
+
   // 회원 상태 변경
   @Transactional
   public Member updateStatus(Long memberId, MemberStatus newStatus) {
