@@ -33,7 +33,7 @@ public class TogetherDto {
     private String title;
     
     @NotNull(message = "지역 정보는 필수입니다.")
-    private RegionDto regionDto;
+    private RegionDto.Request regionDto;
     
     @NotBlank(message = "주소는 필수입니다.")
     @Size(max = 255, message = "주소는 255자를 초과할 수 없습니다.")
@@ -68,7 +68,7 @@ public class TogetherDto {
     private MemberDto.ProfileResponse host;
     private String title;
     private String content;
-    private RegionDto region;
+    private RegionDto.Response region;
     private String address;
     private String addressDetail;
     @DateTimeFormat(pattern = "yyyy-MM-dd")

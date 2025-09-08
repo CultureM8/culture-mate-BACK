@@ -19,7 +19,7 @@ public class EventReviewController {
   private final EventReviewService eventReviewService;
 
   // 특정 이벤트의 리뷰 데이터 조회
-  @GetMapping
+  @GetMapping("/{eventId}")
   public ResponseEntity<List<EventReviewResponseDto>> getEventReviews(@RequestParam Long eventId) {
     return ResponseEntity.ok(
       eventReviewService.findByEventId(eventId).stream()

@@ -377,7 +377,7 @@ public class TogetherService {
       .event(EventDto.ResponseCard.from(together.getEvent()))
       .host(MemberDto.ProfileResponse.from(together.getHost()))
       .title(together.getTitle())
-      .region(RegionDto.from(together.getRegion()))
+      .region(RegionDto.Response.from(together.getRegion()))
       .address(together.getAddress())
       .addressDetail(together.getAddressDetail())
       .meetingDate(together.getMeetingDate())

@@ -17,7 +17,7 @@ import java.time.LocalDate;
 public class EventSearchDto {
   
   private String keyword;
-  private RegionDto region;
+  private RegionDto.Request region;
   private String eventType;
 
   @DateTimeFormat(pattern = "yyyy-MM-dd")

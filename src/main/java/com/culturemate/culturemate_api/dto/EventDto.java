@@ -31,7 +31,7 @@ public class EventDto {
     private String title;
 
     @Valid
-    private RegionDto regionDto;
+    private RegionDto.Request regionDto;
 
     @NotBlank(message = "장소명은 필수입니다.")
     private String eventLocation;
@@ -64,7 +64,7 @@ public class EventDto {
     private Long id;
     private EventType eventType;
     private String title;
-    private RegionDto region;
+    private RegionDto.Response region;
     private String eventLocation;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
@@ -81,7 +81,7 @@ public class EventDto {
         .id(event.getId())
         .eventType(event.getEventType())
         .title(event.getTitle())
-        .region(RegionDto.from(event.getRegion()))
+        .region(RegionDto.Response.from(event.getRegion()))
         .eventLocation(event.getEventLocation())
         .startDate(event.getStartDate())
         .endDate(event.getEndDate())
@@ -130,7 +130,7 @@ public class EventDto {
     private Long id;
     private EventType eventType;
     private String title;
-    private RegionDto regionDto;
+    private RegionDto.Response regionDto;
     private String eventLocation;
     private String address;
     private String addressDetail;
@@ -160,7 +160,7 @@ public class EventDto {
         .id(event.getId())
         .eventType(event.getEventType())
         .title(event.getTitle())
-        .regionDto(RegionDto.from(event.getRegion()))
+        .regionDto(RegionDto.Response.from(event.getRegion()))
         .eventLocation(event.getEventLocation())
         .address(event.getAddress())
         .addressDetail(event.getAddressDetail())

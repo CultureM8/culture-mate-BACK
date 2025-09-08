@@ -61,7 +61,7 @@ public class ChatRoomController {
   // 채팅방 입장 (새로운 채팅방)
   @PostMapping("/{roomId}/join")
   public ResponseEntity<Void> joinChatRoom(@PathVariable Long roomId,
-                                       @AuthenticationPrincipal CustomUser principal) {
+                                           @AuthenticationPrincipal CustomUser principal) {
     Member member = memberService.findByLoginId(principal.getUsername());
     chatRoomService.addMemberToRoom(roomId, member.getId());
     return ResponseEntity.noContent().build();

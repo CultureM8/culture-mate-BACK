@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class TogetherSearchDto {
 
   private String keyword;
-  private RegionDto regionDto;
+  private RegionDto.Request regionDto;
   private String eventType;
   private Long eventId;
 

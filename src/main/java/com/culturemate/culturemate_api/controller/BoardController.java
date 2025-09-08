@@ -26,9 +26,6 @@ public class BoardController {
   private final BoardService boardService;
 
   @Operation(summary = "전체 게시물 조회", description = "모든 게시물을 조회합니다")
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "조회 성공")
-  })
   @GetMapping
   public ResponseEntity<List<BoardDto.Response>> getAllBoards() {
     return ResponseEntity.ok().body(
@@ -38,13 +35,8 @@ public class BoardController {
   }
 
   @Operation(summary = "특정 게시물 조회", description = "ID로 특정 게시물을 조회합니다")
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "조회 성공"),
-    @ApiResponse(responseCode = "404", description = "게시물을 찾을 수 없음")
-  })
   @GetMapping("/{boardId}")
-  public ResponseEntity<BoardDto.Response> getBoard(
-    @Parameter(description = "게시물 ID", required = true) @PathVariable Long boardId) {
+  public ResponseEntity<BoardDto.Response> getBoard(@Parameter(description = "게시물 ID", required = true) @PathVariable Long boardId) {
     return ResponseEntity.ok().body(
       BoardDto.Response.from(boardService.findById(boardId))
     );
@@ -74,13 +66,9 @@ public class BoardController {
   }
 
   @Operation(summary = "게시글 생성", description = "새로운 게시글을 작성합니다")
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "생성 성공"),
-    @ApiResponse(responseCode = "400", description = "잘못된 요청")
-  })
   @PostMapping
-  public ResponseEntity<BoardDto.Response> createBoard(
-    @Parameter(description = "게시글 작성 정보", required = true) @Valid @RequestBody BoardDto.Request requestDto) {
+  public ResponseEntity<BoardDto.Response> createBoard(@Parameter(description = "게시글 작성 정보", required = true)
+                                                         @Valid @RequestBody BoardDto.Request requestDto) {
     return ResponseEntity.ok(
       BoardDto.Response.from(boardService.create(requestDto))
     );
@@ -105,7 +93,7 @@ public class BoardController {
   // 좋아요 토글 (추가/취소)
   @PostMapping("/{boardId}/like")
   public ResponseEntity<String> toggleBoardLike(@PathVariable Long boardId,
-                                           @RequestParam Long memberId) {
+                                                @RequestParam Long memberId) {
     boolean liked = boardService.toggleBoardLike(boardId, memberId);
 
     if (liked) {
