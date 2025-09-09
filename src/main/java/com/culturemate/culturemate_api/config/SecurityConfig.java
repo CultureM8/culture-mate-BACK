@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -42,16 +43,17 @@ public class SecurityConfig {
                     // 인증 API
                     "/api/v1/auth/login",
                     // 문서/개발 도구
-                    "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/favicon.ico",
-                    // Public 읽기 전용 API (예시)
-                    "/api/v1/events",           // 이벤트 목록 조회 (공개)
-                    "/api/v1/events/{id}",      // 이벤트 상세 조회 (공개)
-                    "/api/v1/together",         // Together 목록 조회 (공개)
-                    "/api/v1/together/{id}",    // Together 상세 조회 (공개)
-                    "/api/v1/boards",           // 게시판 목록 조회 (공개)
-                    "/api/v1/boards/{id}"       // 게시글 상세 조회 (공개)
+                    "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/favicon.ico"
                 ).permitAll()
-                // 그 외 모든 API는 인증 필요
+                // 모든 GET 요청은 공개 (읽기 전용)
+                .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+                // 보안이 필요한 개인정보 조회는 인증 필요
+                .requestMatchers(HttpMethod.GET, 
+                    "/api/v1/*/my/**",          // 내 정보 관련 (my로 시작하는 모든 경로)
+                    "/api/v1/members/*/detail", // 멤버 상세 정보
+                    "/api/v1/chat-rooms/**"     // 채팅방 관련
+                ).authenticated()
+                // 그 외 모든 API는 인증 필요 (POST, PUT, DELETE 등)
                 .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
