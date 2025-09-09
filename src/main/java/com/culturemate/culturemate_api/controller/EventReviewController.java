@@ -23,7 +23,7 @@ public class EventReviewController {
   // 특정 이벤트의 리뷰 데이터 조회
   @Operation(summary = "특정 이벤트의 리뷰 조회", description = "특정 이벤트의 아이디를 전달하면 해당 이벤트의 리뷰를 반환")
   @GetMapping("/{eventId}")
-  public ResponseEntity<List<ReviewDto.Response>> getEventReviews(@RequestParam Long eventId) {
+  public ResponseEntity<List<ReviewDto.Response>> getEventReviews(@PathVariable Long eventId) {
     return ResponseEntity.ok(
       eventReviewService.findByEventId(eventId).stream()
         .map(ReviewDto.Response::from)
