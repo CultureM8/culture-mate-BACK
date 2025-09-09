@@ -27,10 +27,18 @@ public class ChatRoomService {
 
   // 채팅방 생성
   @Transactional
-  public ChatRoom createChatRoom(String name, Together together) {
+  public ChatRoom createChatRoom(Together together) {
     ChatRoom chatRoom = ChatRoom.builder()
-      .roomName(name)
+      .roomName(together.getTitle())
       .together(together)
+      .build();
+    return chatRoomRepository.save(chatRoom);
+  }
+
+  // 채팅방 생성
+  @Transactional
+  public ChatRoom createChatRoom() {
+    ChatRoom chatRoom = ChatRoom.builder()
       .build();
     return chatRoomRepository.save(chatRoom);
   }

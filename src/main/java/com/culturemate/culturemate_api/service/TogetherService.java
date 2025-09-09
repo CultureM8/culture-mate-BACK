@@ -62,7 +62,7 @@ public class TogetherService {
     participantsRepository.save(hostParticipation);
 
     // 채팅방 생성 및 호스트 추가
-    ChatRoom chatRoom = chatRoomService.createChatRoom(savedTogether.getTitle(), savedTogether);
+    ChatRoom chatRoom = chatRoomService.createChatRoom(savedTogether);
     chatRoomService.addMemberToRoom(chatRoom.getId(), host.getId());
 
     return savedTogether;
