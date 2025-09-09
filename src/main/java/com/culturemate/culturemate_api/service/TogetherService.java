@@ -8,7 +8,6 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Participants;
 import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
-import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.*;
 
 import java.time.ZoneId;
@@ -35,6 +34,7 @@ public class TogetherService {
   private final EventService eventService;
   private final ImageService imageService;
   private final ChatRoomService chatRoomService;
+  private final ValidationService validationService;
 
 
   @Transactional
@@ -143,7 +143,7 @@ public class TogetherService {
     Together together = findById(id);
     
     // 권한 검증: 본인이 호스트인 모집글만 수정 가능
-    validateTogetherAccess(together, requesterId);
+    validationService.validateTogetherAccess(together, requesterId);
     Event event = eventService.findById(requestDto.getEventId());
     Region region = regionService.findExact(requestDto.getRegionDto());
 
@@ -175,7 +175,7 @@ public class TogetherService {
     Together together = findById(togetherId);
     
     // 권한 검증: 본인이 호스트인 모집글만 삭제 가능
-    validateTogetherAccess(together, requesterId);
+    validationService.validateTogetherAccess(together, requesterId);
 
     // 썸네일/메인 이미지 파일들 삭제
     imageService.deletePhysicalFiles(together.getThumbnailImagePath(),
@@ -398,19 +398,5 @@ public class TogetherService {
       .build();
   }
 
-  // 권한 검증 메서드 (ADMIN 예외 처리 포함)
-  private void validateTogetherAccess(Together together, Long requesterId) {
-    Member requester = memberService.findById(requesterId);
-    
-    // ADMIN은 모든 모집글 수정/삭제 가능
-    if (requester.getRole() == Role.ADMIN) {
-      return;
-    }
-    
-    // 일반 사용자는 본인이 호스트인 모집글만
-    if (!together.getHost().getId().equals(requesterId)) {
-      throw new IllegalArgumentException("본인이 호스트인 모집글만 수정/삭제할 수 있습니다");
-    }
-  }
 
 }

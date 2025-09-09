@@ -3,7 +3,6 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventReview;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.ReviewDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
 import com.culturemate.culturemate_api.repository.EventReviewRepository;
@@ -23,6 +22,7 @@ public class EventReviewService {
   private final EventRepository eventRepository;
   private final EventService eventService;
   private final MemberService memberService;
+  private final ValidationService validationService;
 
   @Transactional
   public EventReview create(ReviewDto.Request reviewDto, Long authenticatedUserId) {
@@ -64,13 +64,17 @@ public class EventReviewService {
     return reviewRepository.findByMember(member);
   }
 
+  public List<EventReview> findByMemberId(Long memberId) {
+    return reviewRepository.findByMemberId(memberId);
+  }
+
   @Transactional
   public EventReview update(Long reviewId, ReviewDto.Request requestDto, Long authenticatedUserId) {
     EventReview existingReview = reviewRepository.findById(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
     
     // 권한 검증: 본인의 리뷰만 수정 가능
-    validateReviewAccess(existingReview, authenticatedUserId);
+    validationService.validateEventReviewAccess(existingReview, authenticatedUserId);
     
     existingReview.setRating(requestDto.getRating());
     existingReview.setContent(requestDto.getContent());
@@ -85,7 +89,7 @@ public class EventReviewService {
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
     
     // 권한 검증: 본인의 리뷰만 삭제 가능
-    validateReviewAccess(eventReview, authenticatedUserId);
+    validationService.validateEventReviewAccess(eventReview, authenticatedUserId);
     
     Long eventId = eventReview.getEvent().getId();
     reviewRepository.delete(eventReview);
@@ -105,18 +109,4 @@ public class EventReviewService {
     } else {}
   }
 
-  // 권한 검증 메서드 (ADMIN 예외 처리 포함)
-  private void validateReviewAccess(EventReview review, Long requesterId) {
-    Member requester = memberService.findById(requesterId);
-    
-    // ADMIN은 모든 리뷰 수정/삭제 가능
-    if (requester.getRole() == Role.ADMIN) {
-      return;
-    }
-    
-    // 일반 사용자는 본인 리뷰만
-    if (!review.getMember().getId().equals(requesterId)) {
-      throw new IllegalArgumentException("본인의 리뷰만 수정/삭제할 수 있습니다");
-    }
-  }
 }

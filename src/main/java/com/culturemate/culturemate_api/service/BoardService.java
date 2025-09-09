@@ -5,7 +5,6 @@ import com.culturemate.culturemate_api.domain.community.BoardLike;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.BoardDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;
 import com.culturemate.culturemate_api.repository.BoardLikeRepository;
@@ -25,6 +24,7 @@ public class BoardService {
   private final BoardLikeRepository boardLikeRepository;
   private final MemberService memberService;
   private final EventService eventService;
+  private final ValidationService validationService;
 
   public List<Board> findAll() {
     return boardRepository.findAll();
@@ -88,7 +88,7 @@ public class BoardService {
       .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
     
     // 권한 검증: 본인의 게시글만 수정 가능
-    validateBoardAccess(board, requesterId);
+    validationService.validateBoardAccess(board, requesterId);
 
     Event event = null;
     if (requestDto.getEventId() != null) {
@@ -109,7 +109,7 @@ public class BoardService {
       .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
     
     // 권한 검증: 본인의 게시글만 삭제 가능
-    validateBoardAccess(board, requesterId);
+    validationService.validateBoardAccess(board, requesterId);
     
     boardRepository.delete(board);
   }
@@ -140,19 +140,5 @@ public class BoardService {
     }
   }
 
-  // 권한 검증 메서드 (ADMIN 예외 처리 포함)
-  private void validateBoardAccess(Board board, Long requesterId) {
-    Member requester = memberService.findById(requesterId);
-    
-    // ADMIN은 모든 게시글 수정/삭제 가능
-    if (requester.getRole() == Role.ADMIN) {
-      return;
-    }
-    
-    // 일반 사용자는 본인 게시글만
-    if (!board.getAuthor().getId().equals(requesterId)) {
-      throw new IllegalArgumentException("본인의 게시글만 수정/삭제할 수 있습니다");
-    }
-  }
 
 }
