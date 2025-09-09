@@ -13,6 +13,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Value("${cors.allowed-origins}")
   private String allowedOrigins;
+
   @Override
   public void configureMessageBroker(MessageBrokerRegistry registry) {
     registry.enableSimpleBroker("/topic", "/queue");

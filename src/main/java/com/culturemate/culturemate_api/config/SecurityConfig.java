@@ -38,12 +38,15 @@ public class SecurityConfig {
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize ->
             authorize
+                // CORS preflight 요청 허용
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // 인증 없이 접근 가능한 엔드포인트
                 .requestMatchers(
                     // 인증 API
                     "/api/v1/auth/login",
                     // 문서/개발 도구
-                    "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/favicon.ico"
+                    "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html", "/favicon.ico",
+                    "/api-docs/**"
                 ).permitAll()
                 // 모든 GET 요청은 공개 (읽기 전용)
                 .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()

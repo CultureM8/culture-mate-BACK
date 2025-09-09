@@ -34,7 +34,8 @@ custom:
 
 # CORS 설정
 cors:
-  allowed-origins: http://localhost:3000,http://127.0.0.1:3000
+#  allowed-origins: ${FRONTEND_URL}
+  allowed-origins: "http://localhost:3000,http://127.0.0.1:3000"
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS,HEAD
   allowed-headers: "Content-Type,Authorization,X-Requested-With,Accept,Accept-Language,Origin"
   allow-credentials: true
