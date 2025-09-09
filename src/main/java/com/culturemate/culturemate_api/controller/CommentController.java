@@ -1,8 +1,7 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.community.Comment;
-import com.culturemate.culturemate_api.dto.CommentRequestDto;
-import com.culturemate.culturemate_api.dto.CommentResponseDto;
+import com.culturemate.culturemate_api.dto.CommentDto;
 import com.culturemate.culturemate_api.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,41 +29,37 @@ public class CommentController {
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
   })
   @PostMapping
-  public ResponseEntity<CommentResponseDto> createComment(@Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
-                                                          @Parameter(description = "댓글 내용", required = true) @RequestBody CommentRequestDto requestDto) {
-    Comment created = commentService.create(
-        boardId, 
-        requestDto.getAuthorId(), 
-        requestDto.getParentId(), 
-        requestDto.getComment()
-    );
-    return ResponseEntity.status(201).body(CommentResponseDto.from(created)); // 201 Created
+  public ResponseEntity<CommentDto.Response> createComment(@Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
+                                                          @Parameter(description = "댓글 내용", required = true) @RequestBody CommentDto.Request requestDto) {
+    Comment created = commentService.create(requestDto);
+    return ResponseEntity.status(201).body(CommentDto.Response.from(created)); // 201 Created
   }
 
   // 댓글 수정
   @PutMapping("/{commentId}")
-  public ResponseEntity<CommentResponseDto> updateComment(@PathVariable Long commentId,
-                                                          @RequestBody CommentRequestDto requestDto) {
-    Comment updated = commentService.update(commentId, requestDto.getComment(), requestDto.getAuthorId());
-    return ResponseEntity.ok(CommentResponseDto.from(updated)); // 200 OK
+  public ResponseEntity<CommentDto.Response> updateComment(@PathVariable Long commentId,
+                                                          @RequestBody CommentDto.Request requestDto,
+                                                          @RequestParam Long requesterId) {
+    Comment updated = commentService.update(commentId, requestDto, requesterId);
+    return ResponseEntity.ok(CommentDto.Response.from(updated)); // 200 OK
   }
 
   // 부모 댓글만 조회 (replyCount 포함)
   @GetMapping
-  public ResponseEntity<List<CommentResponseDto>> getBoardParentComments(@PathVariable Long boardId) {
-    List<CommentResponseDto> comments = commentService.findParentCommentsByBoard(boardId)
+  public ResponseEntity<List<CommentDto.Response>> getComments(@PathVariable Long boardId) {
+    List<CommentDto.Response> comments = commentService.findParentCommentsByBoard(boardId)
       .stream()
-      .map(CommentResponseDto::from)
+      .map(CommentDto.Response::from)
       .collect(Collectors.toList());
     return ResponseEntity.ok(comments); // 200 OK
   }
 
   // 특정 댓글의 대댓글 조회
   @GetMapping("/{parentId}/replies")
-  public ResponseEntity<List<CommentResponseDto>> getCommentReplies(@PathVariable Long parentId) {
-    List<CommentResponseDto> replies = commentService.findReplies(parentId)
+  public ResponseEntity<List<CommentDto.Response>> getCommentReplies(@PathVariable Long parentId) {
+    List<CommentDto.Response> replies = commentService.findReplies(parentId)
       .stream()
-      .map(CommentResponseDto::from)
+      .map(CommentDto.Response::from)
       .collect(Collectors.toList());
     return ResponseEntity.ok(replies); // 200 OK
   }

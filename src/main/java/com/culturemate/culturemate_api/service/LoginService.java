@@ -1,6 +1,6 @@
 package com.culturemate.culturemate_api.service;
 
-import com.culturemate.culturemate_api.dto.CustomUser;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,7 +31,7 @@ public class LoginService implements UserDetailsService {
     var user = result.get();
     List<GrantedAuthority> authorities = new ArrayList<>();
     authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
-    return new CustomUser(
+    return new AuthenticatedUser(
         user.getLoginId(),
         user.getPassword(),
         authorities,

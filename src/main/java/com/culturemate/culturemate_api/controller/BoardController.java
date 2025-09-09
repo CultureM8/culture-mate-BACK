@@ -1,5 +1,6 @@
 package com.culturemate.culturemate_api.controller;
 
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.BoardDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;
 import com.culturemate.culturemate_api.dto.ImageUploadRequestDto;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -77,16 +79,18 @@ public class BoardController {
   // 게시글 수정
   @PutMapping("/{boardId}")
   public ResponseEntity<BoardDto.Response> updateBoard(@PathVariable Long boardId,
-                                                      @Valid @RequestBody BoardDto.Request requestDto) {
+                                                      @Valid @RequestBody BoardDto.Request requestDto,
+                                                      @AuthenticationPrincipal AuthenticatedUser requester) {
     return ResponseEntity.ok(
-      BoardDto.Response.from(boardService.update(boardId, requestDto))
+      BoardDto.Response.from(boardService.update(boardId, requestDto, requester.getMemberId()))
     );
   }
 
   // 게시글 삭제
   @DeleteMapping("/{boardId}")
-  public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId) {
-    boardService.delete(boardId);
+  public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId,
+                                         @AuthenticationPrincipal AuthenticatedUser requester) {
+    boardService.delete(boardId, requester.getMemberId());
     return ResponseEntity.noContent().build();
   }
 

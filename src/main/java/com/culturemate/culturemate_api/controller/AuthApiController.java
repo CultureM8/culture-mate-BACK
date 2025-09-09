@@ -1,6 +1,6 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.dto.CustomUser;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,7 +42,7 @@ public class AuthApiController {
         new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword())
       );
 
-      CustomUser customUser = (CustomUser) authentication.getPrincipal();
+      AuthenticatedUser customUser = (AuthenticatedUser) authentication.getPrincipal();
       MemberDto.Response responseDto = MemberDto.Response.builder()
         .id(customUser.getMemberId())
         .loginId(customUser.getUsername())

@@ -8,6 +8,7 @@ import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.event.TicketPrice;
 import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.EventDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
 import com.culturemate.culturemate_api.dto.TicketPriceDto;
@@ -186,7 +187,10 @@ public class EventService {
   }
 
   @Transactional
-  public Event update(Long id, EventDto.Request requestDto, MultipartFile mainImage, List<MultipartFile> imagesToAdd) {
+  public Event update(Long id, EventDto.Request requestDto, MultipartFile mainImage, List<MultipartFile> imagesToAdd, Long requesterId) {
+    // 권한 검증: ADMIN만 이벤트 수정 가능
+    validateAdminAccess(requesterId);
+    
     Event event = findById(id);
     Region region = requestDto.getRegionDto() != null ? regionService.findExact(requestDto.getRegionDto()) : null;
     
@@ -280,7 +284,10 @@ public class EventService {
   }
 
   @Transactional
-  public void delete(Long eventId) {
+  public void delete(Long eventId, Long requesterId) {
+    // 권한 검증: ADMIN만 이벤트 삭제 가능
+    validateAdminAccess(requesterId);
+    
     Event event = findById(eventId);
     
     // 관련 이미지들 삭제
@@ -344,5 +351,14 @@ public class EventService {
   }
 
   // ℹ️ 전체 삭제는 update 메서드에서 imagesToDelete로 처리
+
+  // ADMIN 권한 검증 메서드
+  private void validateAdminAccess(Long requesterId) {
+    Member requester = memberService.findById(requesterId);
+    
+    if (requester.getRole() != Role.ADMIN) {
+      throw new IllegalArgumentException("이벤트 수정/삭제는 관리자만 가능합니다");
+    }
+  }
 
 }

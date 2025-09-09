@@ -9,12 +9,12 @@ import org.springframework.security.core.userdetails.User;
 import java.util.Collection;
 
 @Getter
-public class CustomUser extends User {
+public class AuthenticatedUser extends User {
   private final Long memberId;
   private final Role role;
   private final MemberStatus status;
 
-  public CustomUser(String username,
+  public AuthenticatedUser(String username,
                     String password,
                     Collection<? extends GrantedAuthority> authorities,
                     Long memberId,

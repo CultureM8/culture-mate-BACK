@@ -3,6 +3,7 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
+import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberDetailRepository;
 import com.culturemate.culturemate_api.repository.MemberRepository;
@@ -39,7 +40,10 @@ public class MemberDetailService {
   }
 
   // 수정
-  public MemberDetail update(Long memberId, MemberDto.DetailRequest dto) {
+  public MemberDetail update(Long memberId, MemberDto.DetailRequest dto, Long requesterId) {
+    // 권한 검증: 본인 프로필만 수정 가능
+    validateProfileAccess(memberId, requesterId);
+    
     MemberDetail memberDetail = memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
 
@@ -54,7 +58,10 @@ public class MemberDetailService {
   }
 
   // 삭제
-  public void delete(Long memberId) {
+  public void delete(Long memberId, Long requesterId) {
+    // 권한 검증: 본인 프로필만 삭제 가능
+    validateProfileAccess(memberId, requesterId);
+    
     memberDetailRepository.deleteById(memberId);
   }
 
@@ -129,6 +136,22 @@ public class MemberDetailService {
     
     // DB 필드 초기화
     memberDetail.setBackgroundImagePath(null);
+  }
+
+  // 권한 검증 메서드 (ADMIN 예외 처리 포함)
+  private void validateProfileAccess(Long profileMemberId, Long requesterId) {
+    Member requester = memberRepository.findById(requesterId)
+        .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+    
+    // ADMIN은 모든 프로필 수정/삭제 가능
+    if (requester.getRole() == Role.ADMIN) {
+      return;
+    }
+    
+    // 일반 사용자는 본인 프로필만
+    if (!profileMemberId.equals(requesterId)) {
+      throw new IllegalArgumentException("본인의 프로필만 수정/삭제할 수 있습니다");
+    }
   }
 
 }

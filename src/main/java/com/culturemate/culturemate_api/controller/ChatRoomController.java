@@ -3,7 +3,7 @@ package com.culturemate.culturemate_api.controller;
 import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
 import com.culturemate.culturemate_api.domain.chatting.ChatMessage;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.CustomUser;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.ChatMessageDto;
 import com.culturemate.culturemate_api.dto.ChatRoomDto;
 import com.culturemate.culturemate_api.service.ChatRoomService;
@@ -49,8 +49,8 @@ public class ChatRoomController {
 
   // 특정 사용자의 채팅방 불러오기 (로그인한 회원)
   @GetMapping("/my")
-  public ResponseEntity<List<ChatRoomDto.Response>> getMyChatRooms(@AuthenticationPrincipal CustomUser principal) {
-    Member member = memberService.findByLoginId(principal.getUsername());
+  public ResponseEntity<List<ChatRoomDto.Response>> getMyChatRooms(@AuthenticationPrincipal AuthenticatedUser requester) {
+    Member member = memberService.findByLoginId(requester.getUsername());
     List<ChatRoom> chatRooms = chatRoomService.findRoomsByMember(member.getId());
     List<ChatRoomDto.Response> response = chatRooms.stream()
         .map(ChatRoomDto.Response::from)
@@ -61,8 +61,8 @@ public class ChatRoomController {
   // 채팅방 입장 (새로운 채팅방)
   @PostMapping("/{roomId}/join")
   public ResponseEntity<Void> joinChatRoom(@PathVariable Long roomId,
-                                           @AuthenticationPrincipal CustomUser principal) {
-    Member member = memberService.findByLoginId(principal.getUsername());
+                                           @AuthenticationPrincipal AuthenticatedUser requester) {
+    Member member = memberService.findByLoginId(requester.getUsername());
     chatRoomService.addMemberToRoom(roomId, member.getId());
     return ResponseEntity.noContent().build();
   }
@@ -87,8 +87,8 @@ public class ChatRoomController {
   // 채팅방 나가기
   @DeleteMapping("/{roomId}/leave")
   public ResponseEntity<Void> leaveChatRoom(@PathVariable Long roomId,
-                                            @AuthenticationPrincipal CustomUser principal) {
-    Member member = memberService.findByLoginId(principal.getUsername());
+                                            @AuthenticationPrincipal AuthenticatedUser requester) {
+    Member member = memberService.findByLoginId(requester.getUsername());
     chatRoomService.removeMemberFromRoom(roomId, member.getId());
     return ResponseEntity.noContent().build();
   }

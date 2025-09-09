@@ -2,6 +2,7 @@ package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.event.Event;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.EventDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
 import com.culturemate.culturemate_api.service.EventService;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -91,9 +93,10 @@ public class EventController {
       @PathVariable Long id,
       @RequestPart(value = "eventRequestDto") EventDto.Request eventRequestDto,
       @RequestParam(value = "mainImage", required = false) MultipartFile mainImage,
-      @RequestParam(value = "imagesToAdd", required = false) List<MultipartFile> imagesToAdd) {
+      @RequestParam(value = "imagesToAdd", required = false) List<MultipartFile> imagesToAdd,
+      @AuthenticationPrincipal AuthenticatedUser requester) {
     
-    Event updatedEvent = eventService.update(id, eventRequestDto, mainImage, imagesToAdd);
+    Event updatedEvent = eventService.update(id, eventRequestDto, mainImage, imagesToAdd, requester.getMemberId());
     return ResponseEntity.ok(EventDto.Response.from(updatedEvent));
   }
 
@@ -112,8 +115,9 @@ public class EventController {
 
   // 이벤트 삭제
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-    eventService.delete(id);
+  public ResponseEntity<Void> deleteEvent(@PathVariable Long id,
+                                         @AuthenticationPrincipal AuthenticatedUser requester) {
+    eventService.delete(id, requester.getMemberId());
     return ResponseEntity.noContent().build();
   }
 
