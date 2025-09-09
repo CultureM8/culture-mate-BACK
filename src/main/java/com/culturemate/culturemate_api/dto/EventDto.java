@@ -31,7 +31,7 @@ public class EventDto {
     private String title;
 
     @Valid
-    private RegionDto regionDto;
+    private RegionDto.Request regionDto;
 
     @NotBlank(message = "장소명은 필수입니다.")
     private String eventLocation;
@@ -64,7 +64,7 @@ public class EventDto {
     private Long id;
     private EventType eventType;
     private String title;
-    private RegionDto regionDto;
+    private RegionDto.Response region;
     private String eventLocation;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
@@ -81,10 +81,38 @@ public class EventDto {
         .id(event.getId())
         .eventType(event.getEventType())
         .title(event.getTitle())
-        .regionDto(RegionDto.from(event.getRegion()))
+        .region(RegionDto.Response.from(event.getRegion()))
         .eventLocation(event.getEventLocation())
         .startDate(event.getStartDate())
         .endDate(event.getEndDate())
+        .description(event.getDescription())
+        .thumbnailImagePath(event.getThumbnailImagePath())
+        .avgRating(event.getAvgRating())
+        .reviewCount(event.getReviewCount())
+        .interestCount(event.getInterestCount())
+        .build();
+    }
+  }
+
+  @Getter
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class ResponseCard {
+    private Long id;
+    private EventType eventType;
+    private String title;
+    private String description;
+    private String thumbnailImagePath;
+    private BigDecimal avgRating;
+    private Integer reviewCount;
+    private Integer interestCount;
+
+    public static ResponseCard from(Event event) {
+      return ResponseCard.builder()
+        .id(event.getId())
+        .eventType(event.getEventType())
+        .title(event.getTitle())
         .description(event.getDescription())
         .thumbnailImagePath(event.getThumbnailImagePath())
         .avgRating(event.getAvgRating())
@@ -102,7 +130,7 @@ public class EventDto {
     private Long id;
     private EventType eventType;
     private String title;
-    private RegionDto regionDto;
+    private RegionDto.Response regionDto;
     private String eventLocation;
     private String address;
     private String addressDetail;
@@ -132,7 +160,7 @@ public class EventDto {
         .id(event.getId())
         .eventType(event.getEventType())
         .title(event.getTitle())
-        .regionDto(RegionDto.from(event.getRegion()))
+        .regionDto(RegionDto.Response.from(event.getRegion()))
         .eventLocation(event.getEventLocation())
         .address(event.getAddress())
         .addressDetail(event.getAddressDetail())

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class RegionService {
     return regionRepository.findAll();
   }
 
-  public List<Region> findByHierarchy(RegionDto regionDto) {
+  public List<Region> findByHierarchy(RegionDto.Request regionDto) {
     if (regionDto == null || !regionDto.hasRegion()) {
       // 지역 조건이 없으면 모든 지역 반환
       return regionRepository.findAll();
@@ -44,11 +45,21 @@ public class RegionService {
       return new ArrayList<>();
     }
     
-    // 2단계: 타겟 + 모든 하위 Region들 재귀로 수집
-    return getSelfAndAllChildren(targetRegion);
+    // 2단계: 타겟 자체 + 하위 지역들을 명확히 분리해서 수집 (NULL 처리 개선)
+    List<Region> result = new ArrayList<>();
+    result.add(targetRegion);  // 자기 자신 먼저 추가
+    
+    // 3단계: 하위 지역들 별도 조회 및 추가
+    List<Region> descendants = regionRepository.findAllDescendants(targetRegion.getId());
+    result.addAll(descendants);
+    
+    // 4단계: ID 기반 중복 제거 (안전장치)
+    return result.stream()
+        .distinct()  // Region 엔티티의 equals/hashCode 기반 중복 제거
+        .collect(Collectors.toList());
   }
 
-  public Region findExact(RegionDto regionDto) {
+  public Region findExact(RegionDto.Request regionDto) {
     if (regionDto == null || !regionDto.hasRegion()) {
       return null;
     }
@@ -60,28 +71,6 @@ public class RegionService {
     );
   }
 
-  /**
-   * 특정 Region과 그 모든 하위 Region들을 재귀적으로 수집
-   */
-  private List<Region> getSelfAndAllChildren(Region targetRegion) {
-    List<Region> result = new ArrayList<>();
-    result.add(targetRegion);  // 자기 자신 추가
-    collectAllChildren(targetRegion, result);  // 모든 하위들 재귀 수집
-    return result;
-  }
-
-  /**
-   * 재귀적으로 모든 하위 Region들을 수집
-   */
-  private void collectAllChildren(Region parent, List<Region> result) {
-    List<Region> children = regionRepository.findByParent(parent);
-    result.addAll(children);
-    
-    // 각 자식에 대해서도 재귀적으로 하위들 수집
-    for (Region child : children) {
-      collectAllChildren(child, result);
-    }
-  }
 
   @Transactional
   public Region create(String level1, String level2, String level3) {
@@ -147,5 +136,6 @@ public class RegionService {
     }
     return level;
   }
+
 
 }

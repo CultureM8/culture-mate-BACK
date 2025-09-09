@@ -5,7 +5,7 @@ import com.culturemate.culturemate_api.domain.community.BoardLike;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.BoardRequestDto;
+import com.culturemate.culturemate_api.dto.BoardDto;
 import com.culturemate.culturemate_api.dto.BoardSearchDto;
 import com.culturemate.culturemate_api.repository.BoardLikeRepository;
 import com.culturemate.culturemate_api.repository.BoardRepository;
@@ -42,11 +42,6 @@ public class BoardService {
 
   // 통합 검색
   public List<Board> search(BoardSearchDto searchDto) {
-    Member author = null;
-    if (searchDto.hasAuthor()) {
-      author = memberService.findById(searchDto.getAuthorId());  // MemberService에서 조회
-    }
-
     EventType eventType = null;
     if (searchDto.hasEventType()) {
       eventType = EventType.valueOf(searchDto.getEventType().toUpperCase());
@@ -59,7 +54,7 @@ public class BoardService {
 
     return boardRepository.findBySearch(
       searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-      author,
+      searchDto.hasAuthor() ? searchDto.getAuthorNickname() : null,
       event,
       eventType
     );
@@ -67,7 +62,7 @@ public class BoardService {
 
   // 게시글 생성
   @Transactional
-  public Board create(BoardRequestDto requestDto) {
+  public Board create(BoardDto.Request requestDto) {
     Member author = memberService.findById(requestDto.getAuthorId());  // MemberService에서 조회
     
     Event event = null;
@@ -87,7 +82,7 @@ public class BoardService {
 
   // 게시글 수정
   @Transactional
-  public Board update(Long boardId, BoardRequestDto requestDto) {
+  public Board update(Long boardId, BoardDto.Request requestDto) {
     Board board = boardRepository.findById(boardId)
       .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
 

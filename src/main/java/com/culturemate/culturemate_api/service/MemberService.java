@@ -39,7 +39,7 @@ public class MemberService {
       .build();
 
     Member savedMember = memberRepository.save(member);
-    memberDetailService.create(savedMember, MemberDto.ProfileRequest.from(registerDto));
+    memberDetailService.create(savedMember, MemberDto.DetailRequest.from(registerDto));
 
     return savedMember;
   }
@@ -70,6 +70,11 @@ public class MemberService {
   // 상태별 회원 조회
   public List<Member> findByStatus(MemberStatus status) {
     return memberRepository.findByStatus(status);
+  }
+
+  // 닉네임으로 회원 검색 (부분 검색)
+  public List<Member> findByNicknameContaining(String nickname) {
+    return memberRepository.findByNicknameContaining(nickname);
   }
 
   // 회원 상태 변경

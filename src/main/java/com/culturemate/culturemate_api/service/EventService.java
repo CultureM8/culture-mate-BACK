@@ -134,7 +134,7 @@ public class EventService {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
       try {
-        regions = regionService.findByHierarchy(searchDto.getRegionDto());
+        regions = regionService.findByHierarchy(searchDto.getRegion());
         // 빈 리스트면 null로 처리
         if (regions != null && regions.isEmpty()) {
           regions = null;

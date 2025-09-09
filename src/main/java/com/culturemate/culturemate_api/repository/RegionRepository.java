@@ -31,4 +31,14 @@ public interface RegionRepository extends JpaRepository<Region, Long> {
    */
   List<Region> findByParent(Region parent);
 
+  /**
+   * 특정 지역의 모든 하위 지역들만 조회 (자기 자신 제외)
+   * NULL 처리 문제 해결을 위한 하위 지역 전용 쿼리
+   */
+  @Query("SELECT r FROM Region r WHERE " +
+         "r.parent.id = :targetRegionId OR " +        // 직계 자식들
+         "r.parent.parent.id = :targetRegionId")      // 손자들
+  List<Region> findAllDescendants(@Param("targetRegionId") Long targetRegionId);
+
+
 }

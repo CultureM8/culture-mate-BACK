@@ -54,7 +54,7 @@ public class MemberDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class ProfileRequest {
+  public static class DetailRequest {
     
     @NotBlank(message = "사용자명은 필수입니다")
     private String nickname;
@@ -67,8 +67,8 @@ public class MemberDto {
 
     private VisibleType visibility;
     
-    public static ProfileRequest from(Register registerRequest) {
-      return ProfileRequest.builder()
+    public static DetailRequest from(Register registerRequest) {
+      return DetailRequest.builder()
         .nickname(registerRequest.getNickname())
         .intro(registerRequest.getIntro())
         .mbti(registerRequest.getMbti())

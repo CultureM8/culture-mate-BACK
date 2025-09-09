@@ -8,6 +8,11 @@ import com.culturemate.culturemate_api.dto.ChatMessageDto;
 import com.culturemate.culturemate_api.dto.ChatRoomDto;
 import com.culturemate.culturemate_api.service.ChatRoomService;
 import com.culturemate.culturemate_api.service.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "ChatRoom API", description = "채팅방 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/chatroom")
@@ -26,7 +32,7 @@ public class ChatRoomController {
 
   // 모든 채팅방 조회 (관리자용)
   @GetMapping
-  public ResponseEntity<List<ChatRoomDto.Response>> getAllRooms() {
+  public ResponseEntity<List<ChatRoomDto.Response>> getAllChatRooms() {
     List<ChatRoom> chatRooms = chatRoomService.findAllRoom();
     List<ChatRoomDto.Response> response = chatRooms.stream()
       .map(ChatRoomDto.Response::from)
@@ -36,7 +42,7 @@ public class ChatRoomController {
 
   // 채팅방 생성
   @PostMapping("/create")
-  public ResponseEntity<ChatRoomDto.Response> createRoom(@RequestParam String name) {
+  public ResponseEntity<ChatRoomDto.Response> createChatRoom(@RequestParam String name) {
     ChatRoom chatRoom = chatRoomService.createChatRoom(name, null);
     return ResponseEntity.ok(ChatRoomDto.Response.from(chatRoom));
   }
@@ -54,8 +60,8 @@ public class ChatRoomController {
 
   // 채팅방 입장 (새로운 채팅방)
   @PostMapping("/{roomId}/join")
-  public ResponseEntity<Void> joinRoom(@PathVariable Long roomId,
-                                       @AuthenticationPrincipal CustomUser principal) {
+  public ResponseEntity<Void> joinChatRoom(@PathVariable Long roomId,
+                                           @AuthenticationPrincipal CustomUser principal) {
     Member member = memberService.findByLoginId(principal.getUsername());
     chatRoomService.addMemberToRoom(roomId, member.getId());
     return ResponseEntity.noContent().build();
@@ -63,14 +69,14 @@ public class ChatRoomController {
 
   // 채팅방 접속 (내가 참여중인 채팅방)
   @GetMapping("/{roomId}")
-  public ResponseEntity<ChatRoomDto.ResponseDetail> getRoom(@PathVariable Long roomId) {
+  public ResponseEntity<ChatRoomDto.ResponseDetail> getChatRoom(@PathVariable Long roomId) {
     ChatRoom chatRoom = chatRoomService.findById(roomId);
     return ResponseEntity.ok(ChatRoomDto.ResponseDetail.from(chatRoom));
   }
 
   // 이전 대화내역 불러오기
   @GetMapping("/{roomId}/messages")
-  public ResponseEntity<List<ChatMessageDto>> getPreviousMessages(@PathVariable Long roomId) {
+  public ResponseEntity<List<ChatMessageDto>> getChatMessages(@PathVariable Long roomId) {
     List<ChatMessage> messages = chatRoomService.getMessagesByRoomId(roomId);
     List<ChatMessageDto> messageDtos = messages.stream()
       .map(ChatMessageDto::from)

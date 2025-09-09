@@ -33,7 +33,7 @@ public class TogetherDto {
     private String title;
     
     @NotNull(message = "지역 정보는 필수입니다.")
-    private RegionDto regionDto;
+    private RegionDto.Request regionDto;
     
     @NotBlank(message = "주소는 필수입니다.")
     @Size(max = 255, message = "주소는 255자를 초과할 수 없습니다.")
@@ -64,17 +64,17 @@ public class TogetherDto {
   public static class Response {
 
     private Long id;
-    private Long eventId;
-    private Long hostId;
+    private EventDto.ResponseCard event;
+    private MemberDto.ProfileResponse host;
     private String title;
-    private RegionDto regionDto;
+    private String content;
+    private RegionDto.Response region;
     private String address;
     private String addressDetail;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate meetingDate;
     private Integer maxParticipants;
     private Integer currentParticipants;
-    private String content;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

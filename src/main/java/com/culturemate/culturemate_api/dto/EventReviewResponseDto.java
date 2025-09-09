@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.event.EventReview;
+import com.culturemate.culturemate_api.domain.member.Member;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +18,7 @@ public class EventReviewResponseDto {
 
   private Long id;
   private Long eventId;
-  private Long memberId;
+  private MemberDto.ProfileResponse author;
   private Integer rating;
   private String content;
   private LocalDateTime createdAt;
@@ -27,7 +28,7 @@ public class EventReviewResponseDto {
     return EventReviewResponseDto.builder()
       .id(eventReview.getId())
       .eventId(eventReview.getEvent().getId())
-      .memberId(eventReview.getMember().getId())
+      .author(MemberDto.ProfileResponse.from(eventReview.getMember()))
       .rating(eventReview.getRating())
       .content(eventReview.getContent())
       .createdAt(eventReview.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class BoardSearchDto {
 
   private String keyword; // 제목이나 내용에서 검색할 키워드
-  private Long authorId; // 작성자 ID
+  private String authorNickname; // 작성자 닉네임
   private Long eventId; // 특정 이벤트 ID
   private String eventType; // 이벤트 타입 (CONCERT, EXHIBITION 등)
   
@@ -22,7 +22,7 @@ public class BoardSearchDto {
   }
   
   public boolean hasAuthor() {
-    return authorId != null;
+    return authorNickname != null && !authorNickname.trim().isEmpty();
   }
   
   public boolean hasEventId() {

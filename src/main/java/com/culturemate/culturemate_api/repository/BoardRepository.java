@@ -35,14 +35,15 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
   List<Board> findByEventAndTitleContaining(Event event, String keyword);
 
   // 통합 검색 메서드 (N+1 해결)
-  @EntityGraph(attributePaths = {"author", "event"})
+  @EntityGraph(attributePaths = {"author", "event", "author.memberDetail"})
   @Query("SELECT b FROM Board b " +
+         "LEFT JOIN b.author.memberDetail md " +
          "WHERE (:keyword IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-         "AND (:author IS NULL OR b.author = :author) " +
+         "AND (:authorNickname IS NULL OR LOWER(md.nickname) LIKE LOWER(CONCAT('%', :authorNickname, '%'))) " +
          "AND (:event IS NULL OR b.event = :event) " +
          "AND (:eventType IS NULL OR b.event.eventType = :eventType)")
   List<Board> findBySearch(@Param("keyword") String keyword,
-                          @Param("author") Member author,
+                          @Param("authorNickname") String authorNickname,
                           @Param("event") Event event,
                           @Param("eventType") EventType eventType);
 

@@ -14,7 +14,7 @@ import java.time.ZoneId;
 public class CommentResponseDto {
   private Long id;
   private Long boardId;
-  private Long authorId;
+  private MemberDto.ProfileResponse author;
   // parentId 제거: 대댓글은 별도 API로 조회
   private String content;
   @DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -22,14 +22,13 @@ public class CommentResponseDto {
   @DateTimeFormat(pattern = "yyyy-MM-dd")  
   private LocalDate updatedAt;
   private Integer likeCount;
-  private int replyCount; // 대댓글 수
+  private Integer replyCount; // 대댓글 수
 
   public static CommentResponseDto from(Comment comment) {
     return CommentResponseDto.builder()
       .id(comment.getId())
       .boardId(comment.getBoard().getId())
-      .authorId(comment.getAuthor().getId())
-      // parentId 제거
+      .author(MemberDto.ProfileResponse.from(comment.getAuthor()))
       .content(comment.getContent())
       .createdAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
       .updatedAt(comment.getUpdatedAt() != null ? comment.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate() : null)
