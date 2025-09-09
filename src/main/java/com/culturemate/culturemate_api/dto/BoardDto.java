@@ -53,7 +53,7 @@ public class BoardDto {
         .title(board.getTitle())
         .content(board.getContent())
         .author(MemberDto.ProfileResponse.from(board.getAuthor()))
-        .eventCard(board.getEvent() != null ? EventDto.ResponseCard.from(board.getEvent()) : null)
+        .eventCard(board.getEvent() != null ? EventDto.ResponseCard.from(board.getEvent(), false) : null)
         .likeCount(board.getLikeCount())
         .createdAt(board.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
         .updatedAt(board.getUpdatedAt() != null ?

@@ -118,6 +118,7 @@ public class TogetherController {
   // 동행 신청 (승인 대기)
   @PostMapping("/{togetherId}/apply")
   public ResponseEntity<Void> applyTogether(@PathVariable Long togetherId,
+                                            @RequestParam String message,
                                             @AuthenticationPrincipal AuthenticatedUser requester) {
     // 동행 신청
     togetherService.applyTogether(togetherId, requester.getMemberId());

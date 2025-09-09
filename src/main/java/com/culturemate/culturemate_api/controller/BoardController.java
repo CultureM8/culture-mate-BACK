@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/board")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "${cors.allowed-origins}")
 public class BoardController {
 
   private final BoardService boardService;

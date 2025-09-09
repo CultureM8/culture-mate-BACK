@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -115,15 +116,9 @@ public class EventService {
       .orElseThrow(() -> new IllegalArgumentException("해당 이벤트가 존재하지 않습니다."));
   }
 
-  // 상세 조회용 (이미지 포함한 모든 정보)
-  public EventDto.ResponseDetail findDetailById(Long eventId) {
-    Event event = findById(eventId);
-    List<Image> images = getContentImages(eventId);
-    List<String> contentImages = images.stream()
-      .map(Image::getPath)
-      .toList();
-    
-    return EventDto.ResponseDetail.from(event, contentImages);
+  // 상세 조회용 (엔티티 반환, Controller에서 DTO 변환)
+  public Event findByIdWithDetails(Long eventId) {
+    return findById(eventId);
   }
 
   public List<Event> findAll() {
@@ -343,6 +338,13 @@ public class EventService {
     return imageService.getImagesByTargetTypeAndId(ImageTarget.EVENT_CONTENT, eventId);
   }
 
+  // 컨텐츠 이미지 경로 목록 조회 (DTO 변환용 헬퍼 메서드)
+  public List<String> getContentImagePaths(Long eventId) {
+    return getContentImages(eventId).stream()
+      .map(Image::getPath)
+      .toList();
+  }
+
   // 이벤트 설명 이미지 개별 삭제
   @Transactional
   public void deleteContentImage(Long eventId, String imagePath) {
@@ -351,6 +353,30 @@ public class EventService {
   }
 
   // ℹ️ 전체 삭제는 update 메서드에서 imagesToDelete로 처리
+
+  // 단일 이벤트 관심 여부 확인
+  public boolean isInterested(Long eventId, Long memberId) {
+    Event event = findById(eventId);
+    Member member = memberService.findById(memberId);
+    return interestEventsRepository.findByMemberAndEvent(member, event).isPresent();
+  }
+
+  // 배치 관심 여부 확인 (성능 최적화)
+  public Map<Long, Boolean> getInterestStatusBatch(List<Long> eventIds, Long memberId) {
+    List<InterestEvents> interests = interestEventsRepository
+      .findByEventIdInAndMemberId(eventIds, memberId);
+    
+    Map<Long, Boolean> result = new HashMap<>();
+    
+    // 모든 이벤트를 false로 초기화
+    eventIds.forEach(id -> result.put(id, false));
+    
+    // 관심 있는 이벤트만 true로 설정
+    interests.forEach(interest -> 
+      result.put(interest.getEvent().getId(), true));
+    
+    return result;
+  }
 
   // ADMIN 권한 검증 메서드
   private void validateAdminAccess(Long requesterId) {

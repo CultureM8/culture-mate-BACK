@@ -381,7 +381,7 @@ public class TogetherService {
   public TogetherDto.Response toResponseDto(Together together) {
     return TogetherDto.Response.builder()
       .id(together.getId())
-      .event(EventDto.ResponseCard.from(together.getEvent()))
+      .event(EventDto.ResponseCard.from(together.getEvent(), false))
       .host(MemberDto.ProfileResponse.from(together.getHost()))
       .title(together.getTitle())
       .region(RegionDto.Response.from(together.getRegion()))

@@ -78,7 +78,7 @@ public class ReviewDto {
     public static ResponseWithEvent from(EventReview eventReview) {
       return ResponseWithEvent.builder()
         .id(eventReview.getId())
-        .event(EventDto.ResponseCard.from(eventReview.getEvent()))
+        .event(EventDto.ResponseCard.from(eventReview.getEvent(), false))
         .author(MemberDto.ProfileResponse.from(eventReview.getMember()))
         .rating(eventReview.getRating())
         .content(eventReview.getContent())
