@@ -11,34 +11,38 @@ import java.util.Collection;
 
 @Getter
 public class AuthenticatedUser extends User {
-  private final Long memberId;
-  private final Role role;
-  private final MemberStatus status;
+  private final Member member;
 
-  public AuthenticatedUser(String username,
-                    String password,
-                    Collection<? extends GrantedAuthority> authorities,
-                    Long memberId,
-                    Role role,
-                    MemberStatus status
-  ) {
-    super(username, password, authorities);
-    this.memberId = memberId;
-    this.role = role;
-    this.status = status;
+  public AuthenticatedUser(Member member, Collection<? extends GrantedAuthority> authorities) {
+    super(member.getLoginId(), member.getPassword(), authorities);
+    this.member = member;
   }
 
   /**
    * Member 엔티티에서 AuthenticatedUser 생성
    */
   public static AuthenticatedUser from(Member member, Collection<? extends GrantedAuthority> authorities) {
-    return new AuthenticatedUser(
-      member.getLoginId(),
-      member.getPassword(),
-      authorities,
-      member.getId(),
-      member.getRole(),
-      member.getStatus()
-    );
+    return new AuthenticatedUser(member, authorities);
+  }
+
+  // 편의 메서드들
+  public Long getMemberId() {
+    return member.getId();
+  }
+
+  public String getLoginId() {
+    return member.getLoginId();
+  }
+
+  public String getNickname() {
+    return member.getMemberDetail() != null ? member.getMemberDetail().getNickname() : member.getLoginId();
+  }
+
+  public Role getRole() {
+    return member.getRole();
+  }
+
+  public MemberStatus getStatus() {
+    return member.getStatus();
   }
 }

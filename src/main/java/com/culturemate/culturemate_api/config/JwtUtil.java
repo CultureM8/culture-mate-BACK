@@ -35,13 +35,13 @@ public class JwtUtil {
    */
   public String generateToken(AuthenticatedUser user) {
     Map<String, Object> claims = new HashMap<>();
-    claims.put("memberId", user.getMemberId());
+    claims.put("loginId", user.getLoginId());
     claims.put("role", user.getRole().name());
     claims.put("status", user.getStatus().name());
 
     return Jwts.builder()
       .setClaims(claims)
-      .setSubject(user.getUsername())
+      .setSubject(user.getMemberId().toString())
       .setIssuedAt(new Date())
       .setExpiration(new Date(System.currentTimeMillis() + expiration))
       .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -53,13 +53,13 @@ public class JwtUtil {
    */
   public String generateToken(Member member) {
     Map<String, Object> claims = new HashMap<>();
-    claims.put("memberId", member.getId());
+    claims.put("loginId", member.getLoginId());
     claims.put("role", member.getRole().name());
     claims.put("status", member.getStatus().name());
 
     return Jwts.builder()
       .setClaims(claims)
-      .setSubject(member.getLoginId())
+      .setSubject(member.getId().toString())
       .setIssuedAt(new Date())
       .setExpiration(new Date(System.currentTimeMillis() + expiration))
       .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -67,25 +67,64 @@ public class JwtUtil {
   }
 
   /**
-   * 토큰에서 사용자명 추출
-   */
-  public String getUsernameFromToken(String token) {
-    return getClaimsFromToken(token).getSubject();
-  }
-
-  /**
-   * 토큰에서 memberId 추출
+   * 토큰에서 memberId 추출 (subject)
    */
   public Long getMemberIdFromToken(String token) {
-    return Long.valueOf(getClaimsFromToken(token).get("memberId").toString());
+    return Long.valueOf(getClaimsFromToken(token).getSubject());
   }
 
   /**
-   * 토큰 유효성 검증
+   * 토큰에서 loginId 추출
    */
-  public boolean validateToken(String token, String username) {
+  public String getLoginIdFromToken(String token) {
+    return getClaimsFromToken(token).get("loginId").toString();
+  }
+
+  /**
+   * 토큰에서 role 추출
+   */
+  public String getRoleFromToken(String token) {
+    return getClaimsFromToken(token).get("role").toString();
+  }
+
+  /**
+   * 토큰에서 status 추출
+   */
+  public String getStatusFromToken(String token) {
+    return getClaimsFromToken(token).get("status").toString();
+  }
+
+  /**
+   * 토큰 유효성 검증 - memberId 기반
+   */
+  public boolean validateToken(String token, Long memberId) {
     try {
-      return getUsernameFromToken(token).equals(username) && !isTokenExpired(token);
+      return getMemberIdFromToken(token).equals(memberId) && !isTokenExpired(token);
+    } catch (Exception e) {
+      log.error("토큰 검증 실패: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * 토큰 유효성 검증 - loginId 기반 (하위 호환성)
+   */
+  public boolean validateTokenByLoginId(String token, String loginId) {
+    try {
+      return getLoginIdFromToken(token).equals(loginId) && !isTokenExpired(token);
+    } catch (Exception e) {
+      log.error("토큰 검증 실패: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * 토큰 유효성 검증 - 토큰만으로 검증 (권장)
+   */
+  public boolean validateToken(String token) {
+    try {
+      getClaimsFromToken(token);
+      return !isTokenExpired(token);
     } catch (Exception e) {
       log.error("토큰 검증 실패: {}", e.getMessage());
       return false;

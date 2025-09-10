@@ -126,7 +126,10 @@ public class TogetherController {
     // 신청 채팅방 생성
     ChatRoom newChatRoom =  chatRoomService.createChatRoom();
     chatRoomService.addMemberToRoom(newChatRoom.getId(), requester.getMemberId());
-    chatRoomService.addMemberToRoom(newChatRoom.getId(), togetherId);
+    
+    // TODO: 호스트를 채팅방에 추가 - Together 엔티티에서 호스트 ID 조회 필요
+    // Together together = togetherService.findById(togetherId);
+    // chatRoomService.addMemberToRoom(newChatRoom.getId(), together.getHost().getId());
 
     // 신청 메시지 보내기
 

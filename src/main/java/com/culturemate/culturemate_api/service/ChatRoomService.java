@@ -99,17 +99,20 @@ public class ChatRoomService {
   // 채팅
   @Transactional
   public ChatMessage sendMessage(Long roomId, Long senderId, String content) {
-    // 발신자 조회
+    // 1. 메시지 내용 검증
+    validateMessageContent(content);
+    
+    // 2. 발신자 조회
     Member sender = memberService.findById(senderId);
     
-    // 채팅방 조회
+    // 3. 채팅방 조회
     ChatRoom room = findById(roomId);
     
-    // 채팅방 멤버 권한 확인
+    // 4. 채팅방 멤버 권한 확인
     ChatMember author = chatMemberRepository.findByChatRoomAndMember(room, sender)
         .orElseThrow(() -> new IllegalArgumentException("해당 채팅방의 참여자가 아닙니다"));
     
-    // 메시지 저장
+    // 5. 메시지 저장
     ChatMessage message = ChatMessage.builder()
         .chatRoom(room)
         .author(author)
@@ -117,6 +120,16 @@ public class ChatRoomService {
         .build();
     
     return chatMessageRepository.save(message);
+  }
+
+  // 메시지 내용 검증
+  private void validateMessageContent(String content) {
+    if (content == null || content.trim().isEmpty()) {
+      throw new IllegalArgumentException("메시지 내용이 비어있습니다");
+    }
+    if (content.length() > 1000) {
+      throw new IllegalArgumentException("메시지가 너무 깁니다 (최대 1000자)");
+    }
   }
 
   // 이전대화 불러오기

@@ -36,10 +36,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
       try {
-        String username = jwtUtil.getUsernameFromToken(token);
-
-        if (username != null && jwtUtil.validateToken(token, username)) {
-          UserDetails userDetails = loginService.loadUserByUsername(username);
+        if (jwtUtil.validateToken(token)) {
+          String loginId = jwtUtil.getLoginIdFromToken(token);
+          UserDetails userDetails = loginService.loadUserByUsername(loginId);
 
           // MemberStatus 검증 추가
           if (userDetails instanceof AuthenticatedUser) {
@@ -47,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             if (!isAllowedStatus(authenticatedUser.getStatus())) {
               log.warn("비활성 상태 사용자의 접근 시도: {} (상태: {})", 
-                      username, authenticatedUser.getStatus());
+                      loginId, authenticatedUser.getStatus());
               response.setStatus(HttpServletResponse.SC_FORBIDDEN);
               response.getWriter().write("{\"error\": \"계정이 비활성 상태입니다.\"}");
               return;
@@ -61,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
 
-          log.debug("JWT 인증 성공: {}", username);
+          log.debug("JWT 인증 성공: {}", loginId);
         }
       } catch (Exception e) {
         log.error("JWT 토큰 처리 중 오류 발생", e);

@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, 
                     "/api/v1/*/my/**",          // 내 정보 관련 (my로 시작하는 모든 경로)
                     "/api/v1/members/*/detail", // 멤버 상세 정보
-                    "/api/v1/chat-rooms/**"     // 채팅방 관련
+                    "/api/v1/chatroom/**"       // 채팅방 관련
                 ).authenticated()
                 // 그 외 모든 API는 인증 필요 (POST, PUT, DELETE 등)
                 .anyRequest().authenticated()
