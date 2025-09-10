@@ -25,4 +25,6 @@ public interface EventReviewRepository extends JpaRepository<EventReview, Long> 
   List<EventReview> findByMember(Member member);
 
   List<EventReview> findByMemberId(Long memberId);
+
+  boolean existsByMemberAndEvent(Member member, Event event);
 }

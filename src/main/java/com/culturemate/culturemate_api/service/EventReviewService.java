@@ -4,6 +4,7 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventReview;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.dto.ReviewDto;
+import com.culturemate.culturemate_api.exceptions.review.ReviewAlreadyExistsException;
 import com.culturemate.culturemate_api.repository.EventRepository;
 import com.culturemate.culturemate_api.repository.EventReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,10 @@ public class EventReviewService {
   public EventReview create(ReviewDto.Request reviewDto, Long authenticatedUserId) {
     Event event = eventService.findById(reviewDto.getEventId());
     Member member = memberService.findById(authenticatedUserId);  // 인증된 사용자 ID만 사용
+
+    if (reviewRepository.existsByMemberAndEvent(member, event)) {
+        throw new ReviewAlreadyExistsException("이미 이 이벤트에 대한 리뷰를 작성했습니다.");
+    }
     
     EventReview eventReview = EventReview.builder()
       .event(event)
