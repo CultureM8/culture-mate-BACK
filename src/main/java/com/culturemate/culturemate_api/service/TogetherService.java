@@ -34,6 +34,7 @@ public class TogetherService {
   private final EventService eventService;
   private final ImageService imageService;
   private final ChatRoomService chatRoomService;
+  private final ValidationService validationService;
 
 
   @Transactional
@@ -61,7 +62,7 @@ public class TogetherService {
     participantsRepository.save(hostParticipation);
 
     // 채팅방 생성 및 호스트 추가
-    ChatRoom chatRoom = chatRoomService.createChatRoom(savedTogether.getTitle(), savedTogether);
+    ChatRoom chatRoom = chatRoomService.createChatRoom(savedTogether);
     chatRoomService.addMemberToRoom(chatRoom.getId(), host.getId());
 
     return savedTogether;
@@ -138,8 +139,11 @@ public class TogetherService {
 
   // 수정
   @Transactional
-  public Together update(Long id, TogetherDto.Request requestDto) {
+  public Together update(Long id, TogetherDto.Request requestDto, Long requesterId) {
     Together together = findById(id);
+    
+    // 권한 검증: 본인이 호스트인 모집글만 수정 가능
+    validationService.validateTogetherAccess(together, requesterId);
     Event event = eventService.findById(requestDto.getEventId());
     Region region = regionService.findExact(requestDto.getRegionDto());
 
@@ -167,8 +171,11 @@ public class TogetherService {
   }
 
   @Transactional
-  public void delete(Long togetherId) {
+  public void delete(Long togetherId, Long requesterId) {
     Together together = findById(togetherId);
+    
+    // 권한 검증: 본인이 호스트인 모집글만 삭제 가능
+    validationService.validateTogetherAccess(together, requesterId);
 
     // 썸네일/메인 이미지 파일들 삭제
     imageService.deletePhysicalFiles(together.getThumbnailImagePath(),
@@ -374,7 +381,7 @@ public class TogetherService {
   public TogetherDto.Response toResponseDto(Together together) {
     return TogetherDto.Response.builder()
       .id(together.getId())
-      .event(EventDto.ResponseCard.from(together.getEvent()))
+      .event(EventDto.ResponseCard.from(together.getEvent(), false))
       .host(MemberDto.ProfileResponse.from(together.getHost()))
       .title(together.getTitle())
       .region(RegionDto.Response.from(together.getRegion()))
@@ -390,5 +397,6 @@ public class TogetherService {
                  together.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
       .build();
   }
+
 
 }

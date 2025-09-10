@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.controller;
 
-import com.culturemate.culturemate_api.dto.CustomUser;
+import com.culturemate.culturemate_api.config.JwtUtil;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,10 +29,11 @@ import java.util.Map;
 public class AuthApiController {
 
   private final AuthenticationManager authenticationManager;
+  private final JwtUtil jwtUtil;
 
-  @Operation(summary = "로그인", description = "회원 로그인을 수행합니다")
+  @Operation(summary = "로그인", description = "회원 로그인을 수행하고 JWT 토큰을 반환합니다")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "로그인 성공"),
+    @ApiResponse(responseCode = "200", description = "로그인 성공 - JWT 토큰과 사용자 정보 반환"),
     @ApiResponse(responseCode = "401", description = "인증 실패")
   })
   @PostMapping("/login")
@@ -42,20 +44,30 @@ public class AuthApiController {
         new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword())
       );
 
-      CustomUser customUser = (CustomUser) authentication.getPrincipal();
-      MemberDto.Response responseDto = MemberDto.Response.builder()
-        .id(customUser.getMemberId())
-        .loginId(customUser.getUsername())
-        .role(customUser.getRole())
+      AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
+      
+      // JWT 토큰 생성
+      String token = jwtUtil.generateToken(authenticatedUser);
+      
+      MemberDto.Response userResponse = MemberDto.Response.builder()
+        .id(authenticatedUser.getMemberId())
+        .loginId(authenticatedUser.getUsername())
+        .role(authenticatedUser.getRole())
         .build();
 
-      return ResponseEntity.ok(responseDto);
+      // 토큰과 사용자 정보 함께 반환
+      Map<String, Object> response = new HashMap<>();
+      response.put("token", token);
+      response.put("user", userResponse);
+      response.put("message", "로그인 성공");
+
+      return ResponseEntity.ok(response);
 
     } catch (AuthenticationException e) {
-      Map<String, Object> data = new HashMap<>();
-      data.put("status", "error");
-      data.put("message", "아이디 또는 비밀번호가 일치하지 않습니다.");
-      return ResponseEntity.status(401).body(data);
+      Map<String, Object> errorResponse = new HashMap<>();
+      errorResponse.put("status", "error");
+      errorResponse.put("message", "아이디 또는 비밀번호가 일치하지 않습니다.");
+      return ResponseEntity.status(401).body(errorResponse);
     }
   }
 }

@@ -1,6 +1,6 @@
 package com.culturemate.culturemate_api.service;
 
-import com.culturemate.culturemate_api.dto.CustomUser;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,23 +22,18 @@ public class LoginService implements UserDetailsService {
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 //    DB에서 username을 가진 유저를 찾아와서
-//    return new User(유저아이디, 비번, 권한) 해주세요
+//    Member 엔티티 기반으로 AuthenticatedUser 생성
 
     var result = memberRepository.findByLoginId(username);
     if(result.isEmpty()){
-      throw new UsernameNotFoundException("그런 아이디 없음");
+      throw new UsernameNotFoundException("존재하지 않는 사용자입니다: " + username);
     }
-    var user = result.get();
+    
+    var member = result.get();
     List<GrantedAuthority> authorities = new ArrayList<>();
-    authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
-    return new CustomUser(
-        user.getLoginId(),
-        user.getPassword(),
-        authorities,
-        user.getId(),
-        user.getRole(),
-        user.getStatus()
-    );
+    authorities.add(new SimpleGrantedAuthority(member.getRole().name()));
+    
+    return AuthenticatedUser.from(member, authorities);
   }
 
 }

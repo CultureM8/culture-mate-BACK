@@ -2,6 +2,7 @@ package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.MemberDetail;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.ImageTarget;
@@ -12,6 +13,7 @@ import com.culturemate.culturemate_api.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,15 +48,17 @@ public class MemberDetailController {
   // 수정
   @PutMapping("/{memberId}")
   public ResponseEntity<MemberDto.DetailResponse> updateMemberDetail(@PathVariable Long memberId,
-                                                       @Valid @RequestBody MemberDto.DetailRequest dto) {
-    MemberDetail updated = memberDetailService.update(memberId, dto);
+                                                       @Valid @RequestBody MemberDto.DetailRequest dto,
+                                                       @AuthenticationPrincipal AuthenticatedUser requester) {
+    MemberDetail updated = memberDetailService.update(memberId, dto, requester.getMemberId());
     return ResponseEntity.ok(MemberDto.DetailResponse.from(updated));  // HTTP 200 OK + 데이터 반환
   }
 
   // 삭제
   @DeleteMapping("/{memberId}")
-  public ResponseEntity<Void> deleteMemberDetail(@PathVariable Long memberId) {
-    memberDetailService.delete(memberId);
+  public ResponseEntity<Void> deleteMemberDetail(@PathVariable Long memberId,
+                                                 @AuthenticationPrincipal AuthenticatedUser requester) {
+    memberDetailService.delete(memberId, requester.getMemberId());
     return ResponseEntity.noContent().build();  // HTTP 204 No Content
   }
 

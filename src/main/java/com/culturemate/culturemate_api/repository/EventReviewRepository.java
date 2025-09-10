@@ -23,4 +23,6 @@ public interface EventReviewRepository extends JpaRepository<EventReview, Long> 
 
   @EntityGraph(attributePaths = {"event", "member"})
   List<EventReview> findByMember(Member member);
+
+  List<EventReview> findByMemberId(Long memberId);
 }

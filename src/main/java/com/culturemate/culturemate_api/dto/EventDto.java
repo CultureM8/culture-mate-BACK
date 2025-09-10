@@ -75,8 +75,10 @@ public class EventDto {
     private BigDecimal avgRating;
     private Integer reviewCount;
     private Integer interestCount;
+    @Builder.Default
+    private Boolean isInterested = false;
 
-    public static Response from(Event event) {
+    public static Response from(Event event, boolean isInterested) {
       return Response.builder()
         .id(event.getId())
         .eventType(event.getEventType())
@@ -90,6 +92,7 @@ public class EventDto {
         .avgRating(event.getAvgRating())
         .reviewCount(event.getReviewCount())
         .interestCount(event.getInterestCount())
+        .isInterested(isInterested)
         .build();
     }
   }
@@ -107,8 +110,10 @@ public class EventDto {
     private BigDecimal avgRating;
     private Integer reviewCount;
     private Integer interestCount;
+    @Builder.Default
+    private Boolean isInterested = false;
 
-    public static ResponseCard from(Event event) {
+    public static ResponseCard from(Event event, boolean isInterested) {
       return ResponseCard.builder()
         .id(event.getId())
         .eventType(event.getEventType())
@@ -118,6 +123,7 @@ public class EventDto {
         .avgRating(event.getAvgRating())
         .reviewCount(event.getReviewCount())
         .interestCount(event.getInterestCount())
+        .isInterested(isInterested)
         .build();
     }
   }
@@ -150,8 +156,10 @@ public class EventDto {
     private Integer interestCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @Builder.Default
+    private Boolean isInterested = false;
 
-    public static ResponseDetail from(Event event, List<String> contentImages) {
+    public static ResponseDetail from(Event event, List<String> contentImages, boolean isInterested) {
       List<TicketPriceDto> ticketPriceDtos = event.getTicketPrice().stream()
               .map(TicketPriceDto::from)
               .toList();
@@ -179,6 +187,7 @@ public class EventDto {
         .createdAt(event.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
         .updatedAt(event.getUpdatedAt() != null ? 
                    event.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
+        .isInterested(isInterested)
         .build();
     }
   }

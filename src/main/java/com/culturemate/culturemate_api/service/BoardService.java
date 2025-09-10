@@ -24,6 +24,7 @@ public class BoardService {
   private final BoardLikeRepository boardLikeRepository;
   private final MemberService memberService;
   private final EventService eventService;
+  private final ValidationService validationService;
 
   public List<Board> findAll() {
     return boardRepository.findAll();
@@ -82,9 +83,12 @@ public class BoardService {
 
   // 게시글 수정
   @Transactional
-  public Board update(Long boardId, BoardDto.Request requestDto) {
+  public Board update(Long boardId, BoardDto.Request requestDto, Long requesterId) {
     Board board = boardRepository.findById(boardId)
       .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+    
+    // 권한 검증: 본인의 게시글만 수정 가능
+    validationService.validateBoardAccess(board, requesterId);
 
     Event event = null;
     if (requestDto.getEventId() != null) {
@@ -100,8 +104,14 @@ public class BoardService {
 
   // 게시글 삭제
   @Transactional
-  public void delete(Long boardId) {
-    boardRepository.deleteById(boardId);
+  public void delete(Long boardId, Long requesterId) {
+    Board board = boardRepository.findById(boardId)
+      .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+    
+    // 권한 검증: 본인의 게시글만 삭제 가능
+    validationService.validateBoardAccess(board, requesterId);
+    
+    boardRepository.delete(board);
   }
 
   // 좋아요
@@ -129,5 +139,6 @@ public class BoardService {
       return true; // 좋아요 성공
     }
   }
+
 
 }

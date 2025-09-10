@@ -2,6 +2,7 @@ package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.event.Event;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.EventDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
 import com.culturemate.culturemate_api.service.EventService;
@@ -13,10 +14,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "Event API", description = "문화 이벤트 관리 API")
 @RestController
@@ -30,24 +33,50 @@ public class EventController {
     @ApiResponse(responseCode = "200", description = "조회 성공")
   })
   @GetMapping
-  public ResponseEntity<List<EventDto.Response>> getAllEvents() {
+  public ResponseEntity<List<EventDto.Response>> getAllEvents(
+      @AuthenticationPrincipal AuthenticatedUser user) {
     List<Event> events = eventService.findAll();
-    List<EventDto.Response> responseDtos = events.stream()
-      .map(EventDto.Response::from)
-      .toList();
-    return ResponseEntity.ok(responseDtos);
+    
+    if (user != null) {
+      // 인증된 사용자: 관심 여부 포함
+      List<Long> eventIds = events.stream().map(Event::getId).toList();
+      Map<Long, Boolean> interestMap = eventService.getInterestStatusBatch(eventIds, user.getMemberId());
+      
+      List<EventDto.Response> responseDtos = events.stream()
+        .map(event -> EventDto.Response.from(event, interestMap.getOrDefault(event.getId(), false)))
+        .toList();
+      return ResponseEntity.ok(responseDtos);
+    } else {
+      // 비인증 사용자: 기본값 false
+      List<EventDto.Response> responseDtos = events.stream()
+        .map(event -> EventDto.Response.from(event, false))
+        .toList();
+      return ResponseEntity.ok(responseDtos);
+    }
   }
 
   // 이벤트 ID로 데이터 조회 (상세 정보)
   @GetMapping("/{id}")
-  public ResponseEntity<EventDto.ResponseDetail> getEventById(@PathVariable Long id) {
-    EventDto.ResponseDetail event = eventService.findDetailById(id);
-    return ResponseEntity.ok(event);
+  public ResponseEntity<EventDto.ResponseDetail> getEventById(
+      @PathVariable Long id,
+      @AuthenticationPrincipal AuthenticatedUser user) {
+    Event event = eventService.findByIdWithDetails(id);
+    List<String> contentImages = eventService.getContentImagePaths(id);
+    
+    boolean isInterested = false;
+    if (user != null) {
+      isInterested = eventService.isInterested(id, user.getMemberId());
+    }
+    
+    EventDto.ResponseDetail responseDetail = EventDto.ResponseDetail.from(event, contentImages, isInterested);
+    return ResponseEntity.ok(responseDetail);
   }
 
   // 통합 이벤트 검색 (제목, 지역, 날짜, 타입 모두 지원)
   @GetMapping("/search")
-  public ResponseEntity<List<EventDto.Response>> searchEvents(EventSearchDto searchDto) {
+  public ResponseEntity<List<EventDto.Response>> searchEvents(
+      EventSearchDto searchDto,
+      @AuthenticationPrincipal AuthenticatedUser user) {
     // 디버깅용 로그
     System.out.println("=== 검색 파라미터 ===");
     System.out.println("keyword: " + searchDto.getKeyword());
@@ -57,20 +86,30 @@ public class EventController {
     System.out.println("hasKeyword(): " + searchDto.hasKeyword());
     System.out.println("==================");
     
+    List<Event> events;
     // 검색 조건이 비어있으면 전체 조회
     if (searchDto.isEmpty()) {
-      List<Event> events = eventService.findAll();
+      events = eventService.findAll();
+    } else {
+      events = eventService.search(searchDto);
+    }
+    
+    if (user != null) {
+      // 인증된 사용자: 관심 여부 포함
+      List<Long> eventIds = events.stream().map(Event::getId).toList();
+      Map<Long, Boolean> interestMap = eventService.getInterestStatusBatch(eventIds, user.getMemberId());
+      
       List<EventDto.Response> responseDtos = events.stream()
-        .map(EventDto.Response::from)
+        .map(event -> EventDto.Response.from(event, interestMap.getOrDefault(event.getId(), false)))
+        .toList();
+      return ResponseEntity.ok(responseDtos);
+    } else {
+      // 비인증 사용자: 기본값 false
+      List<EventDto.Response> responseDtos = events.stream()
+        .map(event -> EventDto.Response.from(event, false))
         .toList();
       return ResponseEntity.ok(responseDtos);
     }
-    
-    List<Event> events = eventService.search(searchDto);
-    List<EventDto.Response> responseDtos = events.stream()
-      .map(EventDto.Response::from)
-      .toList();
-    return ResponseEntity.ok(responseDtos);
   }
 
   // 이벤트 등록
@@ -81,7 +120,8 @@ public class EventController {
       @RequestParam(value = "imagesToAdd", required = false) List<MultipartFile> imagesToAdd) {
     
     Event createdEvent = eventService.create(eventRequestDto, mainImage, imagesToAdd);
-    EventDto.ResponseDetail responseDetail = eventService.findDetailById(createdEvent.getId());
+    List<String> contentImages = eventService.getContentImagePaths(createdEvent.getId());
+    EventDto.ResponseDetail responseDetail = EventDto.ResponseDetail.from(createdEvent, contentImages, false);
     return ResponseEntity.status(201).body(responseDetail);
   }
 
@@ -91,10 +131,11 @@ public class EventController {
       @PathVariable Long id,
       @RequestPart(value = "eventRequestDto") EventDto.Request eventRequestDto,
       @RequestParam(value = "mainImage", required = false) MultipartFile mainImage,
-      @RequestParam(value = "imagesToAdd", required = false) List<MultipartFile> imagesToAdd) {
+      @RequestParam(value = "imagesToAdd", required = false) List<MultipartFile> imagesToAdd,
+      @AuthenticationPrincipal AuthenticatedUser requester) {
     
-    Event updatedEvent = eventService.update(id, eventRequestDto, mainImage, imagesToAdd);
-    return ResponseEntity.ok(EventDto.Response.from(updatedEvent));
+    Event updatedEvent = eventService.update(id, eventRequestDto, mainImage, imagesToAdd, requester.getMemberId());
+    return ResponseEntity.ok(EventDto.Response.from(updatedEvent, false));
   }
 
   // 관심 설정
@@ -112,8 +153,9 @@ public class EventController {
 
   // 이벤트 삭제
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-    eventService.delete(id);
+  public ResponseEntity<Void> deleteEvent(@PathVariable Long id,
+                                         @AuthenticationPrincipal AuthenticatedUser requester) {
+    eventService.delete(id, requester.getMemberId());
     return ResponseEntity.noContent().build();
   }
 

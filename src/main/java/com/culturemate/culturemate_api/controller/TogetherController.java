@@ -1,11 +1,13 @@
 package com.culturemate.culturemate_api.controller;
 
+import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.together.Together;
-import com.culturemate.culturemate_api.dto.CustomUser;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.dto.TogetherDto;
 import com.culturemate.culturemate_api.dto.TogetherSearchDto;
+import com.culturemate.culturemate_api.service.ChatRoomService;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.culturemate.culturemate_api.service.TogetherService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,11 +31,9 @@ import java.util.stream.Collectors;
 public class TogetherController {
   private final TogetherService togetherService;
   private final MemberService memberService;
+  private final ChatRoomService chatRoomService;
 
   @Operation(summary = "전체 모임 조회", description = "모든 모임 목록을 조회합니다")
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "조회 성공")
-  })
   @GetMapping
   public ResponseEntity<List<TogetherDto.Response>> getAllTogethers() {
     return ResponseEntity.ok().body(
@@ -61,6 +61,7 @@ public class TogetherController {
       .map(togetherService::toResponseDto)
       .collect(Collectors.toList()));
   }
+
   // 특정 회원이 실제 참여 중인 모집글 조회 (승인된 것만)
   @GetMapping("/with/{memberId}")
   public ResponseEntity<List<TogetherDto.Response>> getTogethersByMemberId(@PathVariable Long memberId) {
@@ -71,6 +72,7 @@ public class TogetherController {
       .map(togetherService::toResponseDto)
       .collect(Collectors.toList()));
   }
+
   // 모집글 통합 검색
   @GetMapping("/search")
   public ResponseEntity<List<TogetherDto.Response>> searchTogethers(@RequestParam TogetherSearchDto searchDto) {
@@ -97,25 +99,40 @@ public class TogetherController {
   }
 
   // 모집글 수정
-  @PutMapping("/{id}")
-  public ResponseEntity<TogetherDto.Response> updateTogether(@PathVariable Long id,
-                                                             @Valid @RequestBody TogetherDto.Request togetherRequestDto) {
-    Together updatedTogether = togetherService.update(id, togetherRequestDto);
+  @PutMapping("/{togetherId}")
+  public ResponseEntity<TogetherDto.Response> updateTogether(@PathVariable Long togetherId,
+                                                             @Valid @RequestBody TogetherDto.Request togetherRequestDto,
+                                                             @AuthenticationPrincipal AuthenticatedUser requester) {
+    Together updatedTogether = togetherService.update(togetherId, togetherRequestDto, requester.getMemberId());
     return ResponseEntity.ok().body(togetherService.toResponseDto(updatedTogether));
   }
 
   // 모집글 삭제
-  @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteTogether(@PathVariable Long id) {
-    togetherService.delete(id);
+  @DeleteMapping("/{togetherId}")
+  public ResponseEntity<Void> deleteTogether(@PathVariable Long togetherId,
+                                            @AuthenticationPrincipal AuthenticatedUser requester) {
+    togetherService.delete(togetherId, requester.getMemberId());
     return ResponseEntity.noContent().build();
   }
 
   // 동행 신청 (승인 대기)
-  @PostMapping("/{id}/apply")
-  public ResponseEntity<Void> applyTogether(@PathVariable Long id,
-                                            @AuthenticationPrincipal CustomUser customUser) {
-    togetherService.applyTogether(id, customUser.getMemberId());
+  @PostMapping("/{togetherId}/apply")
+  public ResponseEntity<Void> applyTogether(@PathVariable Long togetherId,
+                                            @RequestParam String message,
+                                            @AuthenticationPrincipal AuthenticatedUser requester) {
+    // 동행 신청
+    togetherService.applyTogether(togetherId, requester.getMemberId());
+
+    // 신청 채팅방 생성
+    ChatRoom newChatRoom =  chatRoomService.createChatRoom();
+    chatRoomService.addMemberToRoom(newChatRoom.getId(), requester.getMemberId());
+    
+     Together together = togetherService.findById(togetherId);
+     chatRoomService.addMemberToRoom(newChatRoom.getId(), together.getHost().getId());
+
+    // 신청 메시지 보내기
+    chatRoomService.sendMessage(newChatRoom.getId(), requester.getMemberId(), message);
+
     return ResponseEntity.ok().build();
   }
 
@@ -123,8 +140,8 @@ public class TogetherController {
   @PostMapping("/{togetherId}/participants/{participantId}/approve")
   public ResponseEntity<Void> approveParticipation(@PathVariable Long togetherId,
                                                    @PathVariable Long participantId,
-                                                   @AuthenticationPrincipal CustomUser customUser) {
-    togetherService.approveParticipation(togetherId, participantId, customUser.getMemberId());
+                                                   @AuthenticationPrincipal AuthenticatedUser requester) {
+    togetherService.approveParticipation(togetherId, participantId, requester.getMemberId());
     return ResponseEntity.ok().build();
   }
 
@@ -132,8 +149,8 @@ public class TogetherController {
   @PostMapping("/{togetherId}/participants/{participantId}/reject")
   public ResponseEntity<Void> rejectParticipation(@PathVariable Long togetherId,
                                                   @PathVariable Long participantId,
-                                                  @AuthenticationPrincipal CustomUser customUser) {
-    togetherService.rejectParticipation(togetherId, participantId, customUser.getMemberId());
+                                                  @AuthenticationPrincipal AuthenticatedUser requester) {
+    togetherService.rejectParticipation(togetherId, participantId, requester.getMemberId());
     return ResponseEntity.ok().build();
   }
 
@@ -158,8 +175,8 @@ public class TogetherController {
   // 참여 취소 (본인)
   @DeleteMapping("/{togetherId}/participants/cancel")
   public ResponseEntity<Void> cancelParticipation(@PathVariable Long togetherId,
-                                                  @AuthenticationPrincipal CustomUser customUser) {
-    togetherService.leaveTogether(togetherId, customUser.getMemberId());
+                                                  @AuthenticationPrincipal AuthenticatedUser requester) {
+    togetherService.leaveTogether(togetherId, requester.getMemberId());
     return ResponseEntity.ok().build();
   }
 
@@ -167,8 +184,8 @@ public class TogetherController {
   @DeleteMapping("/{togetherId}/participants/{participantId}")
   public ResponseEntity<Void> removeTogetherMember(@PathVariable Long togetherId,
                                                    @PathVariable Long participantId,
-                                                   @AuthenticationPrincipal CustomUser customUser) {
-    togetherService.removeMember(togetherId, participantId, customUser.getMemberId());
+                                                   @AuthenticationPrincipal AuthenticatedUser requester) {
+    togetherService.removeMember(togetherId, participantId, requester.getMemberId());
     return ResponseEntity.ok().build();
   }
 
@@ -176,11 +193,11 @@ public class TogetherController {
   @PatchMapping("/{togetherId}/recruiting/{status}")
   public ResponseEntity<Void> changeRecruitingStatus(@PathVariable Long togetherId,
                                                      @PathVariable String status,
-                                                     @AuthenticationPrincipal CustomUser customUser) {
+                                                     @AuthenticationPrincipal AuthenticatedUser requester) {
     if ("close".equals(status)) {
-      togetherService.closeTogether(togetherId, customUser.getMemberId());
+      togetherService.closeTogether(togetherId, requester.getMemberId());
     } else if ("reopen".equals(status)) {
-      togetherService.reopenTogether(togetherId, customUser.getMemberId());
+      togetherService.reopenTogether(togetherId, requester.getMemberId());
     } else {
       throw new IllegalArgumentException("상태는 'close' 또는 'reopen'이어야 합니다.");
     }
@@ -190,8 +207,8 @@ public class TogetherController {
   // 내 신청 목록 조회 (상태별 필터링 가능)
   @GetMapping("/my-applications")
   public ResponseEntity<List<TogetherDto.Response>> getMyApplications(@RequestParam(required = false) String status,
-                                                                      @AuthenticationPrincipal CustomUser customUser) {
-    Member member = memberService.findById(customUser.getMemberId());
+                                                                      @AuthenticationPrincipal AuthenticatedUser requester) {
+    Member member = memberService.findById(requester.getMemberId());
     List<Together> togethers;
     
     if (status == null) {

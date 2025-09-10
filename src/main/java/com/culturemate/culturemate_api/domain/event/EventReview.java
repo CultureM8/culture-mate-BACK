@@ -27,6 +27,7 @@ public class EventReview {
   @Column(nullable = false)
   private Integer rating;
 
+  @Column(nullable = false, length = 2000)
   private String content;
 
   @Column(nullable = false)

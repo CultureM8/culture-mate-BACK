@@ -3,7 +3,7 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventReview;
 import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.dto.EventReviewRequestDto;
+import com.culturemate.culturemate_api.dto.ReviewDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
 import com.culturemate.culturemate_api.repository.EventReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +22,12 @@ public class EventReviewService {
   private final EventRepository eventRepository;
   private final EventService eventService;
   private final MemberService memberService;
+  private final ValidationService validationService;
 
   @Transactional
-  public EventReview create(EventReviewRequestDto reviewDto) {
+  public EventReview create(ReviewDto.Request reviewDto, Long authenticatedUserId) {
     Event event = eventService.findById(reviewDto.getEventId());
-    Member member = memberService.findById(reviewDto.getMemberId());
+    Member member = memberService.findById(authenticatedUserId);  // 인증된 사용자 ID만 사용
     
     EventReview eventReview = EventReview.builder()
       .event(event)
@@ -63,10 +64,17 @@ public class EventReviewService {
     return reviewRepository.findByMember(member);
   }
 
+  public List<EventReview> findByMemberId(Long memberId) {
+    return reviewRepository.findByMemberId(memberId);
+  }
+
   @Transactional
-  public EventReview update(Long reviewId, EventReviewRequestDto requestDto) {
+  public EventReview update(Long reviewId, ReviewDto.Request requestDto, Long authenticatedUserId) {
     EventReview existingReview = reviewRepository.findById(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+    
+    // 권한 검증: 본인의 리뷰만 수정 가능
+    validationService.validateEventReviewAccess(existingReview, authenticatedUserId);
     
     existingReview.setRating(requestDto.getRating());
     existingReview.setContent(requestDto.getContent());
@@ -76,14 +84,16 @@ public class EventReviewService {
   }
 
   @Transactional
-  public void delete(Long reviewId) {
+  public void delete(Long reviewId, Long authenticatedUserId) {
     EventReview eventReview = reviewRepository.findById(reviewId)
         .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+    
+    // 권한 검증: 본인의 리뷰만 삭제 가능
+    validationService.validateEventReviewAccess(eventReview, authenticatedUserId);
+    
     Long eventId = eventReview.getEvent().getId();
-
     reviewRepository.delete(eventReview);
     updateEventAverageRating(eventId, "delete");
-
   }
 
   // 리뷰 등록/삭제시 해당 이벤트 별점, 리뷰수 업데이트
@@ -98,4 +108,5 @@ public class EventReviewService {
       eventRepository.updateReviewCount(eventId, -1); // 원자적 감소
     } else {}
   }
+
 }

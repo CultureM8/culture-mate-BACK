@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.domain.community.Comment;
 import com.culturemate.culturemate_api.domain.community.CommentLike;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
+import com.culturemate.culturemate_api.dto.CommentDto;
 import com.culturemate.culturemate_api.repository.CommentLikeRepository;
 import com.culturemate.culturemate_api.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +26,12 @@ public class CommentService {
 
   // 댓글 생성
   @Transactional
-  public Comment create(Long boardId, Long authorId, Long parentId, String content) {
-    Board board = boardService.findById(boardId);
-    Member author = memberService.findById(authorId);
+  public Comment create(CommentDto.Request requestDto) {
+    Board board = boardService.findById(requestDto.getBoardId());
+    Member author = memberService.findById(requestDto.getAuthorId());
     Comment parent = null;
-    if (parentId != null) {
-      parent = commentRepository.findById(parentId)
+    if (requestDto.getParentId() != null) {
+      parent = commentRepository.findById(requestDto.getParentId())
         .orElseThrow(() -> new IllegalArgumentException("부모 댓글이 존재하지 않습니다."));
       
       // 2레벨 제한: 부모 댓글의 부모가 null이어야 함 (대댓글의 대댓글 방지)
@@ -43,7 +44,7 @@ public class CommentService {
       .author(author)
       .board(board)
       .parent(parent)
-      .content(content)
+      .content(requestDto.getComment())
       .likeCount(0)
       .build();
 
@@ -51,12 +52,12 @@ public class CommentService {
   }
 
   @Transactional
-  public Comment update(Long commentId, String content, Long requesterId) {
+  public Comment update(Long commentId, CommentDto.Request requestDto, Long requesterId) {
     Comment comment = commentRepository.findById(commentId)
       .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
     
     validateCommentAccess(comment, requesterId);
-    comment.setContent(content);
+    comment.setContent(requestDto.getComment());
     return comment;
   }
 
