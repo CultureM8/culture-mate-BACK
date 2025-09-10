@@ -35,13 +35,9 @@ public class TogetherDto {
     @NotNull(message = "지역 정보는 필수입니다.")
     private RegionDto.Request regionDto;
     
-    @NotBlank(message = "주소는 필수입니다.")
-    @Size(max = 255, message = "주소는 255자를 초과할 수 없습니다.")
-    private String address;
-    
-    @NotBlank(message = "상세주소는 필수입니다.")
-    @Size(max = 255, message = "상세주소는 255자를 초과할 수 없습니다.")
-    private String addressDetail;
+    @NotBlank(message = "모임장소는 필수입니다.")
+    @Size(max = 255, message = "모임장소는 255자를 초과할 수 없습니다.")
+    private String meetingLocation;
     
     @NotNull(message = "모임 날짜는 필수입니다.")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -69,8 +65,7 @@ public class TogetherDto {
     private String title;
     private String content;
     private RegionDto.Response region;
-    private String address;
-    private String addressDetail;
+    private String meetingLocation;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate meetingDate;
     private Integer maxParticipants;

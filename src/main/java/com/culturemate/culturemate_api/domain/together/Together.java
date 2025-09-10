@@ -55,11 +55,7 @@ public class Together {
 
   @Column(nullable = false)
   @Setter
-  private String address;          // 기본 주소 (도로명 주소)
-  
-  @Column(nullable = false)
-  @Setter
-  private String addressDetail;    // 상세 주소
+  private String meetingLocation;    // 모임장소 (카페명, 지하철역 등)
 
   @Column(nullable = false)
   @Setter

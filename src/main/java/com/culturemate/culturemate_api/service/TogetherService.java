@@ -46,8 +46,9 @@ public class TogetherService {
       .host(host)
       .title(requestDto.getTitle())
       .region(regionService.findExact(requestDto.getRegionDto()))
-      .address(requestDto.getAddress())
-      .addressDetail(requestDto.getAddressDetail())
+      .meetingLocation(requestDto.getMeetingLocation())
+      .meetingDate(requestDto.getMeetingDate())
+      .maxParticipants(requestDto.getMaxParticipants())
       .content(requestDto.getContent())
       .build();
 
@@ -161,8 +162,7 @@ public class TogetherService {
     together.setEvent(event);
     together.setTitle(requestDto.getTitle());
     together.setRegion(region);
-    together.setAddress(requestDto.getAddress());
-    together.setAddressDetail(requestDto.getAddressDetail());
+    together.setMeetingLocation(requestDto.getMeetingLocation());
     together.setMeetingDate(requestDto.getMeetingDate());
     together.setMaxParticipants(requestDto.getMaxParticipants());
     together.setContent(requestDto.getContent());
@@ -385,8 +385,7 @@ public class TogetherService {
       .host(MemberDto.ProfileResponse.from(together.getHost()))
       .title(together.getTitle())
       .region(RegionDto.Response.from(together.getRegion()))
-      .address(together.getAddress())
-      .addressDetail(together.getAddressDetail())
+      .meetingLocation(together.getMeetingLocation())
       .meetingDate(together.getMeetingDate())
       .maxParticipants(together.getMaxParticipants())
       .currentParticipants(together.getParticipantCount())
