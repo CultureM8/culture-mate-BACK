@@ -46,7 +46,9 @@ public class SecurityConfig {
                     "/api/v1/auth/login",
                     // 문서/개발 도구
                     "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui.html", "/favicon.ico",
-                    "/api-docs/**"
+                    "/api-docs/**",
+                    // 이미지 파일 접근 허용
+                    "/images/**"
                 ).permitAll()
                 // 보안이 필요한 개인정보 조회는 인증 필요
                 .requestMatchers(HttpMethod.GET, 
