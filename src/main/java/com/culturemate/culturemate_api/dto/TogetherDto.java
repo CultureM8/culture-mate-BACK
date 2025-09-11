@@ -33,7 +33,7 @@ public class TogetherDto {
     private String title;
     
     @NotNull(message = "지역 정보는 필수입니다.")
-    private RegionDto.Request regionDto;
+    private RegionDto.Request region;
     
     @NotBlank(message = "모임장소는 필수입니다.")
     @Size(max = 255, message = "모임장소는 255자를 초과할 수 없습니다.")

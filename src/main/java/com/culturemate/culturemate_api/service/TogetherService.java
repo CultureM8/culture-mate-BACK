@@ -45,7 +45,7 @@ public class TogetherService {
       .event(event)
       .host(host)
       .title(requestDto.getTitle())
-      .region(regionService.findExact(requestDto.getRegionDto()))
+      .region(regionService.findExact(requestDto.getRegion()))
       .meetingLocation(requestDto.getMeetingLocation())
       .meetingDate(requestDto.getMeetingDate())
       .maxParticipants(requestDto.getMaxParticipants())
@@ -159,7 +159,7 @@ public class TogetherService {
     // 권한 검증: 본인이 호스트인 모집글만 수정 가능
     validationService.validateTogetherAccess(together, requesterId);
     Event event = eventService.findById(requestDto.getEventId());
-    Region region = regionService.findExact(requestDto.getRegionDto());
+    Region region = regionService.findExact(requestDto.getRegion());
 
     // 날짜 검증 - 과거 날짜 방지
     if (together.getMeetingDate().isBefore(LocalDate.now())) {

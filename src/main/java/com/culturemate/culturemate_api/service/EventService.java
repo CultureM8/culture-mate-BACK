@@ -46,7 +46,7 @@ public class EventService {
 
   @Transactional
   public Event create(EventDto.Request requestDto, MultipartFile mainImage, List<MultipartFile> imagesToAdd) {
-    Region region = requestDto.getRegionDto() != null ? regionService.findExact(requestDto.getRegionDto()) : null;
+    Region region = requestDto.getRegion() != null ? regionService.findExact(requestDto.getRegion()) : null;
 
     String mainImagePath = null;
     String thumbnailImagePath = null;
@@ -76,11 +76,14 @@ public class EventService {
         .thumbnailImagePath(thumbnailImagePath)
         .build();
 
+      // 지역 스냅샷 동기화 (성능 최적화)
+      event.updateRegionSnapshot(region);
+
       eventRepository.save(event); // DB 저장
 
       // 3. 티켓 가격 정보 저장
-      if (requestDto.getTicketPriceDto() != null) {
-        for (TicketPriceDto dto : requestDto.getTicketPriceDto()) {
+      if (requestDto.getTicketPrices() != null) {
+        for (TicketPriceDto dto : requestDto.getTicketPrices()) {
           TicketPrice newTicketPrice = TicketPrice.builder()
             .event(event)
             .ticketType(dto.getTicketType())
@@ -187,7 +190,7 @@ public class EventService {
     validateAdminAccess(requesterId);
     
     Event event = findById(id);
-    Region region = requestDto.getRegionDto() != null ? regionService.findExact(requestDto.getRegionDto()) : null;
+    Region region = requestDto.getRegion() != null ? regionService.findExact(requestDto.getRegion()) : null;
     
     event.setEventType(requestDto.getEventType());
     event.setTitle(requestDto.getTitle());
@@ -202,7 +205,7 @@ public class EventService {
     event.setDescription(requestDto.getDescription());
 
     // 티켓 가격 업데이트 로직
-    updateTicketPrices(event, requestDto.getTicketPriceDto());
+    updateTicketPrices(event, requestDto.getTicketPrices());
 
     // 메인 이미지 처리 (수정 시에는 기존 이미지 삭제 후 새 이미지 업로드)
     if (mainImage != null && !mainImage.isEmpty()) {
