@@ -140,16 +140,21 @@ public class EventController {
 
   // 관심 설정
   @PostMapping("/{eventId}/interest")
-  public ResponseEntity<String> toggleEventInterest(@PathVariable Long eventId,
-                                                  @RequestParam Long memberId) {
-    boolean interest = eventService.toggleEventInterest(eventId, memberId);
+public ResponseEntity<String> toggleEventInterest(
+    @PathVariable Long eventId,
+    @AuthenticationPrincipal AuthenticatedUser user
+) {
+  // 토큰에서 회원 식별자 사용
+  Long memberId = user.getMemberId();
 
-    if (interest) {
-      return ResponseEntity.ok("관심 등록");
-    } else {
-      return ResponseEntity.ok("관심 취소");
-    }
+  boolean interest = eventService.toggleEventInterest(eventId, memberId);
+
+  if (interest) {
+    return ResponseEntity.ok("관심 등록");
+  } else {
+    return ResponseEntity.ok("관심 취소");
   }
+}
 
   // 이벤트 삭제
   @DeleteMapping("/{id}")
