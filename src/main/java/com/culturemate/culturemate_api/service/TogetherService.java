@@ -96,12 +96,25 @@ public class TogetherService {
   public List<Together> search(TogetherSearchDto searchDto) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
-      regions = regionService.findByHierarchy(searchDto.getRegionDto());
+      try {
+        regions = regionService.findByHierarchy(searchDto.getRegion());
+        if (regions != null && regions.isEmpty()) {
+          regions = null;
+        }
+      } catch (Exception e) {
+        System.out.println("Region 검색 중 오류: " + e.getMessage());
+        regions = null;
+      }
     }
 
     EventType eventType = null;
     if (searchDto.hasEventType()) {
-      eventType = EventType.valueOf(searchDto.getEventType().toUpperCase());
+      try {
+        eventType = EventType.valueOf(searchDto.getEventType().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        System.out.println("잘못된 EventType: " + searchDto.getEventType());
+        eventType = null;
+      }
     }
 
     // 지역 조건에 따라 다른 Repository 메서드 사용

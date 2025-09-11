@@ -40,14 +40,17 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
 
 //  통합 검색
   @EntityGraph(attributePaths = {"event", "host", "region"})
-  @Query("SELECT t FROM Together t " +
-         "JOIN t.event e " +
-         "WHERE (:keyword IS NULL OR :keyword = '' OR t.title LIKE %:keyword%) AND " +
-         "      (:regions IS NULL OR t.region IN :regions) AND " +
-         "      (:startDate IS NULL OR t.meetingDate >= :startDate) AND " +
-         "      (:endDate IS NULL OR t.meetingDate <= :endDate) AND " +
-         "      (:eventType IS NULL OR e.eventType = :eventType) AND " +
-         "      (:eventId IS NULL OR e.id = :eventId)")
+  @Query("""
+  SELECT t
+  FROM Together t
+  JOIN t.event e
+  WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND (:startDate IS NULL OR t.meetingDate >= :startDate)
+    AND (:endDate   IS NULL OR t.meetingDate <= :endDate)
+    AND (:eventType IS NULL OR e.eventType = :eventType)
+    AND (:eventId   IS NULL OR e.id = :eventId)
+    AND t.region IN :regions
+    """)
   List<Together> findBySearch(@Param("keyword") String keyword,
                               @Param("regions") List<Region> regions,
                               @Param("startDate") LocalDate startDate,
@@ -57,13 +60,16 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
 
   // 지역 조건 없는 검색 (기존 쿼리에서 region 조건만 제거)
   @EntityGraph(attributePaths = {"event", "host"})
-  @Query("SELECT t FROM Together t " +
-    "JOIN t.event e " +
-    "WHERE (:keyword IS NULL OR :keyword = '' OR t.title LIKE %:keyword%) AND " +
-    "      (:startDate IS NULL OR t.meetingDate >= :startDate) AND " +
-    "      (:endDate IS NULL OR t.meetingDate <= :endDate) AND " +
-    "      (:eventType IS NULL OR e.eventType = :eventType) AND " +
-    "      (:eventId IS NULL OR e.id = :eventId)")
+  @Query("""
+  SELECT t
+  FROM Together t
+  JOIN t.event e
+  WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND (:startDate IS NULL OR t.meetingDate >= :startDate)
+    AND (:endDate   IS NULL OR t.meetingDate <= :endDate)
+    AND (:eventType IS NULL OR e.eventType = :eventType)
+    AND (:eventId   IS NULL OR e.id = :eventId)
+    """)
   List<Together> findBySearchWithoutRegion(@Param("keyword") String keyword,
                               @Param("startDate") LocalDate startDate,
                               @Param("endDate") LocalDate endDate,

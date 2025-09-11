@@ -75,7 +75,7 @@ public class TogetherController {
 
   // 모집글 통합 검색
   @GetMapping("/search")
-  public ResponseEntity<List<TogetherDto.Response>> searchTogethers(@RequestParam TogetherSearchDto searchDto) {
+  public ResponseEntity<List<TogetherDto.Response>> searchTogethers(TogetherSearchDto searchDto) {
     if (searchDto.isEmpty()) {
       List<Together> togethers = togetherService.findAll();
       return ResponseEntity.ok().body(

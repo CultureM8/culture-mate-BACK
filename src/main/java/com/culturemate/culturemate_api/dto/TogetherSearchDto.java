@@ -8,14 +8,17 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
+import lombok.Setter;
+
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TogetherSearchDto {
 
   private String keyword;
-  private RegionDto.Request regionDto;
+  private RegionDto.Request region;
   private String eventType;
   private Long eventId;
 
@@ -32,7 +35,7 @@ public class TogetherSearchDto {
   }
   
   public boolean hasRegion() {
-    return regionDto != null && regionDto.hasRegion();
+    return region != null && region.hasRegion();
   }
   
   public boolean hasDateRange() {
