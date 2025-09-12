@@ -29,9 +29,10 @@ public class CommentController {
     @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
   })
   @PostMapping
-  public ResponseEntity<CommentDto.Response> createComment(@Parameter(description = "게시글 ID", required = true) @PathVariable Long boardId,
+  public ResponseEntity<CommentDto.Response> createComment(@Parameter(description = "게시글 ID", required = true) @PathVariable("boardId") Long boardId,
                                                           @Parameter(description = "댓글 내용", required = true) @RequestBody CommentDto.Request requestDto) {
-    Comment created = commentService.create(requestDto);
+
+    Comment created = commentService.create(boardId, requestDto);
     return ResponseEntity.status(201).body(CommentDto.Response.from(created)); // 201 Created
   }
 
