@@ -45,7 +45,7 @@ public class RegionDto {
     private String level1;
     private String level2;
     private String level3;
-    private String fullPath;
+    private String fullPath;  // 호환성을 위해 유지, 동적 생성
 
     public static Response from(Region region) {
       if (region == null) {
@@ -73,15 +73,13 @@ public class RegionDto {
         level1 = current.getRegionName();
       }
 
-      String fullPath = buildFullPath(level1, level2, level3);
-
       return Response.builder()
         .id(region.getId())
         .regionName(region.getRegionName())
         .level1(level1)
         .level2(level2)
         .level3(level3)
-        .fullPath(fullPath)
+        .fullPath(buildFullPath(level1, level2, level3))
         .build();
     }
 

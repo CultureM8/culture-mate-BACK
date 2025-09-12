@@ -41,16 +41,21 @@ public class TogetherService {
   public Together create(TogetherDto.Request requestDto) {
     Event event = eventService.findById(requestDto.getEventId());
     Member host = memberService.findById(requestDto.getHostId());
+    Region region = regionService.findExact(requestDto.getRegion());
+    
     Together together = Together.builder()
       .event(event)
       .host(host)
       .title(requestDto.getTitle())
-      .region(regionService.findExact(requestDto.getRegionDto()))
+      .region(region)
       .meetingLocation(requestDto.getMeetingLocation())
       .meetingDate(requestDto.getMeetingDate())
       .maxParticipants(requestDto.getMaxParticipants())
       .content(requestDto.getContent())
       .build();
+
+    // 지역 스냅샷 동기화 (성능 최적화)
+    together.updateRegionSnapshot(region);
 
     // Together를 DB에 저장
     Together savedTogether = togetherRepository.save(together);
@@ -159,7 +164,7 @@ public class TogetherService {
     // 권한 검증: 본인이 호스트인 모집글만 수정 가능
     validationService.validateTogetherAccess(together, requesterId);
     Event event = eventService.findById(requestDto.getEventId());
-    Region region = regionService.findExact(requestDto.getRegionDto());
+    Region region = regionService.findExact(requestDto.getRegion());
 
     // 날짜 검증 - 과거 날짜 방지
     if (together.getMeetingDate().isBefore(LocalDate.now())) {
@@ -397,7 +402,9 @@ public class TogetherService {
       .event(EventDto.ResponseCard.from(together.getEvent(), false))
       .host(MemberDto.ProfileResponse.from(together.getHost()))
       .title(together.getTitle())
-      .region(RegionDto.Response.from(together.getRegion()))
+      .region(together.getRegionSnapshot() != null ? 
+              together.getRegionSnapshot().toRegionDto() : 
+              null)  // 🚀 N+1 쿼리 문제 해결: 스냅샷 사용
       .meetingLocation(together.getMeetingLocation())
       .meetingDate(together.getMeetingDate())
       .maxParticipants(together.getMaxParticipants())

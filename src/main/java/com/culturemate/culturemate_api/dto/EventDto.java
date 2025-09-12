@@ -31,7 +31,7 @@ public class EventDto {
     private String title;
 
     @Valid
-    private RegionDto.Request regionDto;
+    private RegionDto.Request region;
 
     @NotBlank(message = "장소명은 필수입니다.")
     private String eventLocation;
@@ -52,7 +52,7 @@ public class EventDto {
 
     private String description;
 
-    private List<TicketPriceDto> ticketPriceDto;
+    private List<TicketPriceDto> ticketPrices;
     private List<String> imagesToDelete; // 수정 시 삭제할 이미지 경로들
   }
 
@@ -83,7 +83,9 @@ public class EventDto {
         .id(event.getId())
         .eventType(event.getEventType())
         .title(event.getTitle())
-        .region(RegionDto.Response.from(event.getRegion()))
+        .region(event.getRegionSnapshot() != null ? 
+                event.getRegionSnapshot().toRegionDto() : 
+                null)  // 🚀 N+1 쿼리 문제 해결: 스냅샷 사용
         .eventLocation(event.getEventLocation())
         .startDate(event.getStartDate())
         .endDate(event.getEndDate())
@@ -136,7 +138,7 @@ public class EventDto {
     private Long id;
     private EventType eventType;
     private String title;
-    private RegionDto.Response regionDto;
+    private RegionDto.Response region;
     private String eventLocation;
     private String address;
     private String addressDetail;
@@ -160,7 +162,7 @@ public class EventDto {
     private Boolean isInterested = false;
 
     public static ResponseDetail from(Event event, List<String> contentImages, boolean isInterested) {
-      List<TicketPriceDto> ticketPriceDtos = event.getTicketPrice().stream()
+      List<TicketPriceDto> ticketPrices = event.getTicketPrice().stream()
               .map(TicketPriceDto::from)
               .toList();
 
@@ -168,7 +170,9 @@ public class EventDto {
         .id(event.getId())
         .eventType(event.getEventType())
         .title(event.getTitle())
-        .regionDto(RegionDto.Response.from(event.getRegion()))
+        .region(event.getRegionSnapshot() != null ? 
+               event.getRegionSnapshot().toRegionDto() : 
+               null)  // 🚀 N+1 쿼리 문제 해결: 스냅샷 사용
         .eventLocation(event.getEventLocation())
         .address(event.getAddress())
         .addressDetail(event.getAddressDetail())
@@ -177,7 +181,7 @@ public class EventDto {
         .durationMin(event.getDurationMin())
         .minAge(event.getMinAge())
         .description(event.getDescription())
-        .ticketPrices(ticketPriceDtos)
+        .ticketPrices(ticketPrices)
         .thumbnailImagePath(event.getThumbnailImagePath())
         .mainImagePath(event.getMainImagePath())
         .contentImages(contentImages)

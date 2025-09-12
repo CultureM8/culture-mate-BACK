@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.domain.event;
 
 import com.culturemate.culturemate_api.domain.Region;
+import com.culturemate.culturemate_api.domain.RegionSnapshot;
 import com.culturemate.culturemate_api.domain.community.Board;
 import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import jakarta.persistence.*;
@@ -34,7 +35,11 @@ public class Event {
   @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "region_id")
-  private Region region;           // 지역ID
+  private Region region;           // 지역ID (생성/수정용)
+
+  // 조회 성능 최적화용 지역 스냅샷 (N+1 쿼리 문제 해결)
+  @Embedded
+  private RegionSnapshot regionSnapshot;
 
   @Setter
   @Column(nullable = false)
@@ -123,6 +128,27 @@ public class Event {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
     this.avgRating = sum.divide(BigDecimal.valueOf(eventReview.size()), 2, java.math.RoundingMode.HALF_UP);
+  }
+
+  /**
+   * 지역 스냅샷 업데이트
+   * Region 엔티티 변경 시 반드시 호출하여 스냅샷 동기화
+   * 
+   * @param region 새로운 지역 정보
+   */
+  public void updateRegionSnapshot(Region region) {
+    this.regionSnapshot = RegionSnapshot.from(region);
+  }
+
+  /**
+   * 지역 정보 변경 시 스냅샷 자동 동기화
+   * setRegion() 호출 시 자동으로 스냅샷이 업데이트됨
+   * 
+   * @param region 새로운 지역 정보
+   */
+  public void setRegion(Region region) {
+    this.region = region;
+    updateRegionSnapshot(region);
   }
 
 }

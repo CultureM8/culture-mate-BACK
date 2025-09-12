@@ -60,4 +60,5 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   @Modifying
   @Query("UPDATE Event e SET e.reviewCount = e.reviewCount + :increment WHERE e.id = :eventId")
   void updateReviewCount(@Param("eventId") Long eventId, @Param("increment") int increment);
+
 }

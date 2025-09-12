@@ -85,4 +85,5 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   @Modifying
   @Query("UPDATE Together t SET t.interestCount = t.interestCount + :increment WHERE t.id = :togetherId")
   void updateInterestCount(@Param("togetherId") Long togetherId, @Param("increment") int increment);
+
 }
