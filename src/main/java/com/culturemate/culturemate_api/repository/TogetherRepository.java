@@ -85,4 +85,22 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   @Modifying
   @Query("UPDATE Together t SET t.interestCount = t.interestCount + :increment WHERE t.id = :togetherId")
   void updateInterestCount(@Param("togetherId") Long togetherId, @Param("increment") int increment);
+
+  // === RegionSnapshot 마이그레이션용 쿼리 ===
+
+  // regionSnapshot이 없는 Together 조회 (JOIN FETCH로 region 정보 함께 조회)
+  @Query("SELECT t FROM Together t " +
+         "LEFT JOIN FETCH t.region r " +
+         "LEFT JOIN FETCH r.parent rp " +
+         "LEFT JOIN FETCH rp.parent rpp " +
+         "WHERE t.regionSnapshot.regionId IS NULL AND t.region IS NOT NULL")
+  List<Together> findTogethersWithoutSnapshot();
+
+  // regionSnapshot이 없는 Together 수 조회
+  @Query("SELECT COUNT(t) FROM Together t WHERE t.regionSnapshot.regionId IS NULL AND t.region IS NOT NULL")
+  long countTogethersWithoutSnapshot();
+
+  // regionSnapshot이 있는 Together 수 조회
+  @Query("SELECT COUNT(t) FROM Together t WHERE t.regionSnapshot.regionId IS NOT NULL")
+  long countTogethersWithSnapshot();
 }

@@ -64,8 +64,11 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   // === RegionSnapshot 마이그레이션용 쿼리 ===
 
   // regionSnapshot이 없는 이벤트 조회 (JOIN FETCH로 region 정보 함께 조회)
-  @EntityGraph(attributePaths = {"region"})
-  @Query("SELECT e FROM Event e WHERE e.regionSnapshot.regionId IS NULL AND e.region IS NOT NULL")
+  @Query("SELECT e FROM Event e " +
+         "LEFT JOIN FETCH e.region r " +
+         "LEFT JOIN FETCH r.parent rp " +
+         "LEFT JOIN FETCH rp.parent rpp " +
+         "WHERE e.regionSnapshot.regionId IS NULL AND e.region IS NOT NULL")
   List<Event> findEventsWithoutSnapshot();
 
   // regionSnapshot이 없는 이벤트 수 조회

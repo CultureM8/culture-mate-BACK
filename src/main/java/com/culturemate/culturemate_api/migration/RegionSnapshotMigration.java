@@ -1,7 +1,9 @@
 package com.culturemate.culturemate_api.migration;
 
 import com.culturemate.culturemate_api.domain.event.Event;
+import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.repository.EventRepository;
+import com.culturemate.culturemate_api.repository.TogetherRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -27,6 +29,7 @@ import java.util.List;
 public class RegionSnapshotMigration implements CommandLineRunner {
 
   private final EventRepository eventRepository;
+  private final TogetherRepository togetherRepository;
 
   @Override
   public void run(String... args) throws Exception {
@@ -34,8 +37,10 @@ public class RegionSnapshotMigration implements CommandLineRunner {
     // 운영 환경에서는 수동 실행 권장
     String activeProfile = System.getProperty("spring.profiles.active", "default");
     if (!"prod".equals(activeProfile)) {
-      log.info("RegionSnapshot 마이그레이션을 시작합니다. (Profile: {})", activeProfile);
-      migrateRegionSnapshots();
+      log.info("RegionSnapshot 마이그레이션을 시작합니다. (Profile: {}) - Event + Together", activeProfile);
+      int eventMigrated = migrateEventSnapshots();
+      int togetherMigrated = migrateTogetherSnapshots();
+      log.info("총 마이그레이션 완료 - Event: {}, Together: {}", eventMigrated, togetherMigrated);
     } else {
       log.info("운영 환경에서는 RegionSnapshot 마이그레이션을 수동으로 실행해주세요.");
     }
@@ -47,7 +52,7 @@ public class RegionSnapshotMigration implements CommandLineRunner {
    * @return 마이그레이션된 이벤트 수
    */
   @Transactional
-  public int migrateRegionSnapshots() {
+  public int migrateEventSnapshots() {
     log.info("=== RegionSnapshot 마이그레이션 시작 ===");
 
     // 1. regionSnapshot이 null인 이벤트 조회 (join fetch로 region 정보도 함께 조회)
@@ -92,6 +97,61 @@ public class RegionSnapshotMigration implements CommandLineRunner {
     log.info("총 처리 이벤트: {}", totalCount);
     log.info("성공적으로 마이그레이션된 이벤트: {}", migratedCount);
     log.info("실패한 이벤트: {}", totalCount - migratedCount);
+
+    return migratedCount;
+  }
+
+  /**
+   * 기존 Together 데이터의 RegionSnapshot 생성
+   * 
+   * @return 마이그레이션된 Together 수
+   */
+  @Transactional
+  public int migrateTogetherSnapshots() {
+    log.info("=== Together RegionSnapshot 마이그레이션 시작 ===");
+
+    // 1. regionSnapshot이 null인 Together 조회 (join fetch로 region 정보도 함께 조회)
+    List<Together> togethersToMigrate = togetherRepository.findTogethersWithoutSnapshot();
+
+    if (togethersToMigrate.isEmpty()) {
+      log.info("마이그레이션할 Together가 없습니다. 모든 Together가 이미 스냅샷을 가지고 있습니다.");
+      return 0;
+    }
+
+    log.info("마이그레이션 대상 Together 수: {}", togethersToMigrate.size());
+
+    // 2. 각 Together의 regionSnapshot 생성
+    int migratedCount = 0;
+    int totalCount = togethersToMigrate.size();
+
+    for (Together together : togethersToMigrate) {
+      try {
+        if (together.getRegion() != null) {
+          // 스냅샷 생성 및 동기화
+          together.updateRegionSnapshot(together.getRegion());
+          migratedCount++;
+
+          // 진행상황 로깅 (50개마다)
+          if (migratedCount % 50 == 0) {
+            log.info("Together 마이그레이션 진행: {}/{} ({}%)", 
+                    migratedCount, totalCount, 
+                    Math.round((double) migratedCount / totalCount * 100));
+          }
+        } else {
+          log.warn("Together ID {}는 region 정보가 없어 스킵합니다.", together.getId());
+        }
+      } catch (Exception e) {
+        log.error("Together ID {} 마이그레이션 중 오류: {}", together.getId(), e.getMessage());
+      }
+    }
+
+    // 3. 배치 저장 (성능 최적화)
+    togetherRepository.saveAll(togethersToMigrate);
+
+    log.info("=== Together RegionSnapshot 마이그레이션 완료 ===");
+    log.info("총 처리 Together: {}", totalCount);
+    log.info("성공적으로 마이그레이션된 Together: {}", migratedCount);
+    log.info("실패한 Together: {}", totalCount - migratedCount);
 
     return migratedCount;
   }

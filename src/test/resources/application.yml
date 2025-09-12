@@ -8,7 +8,7 @@ spring:
     driver-class-name: ${DB_DRIVER}
   jpa:
     hibernate:
-      ddl-auto: ${DB_DDL_AUTO} # 개발시 update, 운영시 validate, 테스트시 create or create-drop
+      ddl-auto: ${TEST_DB_DDL_AUTO} # 개발시 update, 운영시 validate, 테스트시 create or create-drop
     properties:
       hibernate:
       # show_sql: true

@@ -146,7 +146,6 @@ public class Event {
    * 
    * @param region 새로운 지역 정보
    */
-  @Override
   public void setRegion(Region region) {
     this.region = region;
     updateRegionSnapshot(region);
