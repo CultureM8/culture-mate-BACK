@@ -61,21 +61,4 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   @Query("UPDATE Event e SET e.reviewCount = e.reviewCount + :increment WHERE e.id = :eventId")
   void updateReviewCount(@Param("eventId") Long eventId, @Param("increment") int increment);
 
-  // === RegionSnapshot 마이그레이션용 쿼리 ===
-
-  // regionSnapshot이 없는 이벤트 조회 (JOIN FETCH로 region 정보 함께 조회)
-  @Query("SELECT e FROM Event e " +
-         "LEFT JOIN FETCH e.region r " +
-         "LEFT JOIN FETCH r.parent rp " +
-         "LEFT JOIN FETCH rp.parent rpp " +
-         "WHERE e.regionSnapshot.regionId IS NULL AND e.region IS NOT NULL")
-  List<Event> findEventsWithoutSnapshot();
-
-  // regionSnapshot이 없는 이벤트 수 조회
-  @Query("SELECT COUNT(e) FROM Event e WHERE e.regionSnapshot.regionId IS NULL AND e.region IS NOT NULL")
-  long countEventsWithoutSnapshot();
-
-  // regionSnapshot이 있는 이벤트 수 조회
-  @Query("SELECT COUNT(e) FROM Event e WHERE e.regionSnapshot.regionId IS NOT NULL")
-  long countEventsWithSnapshot();
 }
