@@ -8,8 +8,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,7 +42,9 @@ public class CommentController {
   @PutMapping("/{commentId}")
   public ResponseEntity<CommentDto.Response> updateComment(@PathVariable Long commentId,
                                                           @RequestBody CommentDto.Request requestDto,
-                                                          @RequestParam Long requesterId) {
+                                                          Authentication authentication) {
+    AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
+    Long requesterId = authenticatedUser.getMemberId();
     Comment updated = commentService.update(commentId, requestDto, requesterId);
     return ResponseEntity.ok(CommentDto.Response.from(updated)); // 200 OK
   }
@@ -66,9 +70,11 @@ public class CommentController {
   }
 
   // 삭제
-  @DeleteMapping("/{commentId}")
+    @DeleteMapping("/{commentId}")
   public ResponseEntity<Void> deleteComment(@PathVariable Long commentId,
-                                            @RequestParam Long requesterId) {
+                                            Authentication authentication) {
+    AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
+    Long requesterId = authenticatedUser.getMemberId();
     commentService.delete(commentId, requesterId);
     return ResponseEntity.noContent().build(); // 204 No Content
   }
