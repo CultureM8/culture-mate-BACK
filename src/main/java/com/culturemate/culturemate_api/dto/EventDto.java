@@ -2,6 +2,7 @@ package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -60,6 +61,7 @@ public class EventDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "EventResponse", description = "이벤트 기본 정보 응답 DTO")
   public static class Response {
     private Long id;
     private EventType eventType;
@@ -103,6 +105,7 @@ public class EventDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "EventResponseCard", description = "이벤트 카드 정보 응답 DTO")
   public static class ResponseCard {
     private Long id;
     private EventType eventType;
@@ -134,6 +137,7 @@ public class EventDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "EventResponseDetail", description = "이벤트 상세 정보 응답 DTO")
   public static class ResponseDetail {
     private Long id;
     private EventType eventType;

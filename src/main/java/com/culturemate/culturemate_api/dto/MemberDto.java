@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.domain.member.MemberDetail;
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.domain.member.VisibleType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -82,6 +83,7 @@ public class MemberDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "MemberResponse", description = "회원 상세 정보 응답 DTO")
   public static class Response {
     private Long id;
     private String loginId;
@@ -107,6 +109,7 @@ public class MemberDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "MemberProfileResponse", description = "회원 프로필 정보 응답 DTO")
   public static class ProfileResponse {
     private Long id;
     private String nickname;
@@ -128,6 +131,7 @@ public class MemberDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "MemberDetailResponse", description = "회원 상세 정보 응답 DTO")
   public static class DetailResponse {
     private Long id;
     private String nickname;

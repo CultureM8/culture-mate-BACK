@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.ReviewDto;
 import com.culturemate.culturemate_api.service.EventReviewService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Event Review API", description = "이벤트 리뷰 관리 API")
 @RestController
 @RequestMapping("/api/v1/event-reviews")
 @RequiredArgsConstructor

@@ -1,5 +1,7 @@
 package com.culturemate.culturemate_api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.culturemate.culturemate_api.domain.event.EventReview;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -36,6 +38,7 @@ public class ReviewDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "ReviewResponse", description = "리뷰 정보 응답 DTO")
   public static class Response {
 
     private Long id;

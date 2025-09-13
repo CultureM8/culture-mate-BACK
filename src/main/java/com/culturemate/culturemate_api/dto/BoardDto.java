@@ -44,23 +44,15 @@ public class BoardDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "게시물 상세 정보 응답 DTO")
+  @Schema(name = "BoardResponse", description = "게시물 상세 정보 응답 DTO")
   public static class Response {
-    @Schema(description = "게시물 ID", example = "1")
     private Long id;
-    @Schema(description = "게시물 제목", example = "새로운 전시회 정보 공유")
     private String title;
-    @Schema(description = "게시물 내용", example = "이번에 새로 열린 전시에요...")
     private String content;
-    @Schema(description = "작성자 프로필 정보")
     private MemberDto.ProfileResponse author;
-    @Schema(description = "연관 이벤트 카드 정보")
     private EventDto.ResponseCard eventCard;
-    @Schema(description = "좋아요 수", example = "15")
     private Integer likeCount;
-    @Schema(description = "생성 시각")
     private LocalDateTime createdAt;
-    @Schema(description = "최종 수정 시각")
     private LocalDateTime updatedAt;
 
     public static Response from(Board board) {

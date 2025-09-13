@@ -10,6 +10,7 @@ import com.culturemate.culturemate_api.service.ImageService;
 import com.culturemate.culturemate_api.service.ImagePermissionService;
 import com.culturemate.culturemate_api.service.MemberDetailService;
 import com.culturemate.culturemate_api.service.MemberService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Tag(name = "Member Detail API", description = "회원 상세 정보(마이페이지) 관리 API")
 @RestController
 @RequestMapping("/api/v1/member-detail")
 @RequiredArgsConstructor

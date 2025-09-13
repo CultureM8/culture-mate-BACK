@@ -1,5 +1,7 @@
 package com.culturemate.culturemate_api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.culturemate.culturemate_api.domain.Region;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,6 +41,7 @@ public class RegionDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "RegionResponse", description = "지역 정보 응답 DTO")
   public static class Response {
     private Long id;
     private String regionName;
