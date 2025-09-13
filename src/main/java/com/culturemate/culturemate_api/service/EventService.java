@@ -381,6 +381,16 @@ public class EventService {
     return result;
   }
 
+  // 사용자 관심 이벤트 목록 조회
+  public List<Event> getUserInterestEvents(Long memberId) {
+    Member member = memberService.findById(memberId);
+    List<InterestEvents> interestEvents = interestEventsRepository.findByMember(member);
+    
+    return interestEvents.stream()
+      .map(InterestEvents::getEvent)
+      .toList();
+  }
+
   // ADMIN 권한 검증 메서드
   private void validateAdminAccess(Long requesterId) {
     Member requester = memberService.findById(requesterId);
