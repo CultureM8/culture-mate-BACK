@@ -156,6 +156,23 @@ public ResponseEntity<String> toggleEventInterest(
   }
 }
 
+  // 사용자 관심 이벤트 목록 조회
+  @GetMapping("/interests")
+  public ResponseEntity<List<EventDto.Response>> getUserInterestEvents(
+    @AuthenticationPrincipal AuthenticatedUser user) {
+    
+    if (user == null) {
+      return ResponseEntity.status(401).build(); // Unauthorized
+    }
+    
+    List<Event> interestEvents = eventService.getUserInterestEvents(user.getMemberId());
+    List<EventDto.Response> responseDtos = interestEvents.stream()
+      .map(event -> EventDto.Response.from(event, true)) // 모든 관심 이벤트는 isInterested = true
+      .toList();
+    
+    return ResponseEntity.ok(responseDtos);
+  }
+
   // 이벤트 삭제
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteEvent(@PathVariable Long id,
