@@ -1,5 +1,7 @@
 package com.culturemate.culturemate_api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +19,7 @@ public class ChatRoomDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "ChatRoomResponse", description = "채팅방 정보 응답 DTO")
   public static class Response {
     private Long id;
     private String roomName;

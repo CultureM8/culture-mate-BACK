@@ -1,5 +1,6 @@
 package com.culturemate.culturemate_api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -57,6 +58,7 @@ public class TogetherDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "TogetherResponse", description = "모임 상세 정보 응답 DTO")
   public static class Response {
 
     private Long id;

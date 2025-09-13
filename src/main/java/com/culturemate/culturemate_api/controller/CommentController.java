@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Tag(name = "Comment API", description = "댓글 관리 API")
+@Tag(name = "Board Comment API", description = "댓글 관리 API")
 @RestController
 @RequestMapping("/api/v1/board/{boardId}/comments")
 @RequiredArgsConstructor

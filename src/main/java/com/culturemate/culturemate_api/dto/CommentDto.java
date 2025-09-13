@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.dto;
 
 import com.culturemate.culturemate_api.domain.community.Comment;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +37,7 @@ public class CommentDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "CommentResponse", description = "댓글 상세 정보 응답 DTO")
   public static class Response {
 
     private Long id;

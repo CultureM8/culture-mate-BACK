@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Region API", description = "지역 관리 API (관리자용)")
 @RestController
 @RequestMapping("/api/v1/regions")
 @RequiredArgsConstructor
