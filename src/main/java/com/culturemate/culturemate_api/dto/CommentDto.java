@@ -42,9 +42,9 @@ public class CommentDto {
     private Long boardId;
     private MemberDto.ProfileResponse author;
     private String content;
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH24:mm:ss")
     private LocalDate createdAt;
-    @DateTimeFormat(pattern = "yyyy-MM-dd")  
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH24:mm:ss")
     private LocalDate updatedAt;
     private Integer likeCount;
     private Integer replyCount; // 대댓글 수

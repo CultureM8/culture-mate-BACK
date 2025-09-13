@@ -8,6 +8,7 @@ import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.CommentDto;
 import com.culturemate.culturemate_api.repository.CommentLikeRepository;
 import com.culturemate.culturemate_api.repository.CommentRepository;
+import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +27,8 @@ public class CommentService {
 
   // 댓글 생성
   @Transactional
-  public Comment create(CommentDto.Request requestDto) {
-    Board board = boardService.findById(requestDto.getBoardId());
+  public Comment create(Long boardId, CommentDto.Request requestDto) {
+    Board board = boardService.findById(boardId);
     Member author = memberService.findById(requestDto.getAuthorId());
     Comment parent = null;
     if (requestDto.getParentId() != null) {
