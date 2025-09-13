@@ -21,6 +21,7 @@ public class TogetherDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "TogetherRequest")
   public static class Request {
 
     @NotNull(message = "이벤트 ID는 필수입니다.")

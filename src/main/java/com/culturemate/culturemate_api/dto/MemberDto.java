@@ -55,6 +55,7 @@ public class MemberDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "MemberDetailRequest")
   public static class DetailRequest {
     
     @NotBlank(message = "사용자명은 필수입니다")

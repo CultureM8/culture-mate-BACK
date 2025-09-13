@@ -24,6 +24,7 @@ public class EventDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "EventRequest")
   public static class Request {
     @NotNull(message = "이벤트 유형은 필수입니다.")
     private EventType eventType;

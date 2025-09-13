@@ -41,6 +41,7 @@ public class ChatRoomDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "ChatRoomResponseDetail")
   public static class ResponseDetail {
     private Long id;
     private String roomName;

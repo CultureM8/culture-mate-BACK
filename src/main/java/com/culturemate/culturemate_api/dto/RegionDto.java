@@ -22,6 +22,7 @@ public class RegionDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "RegionRequest")
   public static class Request {
     private String level1;
     private String level2;

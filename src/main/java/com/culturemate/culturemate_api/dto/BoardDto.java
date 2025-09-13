@@ -19,7 +19,7 @@ public class BoardDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "게시물 생성/수정 요청 DTO")
+  @Schema(name = "BoardRequest", description = "게시물 생성/수정 요청 DTO")
   public static class Request {
     @Schema(description = "게시물 제목", example = "새로운 전시회 정보 공유", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "제목은 필수입니다.")

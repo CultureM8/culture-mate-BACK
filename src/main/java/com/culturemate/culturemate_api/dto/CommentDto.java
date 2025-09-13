@@ -18,6 +18,7 @@ public class CommentDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "CommentRequest")
   public static class Request {
 
     @NotNull(message = "게시물 ID는 필수입니다")

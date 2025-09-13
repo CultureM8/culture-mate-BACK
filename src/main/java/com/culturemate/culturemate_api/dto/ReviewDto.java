@@ -20,6 +20,7 @@ public class ReviewDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "ReviewRequest")
   public static class Request {
 
     @NotNull(message = "이벤트 ID는 필수입니다")
@@ -68,6 +69,7 @@ public class ReviewDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(name = "ReviewResponseWithEvent")
   public static class ResponseWithEvent {
 
     private Long id;
