@@ -238,12 +238,12 @@ public class TogetherController {
   // 내 신청 목록 조회 (상태별 필터링 가능)
   @GetMapping("/my-applications")
   @Operation(summary = "보낸 신청 목록 조회", description = "내가 참여 신청한 동행 목록을 조회합니다")
-  public ResponseEntity<List<ParticipationRequestDto>> getMyApplications(
+  public ResponseEntity<List<TogetherDto.Response>> getMyApplications(
       @RequestParam(required = false) String status,
       @AuthenticationPrincipal AuthenticatedUser requester) {
 
-    // 내가 신청한 동행들의 참여 데이터 조회
-    List<ParticipationRequestDto> myApplications = participantsRepository
+    // 내가 신청한 동행들의 Together 데이터 조회 (완전한 정보)
+    List<TogetherDto.Response> myApplications = participantsRepository
         .findByParticipant_IdAndStatusInOrderByCreatedAtDesc(
             requester.getMemberId(),
             status != null ? List.of(ParticipationStatus.valueOf(status.toUpperCase()))
@@ -253,34 +253,14 @@ public class TogetherController {
         .filter(participant -> !participant.getParticipant().getId().equals(participant.getTogether().getHost().getId())) // 내가 호스트인 경우 제외
         .map(participant -> {
           Together together = participant.getTogether();
-          Member applicant = participant.getParticipant();
-          Event event = together.getEvent();
 
-          return ParticipationRequestDto.builder()
-              .requestId(participant.getId())
-              .togetherId(together.getId())
-              .togetherTitle(together.getTitle())
-              .applicantId(applicant.getId())
-              .applicantName(applicant.getMemberDetail() != null ?
-                  applicant.getMemberDetail().getNickname() : applicant.getLoginId())
-              .applicantProfileImage(applicant.getMemberDetail() != null ?
-                  applicant.getMemberDetail().getThumbnailImagePath() : null)
-              .hostId(together.getHost().getId())
-              .hostName(together.getHost().getMemberDetail() != null ?
-                  together.getHost().getMemberDetail().getNickname() : together.getHost().getLoginId())
-              .status(participant.getStatus().name())
-              .message(participant.getMessage())
-              .eventName(event != null ? event.getTitle() : "")
-              .eventType(event != null ? event.getEventType().name() : "")
-              .eventImage(event != null ? event.getThumbnailImagePath() : null)
-              .meetingDate(together.getMeetingDate())
-              .createdAt(participant.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime())
-              // 채팅방 정보 추가
-              .applicationChatRoomId(participant.getApplicationChatRoom() != null ?
-                  participant.getApplicationChatRoom().getId() : null)
-              .applicationChatRoomName(participant.getApplicationChatRoom() != null ?
-                  participant.getApplicationChatRoom().getRoomName() : null)
-              .build();
+          // TogetherService의 toResponseDto 메서드 사용하여 완전한 정보 제공
+          // 관심 등록 여부는 게스트 입장에서는 불필요하므로 false로 설정
+          TogetherDto.Response response = togetherService.toResponseDto(together, false);
+
+          // 추가적으로 participant 상태 정보를 포함하기 위해 커스텀 필드를 추가할 수도 있지만,
+          // 일단 기본 TogetherDto.Response 구조를 유지하면서 완전한 Together 정보를 제공
+          return response;
         })
         .collect(Collectors.toList());
 
