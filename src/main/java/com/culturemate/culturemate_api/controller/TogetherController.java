@@ -146,7 +146,7 @@ public class TogetherController {
   public ResponseEntity<ChatRoomDto.ResponseDetail> getTogetherChatRoom(@PathVariable Long togetherId,
                                                                         @AuthenticationPrincipal AuthenticatedUser requester) {
     Together together = togetherService.findById(togetherId);
-    ChatRoom chatRoom = chatRoomService.findByTogether(together);
+    ChatRoom chatRoom = chatRoomService.findGroupChatByTogether(together);
 
     // 권한 검증: 호스트이거나 승인된 참여자만 채팅방 정보 접근 가능
     if (!chatRoomService.canAccessChatRoom(chatRoom.getId(), requester.getMemberId())) {

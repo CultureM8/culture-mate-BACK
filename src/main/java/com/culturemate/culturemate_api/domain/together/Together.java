@@ -2,6 +2,8 @@ package com.culturemate.culturemate_api.domain.together;
 
 import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.RegionSnapshot;
+import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
+import com.culturemate.culturemate_api.domain.chatting.ChatRoomType;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.member.InterestEvents;
 import com.culturemate.culturemate_api.domain.member.InterestTogethers;
@@ -18,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -100,6 +103,11 @@ public class Together {
   @Builder.Default
   private List<InterestTogethers> interestTogethers = new ArrayList<>();
 
+  // Together ↔ ChatRooms 1:N 관계 (GROUP_CHAT + APPLICATION_CHAT)
+  @OneToMany(mappedBy = "together", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @Builder.Default
+  private List<ChatRoom> chatRooms = new ArrayList<>();
+
   //=== 생성/수정 로직 ===//
   @PrePersist
   public void onCreate() {
@@ -124,12 +132,53 @@ public class Together {
   /**
    * 지역 정보 변경 시 스냅샷 자동 동기화
    * setRegion() 호출 시 자동으로 스냅샷이 업데이트됨
-   * 
+   *
    * @param region 새로운 지역 정보
    */
   public void setRegion(Region region) {
     this.region = region;
     updateRegionSnapshot(region);
+  }
+
+  //=== 채팅방 관련 편의 메서드 ===//
+
+  /**
+   * 그룹 채팅방 조회 (GROUP_CHAT 타입)
+   * Together당 하나만 존재해야 함
+   *
+   * @return 그룹 채팅방 또는 null
+   */
+  public ChatRoom getGroupChatRoom() {
+    return chatRooms.stream()
+        .filter(room -> room.getType() == ChatRoomType.GROUP_CHAT)
+        .findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * 신청용 채팅방 목록 조회 (APPLICATION_CHAT 타입)
+   * 신청자별로 여러 개 존재 가능
+   *
+   * @return 신청용 채팅방 리스트
+   */
+  public List<ChatRoom> getApplicationChatRooms() {
+    return chatRooms.stream()
+        .filter(room -> room.getType() == ChatRoomType.APPLICATION_CHAT)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 특정 신청자와의 채팅방 조회
+   *
+   * @param applicant 신청자
+   * @return 해당 신청자와의 채팅방 또는 null
+   */
+  public ChatRoom getApplicationChatRoom(Member applicant) {
+    return chatRooms.stream()
+        .filter(room -> room.getType() == ChatRoomType.APPLICATION_CHAT)
+        .filter(room -> room.getApplicant() != null && room.getApplicant().equals(applicant))
+        .findFirst()
+        .orElse(null);
   }
 
 }

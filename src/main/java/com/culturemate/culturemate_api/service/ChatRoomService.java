@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,10 +82,28 @@ public class ChatRoomService {
       .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다: " + roomId));
   }
 
-  // 특정 동행의 채팅방 검색
+  // 특정 동행의 그룹 채팅방 검색 (안전한 조회)
+  public ChatRoom findGroupChatByTogether(Together together) {
+    return chatRoomRepository.findGroupChatByTogether(together)
+      .orElseThrow(() -> new IllegalArgumentException("해당 모집글의 그룹 채팅방이 존재하지 않습니다.: " + together.getId()));
+  }
+
+  // 특정 동행의 채팅방 검색 (기존 호환성 유지 - 그룹챗 반환)
   public ChatRoom findByTogether(Together together) {
-    return chatRoomRepository.findByTogether(together)
-      .orElseThrow(() -> new IllegalArgumentException("해당 모집글의 채팅방이 존재하지 않습니다.: " + together.getId()));
+    return findGroupChatByTogether(together);
+  }
+
+  // 특정 동행의 모든 채팅방 검색
+  public List<ChatRoom> findAllChatRoomsByTogether(Together together) {
+    List<ChatRoom> allRooms = new ArrayList<>();
+    allRooms.addAll(chatRoomRepository.findByTogetherAndType(together, ChatRoomType.GROUP_CHAT));
+    allRooms.addAll(chatRoomRepository.findByTogetherAndType(together, ChatRoomType.APPLICATION_CHAT));
+    return allRooms;
+  }
+
+  // 특정 동행의 신청용 채팅방들 검색
+  public List<ChatRoom> findApplicationChatsByTogether(Together together) {
+    return chatRoomRepository.findApplicationChatsByTogether(together);
   }
 
   // 채팅방 멤버 추가 (내부용, 권한 검증 없음)
@@ -131,10 +150,10 @@ public class ChatRoomService {
   }
 
 
-  // 특정 모집글의 톡방에 멤버 추가
+  // 특정 모집글의 그룹 톡방에 멤버 추가
   @Transactional
   public void addMemberToRoomByTogether(Together together, Long memberId) {
-    chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
+    chatRoomRepository.findGroupChatByTogether(together).ifPresent(chatRoom ->
       addMemberToRoom(chatRoom.getId(), memberId)
     );
   }
@@ -148,10 +167,10 @@ public class ChatRoomService {
     chatMemberRepository.deleteByChatRoomAndMember(chatRoom, member);
   }
 
-  // 특정 모집글의 톡방에서 멤버 제거
+  // 특정 모집글의 그룹 톡방에서 멤버 제거
   @Transactional
   public void removeMemberFromRoomByTogether(Together together, Long memberId) {
-    chatRoomRepository.findByTogether(together).ifPresent(chatRoom ->
+    chatRoomRepository.findGroupChatByTogether(together).ifPresent(chatRoom ->
       removeMemberFromRoom(chatRoom.getId(), memberId)
     );
   }
@@ -161,17 +180,53 @@ public class ChatRoomService {
   public ChatMessage sendMessage(Long roomId, Long senderId, String content) {
     // 1. 메시지 내용 검증
     validateMessageContent(content);
-    
+
     // 2. 발신자 조회
     Member sender = memberService.findById(senderId);
-    
+
     // 3. 채팅방 조회
     ChatRoom room = findById(roomId);
-    
+
     // 4. 채팅방 멤버 권한 확인
     ChatMember author = chatMemberRepository.findByChatRoomAndMember(room, sender)
-        .orElseThrow(() -> new IllegalArgumentException("해당 채팅방의 참여자가 아닙니다"));
-    
+        .orElse(null);
+
+    // 4-1. ChatMember가 없는 경우, Together 호스트인지 확인
+    if (author == null && room.getTogether() != null) {
+      Together together = room.getTogether();
+
+      // 호스트이면서 HOST 상태로 참여자에 등록되어 있는지 확인
+      if (together.getHost().getId().equals(senderId)) {
+        // 호스트를 ChatMember로 자동 추가 (이미 있어야 하지만 혹시 누락된 경우 대비)
+        author = ChatMember.builder()
+            .chatRoom(room)
+            .member(sender)
+            .build();
+        author = chatMemberRepository.save(author);
+      } else {
+        // 일반 참여자인 경우 Participants 테이블에서 HOST 또는 APPROVED 상태 확인
+        Participants participant = participantsRepository
+            .findByTogetherIdAndParticipantId(together.getId(), sender.getId());
+        boolean isValidParticipant = participant != null &&
+            (participant.getStatus() == ParticipationStatus.HOST ||
+             participant.getStatus() == ParticipationStatus.APPROVED);
+
+        if (isValidParticipant) {
+          // 유효한 참여자이지만 ChatMember에 없는 경우 추가
+          author = ChatMember.builder()
+              .chatRoom(room)
+              .member(sender)
+              .build();
+          author = chatMemberRepository.save(author);
+        }
+      }
+    }
+
+    // 4-2. 여전히 author가 null이면 권한 없음
+    if (author == null) {
+      throw new IllegalArgumentException("해당 채팅방의 참여자가 아닙니다");
+    }
+
     // 5. 메시지 저장
     ChatMessage message = ChatMessage.builder()
         .chatRoom(room)
@@ -179,8 +234,18 @@ public class ChatRoomService {
         .content(content)
         .createdAt(Instant.now())
         .build();
-    
-    return chatMessageRepository.save(message);
+
+    System.out.println("DEBUG: 메시지 저장 시도 - roomId: " + room.getId() + ", authorId: " + author.getId() + ", content: " + content);
+
+    try {
+      ChatMessage savedMessage = chatMessageRepository.save(message);
+      System.out.println("DEBUG: 메시지 저장 성공 - messageId: " + savedMessage.getId() + ", createdAt: " + savedMessage.getCreatedAt());
+      return savedMessage;
+    } catch (Exception e) {
+      System.out.println("ERROR: 메시지 저장 실패 - " + e.getMessage());
+      e.printStackTrace();
+      throw e;
+    }
   }
 
   // 메시지 내용 검증

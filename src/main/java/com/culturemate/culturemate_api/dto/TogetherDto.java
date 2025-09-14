@@ -75,6 +75,7 @@ public class TogetherDto {
     private Integer currentParticipants;
     private Boolean active;
     private Boolean isInterested; // 관심 등록 여부
+    private Long roomId; // 채팅방 ID (Together의 채팅방)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

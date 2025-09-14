@@ -67,10 +67,11 @@ public class TogetherService {
     // Together를 DB에 저장
     Together savedTogether = togetherRepository.save(together);
 
-    // 호스트를 참여자로 자동 추가
+    // 호스트를 참여자로 자동 추가 (HOST 상태로)
     Participants hostParticipation = Participants.builder()
       .together(savedTogether)
       .participant(host)
+      .status(ParticipationStatus.HOST)  // 호스트 상태로 설정
       .build();
     participantsRepository.save(hostParticipation);
 
@@ -348,7 +349,7 @@ public class TogetherService {
   private void ensureGroupChatRoomAndAddMember(Together together, Long participantId) {
     try {
       // 기존 그룹 채팅방 조회 시도
-      ChatRoom groupChatRoom = chatRoomService.findByTogether(together);
+      ChatRoom groupChatRoom = chatRoomService.findGroupChatByTogether(together);
 
       // 그룹 채팅방이 존재하면 승인된 참여자 추가
       chatRoomService.addMemberToRoom(groupChatRoom.getId(), participantId);
@@ -495,8 +496,9 @@ public class TogetherService {
       .content(together.getContent())
       .active(isActive(together)) // 실제 isActive 계산
       .isInterested(isInterested) // 관심 등록 여부
+      .roomId(together.getGroupChatRoom() != null ? together.getGroupChatRoom().getId() : null) // 그룹 채팅방 ID
       .createdAt(together.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-      .updatedAt(together.getUpdatedAt() != null ? 
+      .updatedAt(together.getUpdatedAt() != null ?
                  together.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
       .build();
   }

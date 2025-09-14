@@ -19,11 +19,11 @@ import java.util.List;
 @Repository
 public interface TogetherRepository extends JpaRepository<Together, Long> {
 
-  @EntityGraph(attributePaths = {"event", "host", "region"})
+  @EntityGraph(attributePaths = {"event", "host", "region", "chatRooms"})
   List<Together> findByHost(Member host);
   
   // 참여자의 모든 참여 내역 (상태 무관) => 특정 참여자의 신청내역을 조회할 때 사용
-  @EntityGraph(attributePaths = {"event", "host", "region"})
+  @EntityGraph(attributePaths = {"event", "host", "region", "chatRooms"})
   @Query("SELECT t FROM Together t " +
          "JOIN t.participants p " +
          "WHERE p.participant = :member " +
@@ -31,7 +31,7 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   List<Together> findByParticipantAll(@Param("member") Member participant);
 
   // 참여자의 특정 상태 참여 내역
-  @EntityGraph(attributePaths = {"event", "host", "region"})
+  @EntityGraph(attributePaths = {"event", "host", "region", "chatRooms"})
   @Query("SELECT t FROM Together t " +
          "JOIN t.participants p " +
          "WHERE p.participant = :member " +
@@ -40,7 +40,7 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   List<Together> findByParticipantAndStatus(@Param("member") Member participant, @Param("status") ParticipationStatus status);
 
 //  통합 검색
-  @EntityGraph(attributePaths = {"event", "host", "region"})
+  @EntityGraph(attributePaths = {"event", "host", "region", "chatRooms"})
   @Query("""
   SELECT t
   FROM Together t
