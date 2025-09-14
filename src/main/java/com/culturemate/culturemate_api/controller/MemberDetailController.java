@@ -70,13 +70,14 @@ public class MemberDetailController {
   @PatchMapping("/{memberId}/image")
   public ResponseEntity<Void> updateMemberImage(@PathVariable Long memberId,
                                           @RequestParam("image") MultipartFile imageFile,
-                                          @RequestParam("type") String imageType) {
+                                          @RequestParam("type") String imageType,
+                                          @AuthenticationPrincipal AuthenticatedUser user) {
     switch (imageType.toLowerCase()) {
       case "profile":
-        memberDetailService.updateProfileImage(memberId, imageFile);
+        memberDetailService.updateProfileImage(memberId, imageFile, user.getMemberId());
         break;
       case "background":
-        memberDetailService.updateBackgroundImage(memberId, imageFile);
+        memberDetailService.updateBackgroundImage(memberId, imageFile, user.getMemberId());
         break;
       default:
         throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");
@@ -87,13 +88,14 @@ public class MemberDetailController {
   // 통합 이미지 삭제 (프로필, 배경)
   @DeleteMapping("/{memberId}/image")
   public ResponseEntity<Void> deleteMemberImage(@PathVariable Long memberId,
-                                          @RequestParam("type") String imageType) {
+                                          @RequestParam("type") String imageType,
+                                          @AuthenticationPrincipal AuthenticatedUser user) {
     switch (imageType.toLowerCase()) {
       case "profile":
-        memberDetailService.deleteProfileImage(memberId);
+        memberDetailService.deleteProfileImage(memberId, user.getMemberId());
         break;
       case "background":
-        memberDetailService.deleteBackgroundImage(memberId);
+        memberDetailService.deleteBackgroundImage(memberId, user.getMemberId());
         break;
       default:
         throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");

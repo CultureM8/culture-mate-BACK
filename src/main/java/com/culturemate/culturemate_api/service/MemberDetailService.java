@@ -68,7 +68,8 @@ public class MemberDetailService {
   // ===== 이미지 관리 =====
   
   // 프로필 이미지 업로드/수정 (썸네일 + 메인)
-  public void updateProfileImage(Long memberId, MultipartFile imageFile) {
+  public void updateProfileImage(Long memberId, MultipartFile imageFile, Long requesterId) {
+    validateProfileAccess(memberId, requesterId);
     MemberDetail memberDetail = findByMemberId(memberId);
     
     try {
@@ -91,7 +92,8 @@ public class MemberDetailService {
   }
 
   // 배경 이미지 업로드/수정
-  public void updateBackgroundImage(Long memberId, MultipartFile imageFile) {
+  public void updateBackgroundImage(Long memberId, MultipartFile imageFile, Long requesterId) {
+    validateProfileAccess(memberId, requesterId);
     MemberDetail memberDetail = findByMemberId(memberId);
     
     try {
@@ -112,7 +114,8 @@ public class MemberDetailService {
   }
 
   // 프로필 이미지 삭제
-  public void deleteProfileImage(Long memberId) {
+  public void deleteProfileImage(Long memberId, Long requesterId) {
+    validateProfileAccess(memberId, requesterId);
     MemberDetail memberDetail = findByMemberId(memberId);
     
     // 물리적 파일 삭제
@@ -126,7 +129,8 @@ public class MemberDetailService {
   }
 
   // 배경 이미지 삭제
-  public void deleteBackgroundImage(Long memberId) {
+  public void deleteBackgroundImage(Long memberId, Long requesterId) {
+    validateProfileAccess(memberId, requesterId);
     MemberDetail memberDetail = findByMemberId(memberId);
     
     // 물리적 파일 삭제
