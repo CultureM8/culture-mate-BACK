@@ -15,6 +15,7 @@ import com.culturemate.culturemate_api.exceptions.together.*;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import com.culturemate.culturemate_api.repository.TogetherRepository;
 import com.culturemate.culturemate_api.repository.InterestTogethersRepository;
+import com.culturemate.culturemate_api.repository.ChatRoomRepository;
 import com.culturemate.culturemate_api.domain.member.InterestTogethers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class TogetherService {
   private final TogetherRepository togetherRepository;
   private final ParticipantsRepository participantsRepository;
   private final InterestTogethersRepository interestTogethersRepository;
+  private final ChatRoomRepository chatRoomRepository;
   private final MemberService memberService;
   private final RegionService regionService;
   private final EventService eventService;
@@ -196,15 +198,30 @@ public class TogetherService {
   @Transactional
   public void delete(Long togetherId, Long requesterId) {
     Together together = findById(togetherId);
-    
+
     // 권한 검증: 본인이 호스트인 모집글만 삭제 가능
     validationService.validateTogetherAccess(together, requesterId);
 
-    // 썸네일/메인 이미지 파일들 삭제
+    // 관련 엔티티들 수동 삭제 (외래키 제약조건 해결)
+    // 삭제 순서가 중요: 자식 → 부모 순서로 삭제
+
+    // 1. ChatRoom 삭제 (Together를 참조하는 주요 테이블)
+    chatRoomRepository.deleteByTogetherId(togetherId);
+
+    // 2. InterestTogethers 삭제 (관심 등록 정보)
+    interestTogethersRepository.deleteByTogetherId(togetherId);
+
+    // 3. Participants 삭제 (참여자 정보)
+    participantsRepository.deleteByTogetherId(togetherId);
+
+    // 4. 변경사항을 DB에 즉시 반영
+    togetherRepository.flush();
+
+    // 5. 이미지 파일들 삭제
     imageService.deletePhysicalFiles(together.getThumbnailImagePath(),
                                     together.getMainImagePath());
 
-    // Together 엔티티 삭제
+    // 6. 마지막으로 Together 엔티티 삭제
     togetherRepository.delete(together);
   }
 

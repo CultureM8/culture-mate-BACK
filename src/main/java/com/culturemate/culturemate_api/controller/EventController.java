@@ -62,12 +62,12 @@ public class EventController {
       @AuthenticationPrincipal AuthenticatedUser user) {
     Event event = eventService.findByIdWithDetails(id);
     List<String> contentImages = eventService.getContentImagePaths(id);
-    
+
     boolean isInterested = false;
     if (user != null) {
       isInterested = eventService.isInterested(id, user.getMemberId());
     }
-    
+
     EventDto.ResponseDetail responseDetail = EventDto.ResponseDetail.from(event, contentImages, isInterested);
     return ResponseEntity.ok(responseDetail);
   }
