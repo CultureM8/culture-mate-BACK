@@ -39,7 +39,7 @@ public class MemberDetailService {
     return memberDetailRepository.save(memberDetail);
   }
 
-  // 수정
+  // 수정 -
   public MemberDetail update(Long memberId, MemberDto.DetailRequest dto, Long requesterId) {
     // 권한 검증: 본인 프로필만 수정 가능
     validateProfileAccess(memberId, requesterId);

@@ -85,7 +85,7 @@ public class MemberDetailController {
     return ResponseEntity.ok().build();
   }
 
-  // 통합 이미지 삭제 (프로필, 배경)
+  // 통합 이미지 삭제 (프로필, 배경) -
   @DeleteMapping("/{memberId}/image")
   public ResponseEntity<Void> deleteMemberImage(@PathVariable Long memberId,
                                           @RequestParam("type") String imageType,
