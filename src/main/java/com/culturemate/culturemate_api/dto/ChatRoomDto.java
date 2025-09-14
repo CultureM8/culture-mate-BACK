@@ -30,7 +30,7 @@ public class ChatRoomDto {
       return Response.builder()
         .id(chatRoom.getId())
         .roomName(chatRoom.getRoomName())
-        .chatMemberCount(chatRoom.getChatMembers().size())
+        .chatMemberCount(chatRoom.getChatMemberCount())
         .createdAt(chatRoom.getCreatedAt() != null ? 
                    chatRoom.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
         .build();
@@ -46,6 +46,7 @@ public class ChatRoomDto {
     private Long id;
     private String roomName;
     private Integer chatMemberCount;
+    private MemberDto.ProfileResponse host;
     private List<MemberDto.ProfileResponse> participants;
     private LocalDateTime createdAt;
 
@@ -57,7 +58,8 @@ public class ChatRoomDto {
       return ResponseDetail.builder()
         .id(chatRoom.getId())
         .roomName(chatRoom.getRoomName())
-        .chatMemberCount(chatRoom.getChatMembers().size())
+        .chatMemberCount(chatRoom.getChatMemberCount())
+        .host(MemberDto.ProfileResponse.from(chatRoom.getTogether().getHost()))
         .participants(participants)
         .createdAt(chatRoom.getCreatedAt() != null ? 
                    chatRoom.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)

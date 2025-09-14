@@ -1,6 +1,14 @@
 spring:
   application:
     name: "CultureMate API"
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+      poll-interval: 2s
+      quiet-period: 1s
+    livereload:
+      enabled: true
   servlet:
     multipart:
       max-file-size: 20MB

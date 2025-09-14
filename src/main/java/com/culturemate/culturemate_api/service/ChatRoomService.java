@@ -3,15 +3,19 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.chatting.ChatMember;
 import com.culturemate.culturemate_api.domain.chatting.ChatMessage;
 import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
+import com.culturemate.culturemate_api.domain.chatting.ChatRoomType;
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.domain.together.Participants;
+import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
-import com.culturemate.culturemate_api.repository.ChatMemberRepository;
-import com.culturemate.culturemate_api.repository.ChatMessageRepository;
-import com.culturemate.culturemate_api.repository.ChatRoomRepository;
+import com.culturemate.culturemate_api.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,8 @@ public class ChatRoomService {
   private final ChatRoomRepository chatRoomRepository;
   private final ChatMemberRepository chatMemberRepository;
   private final MemberService memberService;
+  // NOTE: 순환 참조를 피하기 위해 Together 도메인의 Repository를 직접 참조. 리팩토링 대상.
+  private final ParticipantsRepository participantsRepository;
 
   // 채팅방 생성
   @Transactional
@@ -35,12 +41,33 @@ public class ChatRoomService {
     return chatRoomRepository.save(chatRoom);
   }
 
-  // 채팅방 생성
+  // 채팅방 생성 (일반)
   @Transactional
   public ChatRoom createChatRoom() {
     ChatRoom chatRoom = ChatRoom.builder()
       .build();
     return chatRoomRepository.save(chatRoom);
+  }
+
+  // 신청용 1:1 채팅방 생성 (호스트-신청자 매칭)
+  @Transactional
+  public ChatRoom createApplicationChatRoom(Together together, Member applicant) {
+    String roomName = String.format("[%s] 신청 문의", together.getTitle());
+
+    ChatRoom applicationChatRoom = ChatRoom.builder()
+      .roomName(roomName)
+      .together(together)
+      .type(ChatRoomType.APPLICATION_CHAT)
+      .applicant(applicant)
+      .build();
+
+    ChatRoom savedChatRoom = chatRoomRepository.save(applicationChatRoom);
+
+    // 호스트와 신청자를 채팅방에 자동 추가
+    addMemberToRoom(savedChatRoom.getId(), together.getHost().getId());
+    addMemberToRoom(savedChatRoom.getId(), applicant.getId());
+
+    return savedChatRoom;
   }
 
   // 모든 채팅방 검색
@@ -54,7 +81,13 @@ public class ChatRoomService {
       .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다: " + roomId));
   }
 
-  // 채팅방 멤버 추가
+  // 특정 동행의 채팅방 검색
+  public ChatRoom findByTogether(Together together) {
+    return chatRoomRepository.findByTogether(together)
+      .orElseThrow(() -> new IllegalArgumentException("해당 모집글의 채팅방이 존재하지 않습니다.: " + together.getId()));
+  }
+
+  // 채팅방 멤버 추가 (내부용, 권한 검증 없음)
   @Transactional
   public void addMemberToRoom(Long roomId, Long memberId) {
     ChatRoom chatRoom = findById(roomId);
@@ -70,6 +103,33 @@ public class ChatRoomService {
       .build();
     chatMemberRepository.save(chatMember);
   }
+
+  /**
+   * 채팅방에 멤버를 추가 (권한 검증 포함)
+   * - Together 채팅방의 경우, 호스트 또는 승인된 멤버만 참여 가능
+   */
+  @Transactional
+  public void checkAndAddMemberToRoom(Long roomId, Long memberId) {
+    ChatRoom chatRoom = findById(roomId);
+    Together together = chatRoom.getTogether();
+
+    // 1. Together와 연결된 채팅방인 경우 권한 검증
+    if (together != null) {
+      boolean isHost = together.getHost().getId().equals(memberId);
+
+      Participants participation = participantsRepository.findByTogetherIdAndParticipantId(together.getId(), memberId);
+      boolean isApproved = participation != null && participation.getStatus() == ParticipationStatus.APPROVED;
+
+      if (!isHost && !isApproved) {
+        throw new SecurityException("이 채팅방에 참여할 권한이 없습니다. 호스트의 승인이 필요합니다.");
+      }
+    }
+    // else: Together와 연결되지 않은 일반 채팅방은 누구나 참여 가능 (현재 정책)
+
+    // 2. 권한이 있으면 멤버 추가
+    addMemberToRoom(roomId, memberId);
+  }
+
 
   // 특정 모집글의 톡방에 멤버 추가
   @Transactional
@@ -117,6 +177,7 @@ public class ChatRoomService {
         .chatRoom(room)
         .author(author)
         .content(content)
+        .createdAt(Instant.now())
         .build();
     
     return chatMessageRepository.save(message);
@@ -132,9 +193,9 @@ public class ChatRoomService {
     }
   }
 
-  // 이전대화 불러오기
-  public List<ChatMessage> getMessagesByRoomId(Long roomId) {
-    return chatMessageRepository.findByChatRoomId(roomId);
+  // 이전대화 불러오기 (페이지네이션 적용)
+  public Page<ChatMessage> getMessagesByRoomId(Long roomId, Pageable pageable) {
+    return chatMessageRepository.findByChatRoomId(roomId, pageable);
   }
 
   // 특정 멤버가 참여중인 채팅방 목록 조회
@@ -144,5 +205,34 @@ public class ChatRoomService {
     return chatMembers.stream()
         .map(ChatMember::getChatRoom)
         .collect(Collectors.toList());
+  }
+
+  // 멤버가 해당 채팅방에 접근 권한이 있는지 확인
+  public boolean canAccessChatRoom(Long roomId, Long memberId) {
+    ChatRoom chatRoom = findById(roomId);
+    Member member = memberService.findById(memberId);
+
+    // 1. ChatMember로 직접 참여한 경우 (일반 채팅방 또는 Together 승인된 참여자)
+    if (chatMemberRepository.findByChatRoomAndMember(chatRoom, member).isPresent()) {
+      return true;
+    }
+
+    // 2. Together 채팅방의 경우 호스트 권한 확인
+    if (chatRoom.getTogether() != null) {
+      Together together = chatRoom.getTogether();
+      // 호스트인 경우
+      if (together.getHost().getId().equals(memberId)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // 간단한 멤버십 확인 (ChatMember 테이블만 확인)
+  public boolean isMemberOfRoom(Long roomId, Long memberId) {
+    ChatRoom chatRoom = findById(roomId);
+    Member member = memberService.findById(memberId);
+    return chatMemberRepository.findByChatRoomAndMember(chatRoom, member).isPresent();
   }
 }

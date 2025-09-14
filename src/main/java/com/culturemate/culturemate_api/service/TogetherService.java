@@ -101,7 +101,8 @@ public class TogetherService {
   
   // 특정 상태의 신청 동행만 조회
   public List<Together> findByMemberAndStatus(Member member, String status) {
-    return togetherRepository.findByParticipantAndStatus(member, status);
+    ParticipationStatus participationStatus = ParticipationStatus.valueOf(status.toUpperCase());
+    return togetherRepository.findByParticipantAndStatus(member, participationStatus);
   }
 
   // 통합 검색 기능
@@ -242,15 +243,16 @@ public class TogetherService {
   
   // 특정 상태 참여자 목록 조회
   public List<Member> getParticipantsByStatus(Long togetherId, String status) {
-    List<Participants> participantsList = participantsRepository.findByTogetherIdAndStatus(togetherId, status);
+    ParticipationStatus participationStatus = ParticipationStatus.valueOf(status.toUpperCase());
+    List<Participants> participantsList = participantsRepository.findByTogetherIdAndStatus(togetherId, participationStatus);
     return participantsList.stream()
       .map(Participants::getParticipant)
       .collect(Collectors.toList());
   }
 
-  // 동행 신청 (승인 대기 상태로 생성)
+  // 동행 신청 (승인 대기 상태로 생성 + 신청용 채팅방 생성)
   @Transactional
-  public void applyTogether(Long togetherId, Long memberId) {
+  public Participants applyTogether(Long togetherId, Long memberId, String message) {
     Together together = findById(togetherId);
 
     if (!isActive(together)) {
@@ -260,16 +262,37 @@ public class TogetherService {
       throw new TogetherAlreadyJoinedException(togetherId, memberId);
     }
 
-    Member member = memberService.findById(memberId);
+    Member applicant = memberService.findById(memberId);
+
+    // 임시: 채팅방 연결 없이 신청만 저장 (스키마 업데이트 후 다시 활성화)
     Participants participation = Participants.builder()
         .together(together)
-        .participant(member)
-        .status(ParticipationStatus.PENDING) // 명시적으로 대기 상태 설정
+        .participant(applicant)
+        .status(ParticipationStatus.PENDING)
+        .message(message) // 신청 메시지 저장
         .build();
-    participantsRepository.save(participation);
-    
-    // 신청 단계에서는 채팅방에 추가하지 않음 (승인 후에만 추가)
-    // 필요시 알림 로직 추가 가능
+
+    Participants savedParticipation = participantsRepository.save(participation);
+
+    // 신청용 1:1 채팅방 생성 (호스트-신청자 매칭) - 별도 처리
+    try {
+      ChatRoom applicationChatRoom = chatRoomService.createApplicationChatRoom(together, applicant);
+
+      // 초기 신청 메시지 전송
+      if (message != null && !message.trim().isEmpty()) {
+        chatRoomService.sendMessage(applicationChatRoom.getId(), memberId, message);
+      }
+
+      // Participants 엔티티에 채팅방 연결 - 핵심 수정
+      savedParticipation.setApplicationChatRoom(applicationChatRoom);
+      participantsRepository.save(savedParticipation);
+
+    } catch (Exception e) {
+      // 채팅방 생성 실패 시에도 신청은 유지
+      System.err.println("채팅방 생성 실패, 신청은 정상 처리: " + e.getMessage());
+    }
+
+    return savedParticipation;
   }
 
   // 동행 참여 거절
@@ -285,7 +308,16 @@ public class TogetherService {
       throw new IllegalArgumentException("참여 신청을 찾을 수 없습니다.");
     }
 
+    // 현재 상태 로깅
+    System.out.println("=== 거절 처리 시작 ===");
+    System.out.println("참여자 ID: " + participantId + ", 현재 상태: " + participation.getStatus());
+
     participation.setStatus(ParticipationStatus.REJECTED);
+    Participants saved = participantsRepository.save(participation);
+
+    // 저장 결과 검증
+    System.out.println("저장 후 상태: " + saved.getStatus());
+    System.out.println("=== 거절 처리 완료 ===");
   }
 
   // 동행 참여 승인
@@ -306,13 +338,54 @@ public class TogetherService {
       throw new IllegalArgumentException("참여 신청을 찾을 수 없습니다.");
     }
 
+    // 현재 상태 로깅
+    System.out.println("=== 승인 처리 시작 ===");
+    System.out.println("참여자 ID: " + participantId + ", 현재 상태: " + participation.getStatus());
+
     participation.setStatus(ParticipationStatus.APPROVED);
+    Participants saved = participantsRepository.save(participation);
+
+    // 저장 결과 검증
+    System.out.println("저장 후 상태: " + saved.getStatus());
 
     // 승인 시 참여자 수 증가
     togetherRepository.updateParticipantCount(togetherId, 1);
 
-    // 채팅방에 멤버 추가
-    chatRoomService.addMemberToRoomByTogether(together, participantId);
+    // 그룹 채팅방 처리: 없으면 생성하고, 승인된 참여자를 추가
+    ensureGroupChatRoomAndAddMember(together, participantId);
+
+    System.out.println("=== 승인 처리 완료 ===");
+  }
+
+  /**
+   * 그룹 채팅방 존재 확인 및 승인된 참여자 추가
+   * - 그룹 채팅방이 없으면 생성
+   * - 승인된 참여자를 그룹 채팅방에 추가
+   */
+  private void ensureGroupChatRoomAndAddMember(Together together, Long participantId) {
+    try {
+      // 기존 그룹 채팅방 조회 시도
+      ChatRoom groupChatRoom = chatRoomService.findByTogether(together);
+
+      // 그룹 채팅방이 존재하면 승인된 참여자 추가
+      chatRoomService.addMemberToRoom(groupChatRoom.getId(), participantId);
+
+    } catch (IllegalArgumentException e) {
+      // 그룹 채팅방이 없는 경우 생성
+      ChatRoom newGroupChatRoom = chatRoomService.createChatRoom(together);
+
+      // 호스트를 그룹 채팅방에 추가
+      chatRoomService.addMemberToRoom(newGroupChatRoom.getId(), together.getHost().getId());
+
+      // 모든 승인된 참여자들을 그룹 채팅방에 추가
+      List<Member> approvedParticipants = getParticipantsByStatus(together.getId(), "APPROVED");
+      for (Member participant : approvedParticipants) {
+        chatRoomService.addMemberToRoom(newGroupChatRoom.getId(), participant.getId());
+      }
+
+      // 현재 승인된 참여자도 추가 (위 루프에 포함될 수 있지만 중복 방지)
+      chatRoomService.addMemberToRoom(newGroupChatRoom.getId(), participantId);
+    }
   }
 
   // 동행 참여 취소

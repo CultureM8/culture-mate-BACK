@@ -114,6 +114,7 @@ public class MemberDto {
   public static class ProfileResponse {
     private Long id;
     private String nickname;
+    private String maskedLoginId;  // 마스킹된 로그인 ID
     private String thumbnailImagePath;
     private String intro;
 
@@ -122,9 +123,20 @@ public class MemberDto {
       return ProfileResponse.builder()
         .id(member.getId())
         .nickname(detail != null ? detail.getNickname() : null)
+        .maskedLoginId(maskLoginId(member.getLoginId()))
         .thumbnailImagePath(detail != null ? detail.getThumbnailImagePath() : null)
         .intro(detail != null ? detail.getIntro() : null)
         .build();
+    }
+
+    // 로그인 ID 마스킹 처리 (앞 3글자만 표시)
+    private static String maskLoginId(String loginId) {
+      if (loginId == null || loginId.length() <= 3) {
+        return loginId;
+      }
+      String prefix = loginId.substring(0, 3);
+      String masked = "*".repeat(loginId.length() - 3);
+      return prefix + masked;
     }
   }
 

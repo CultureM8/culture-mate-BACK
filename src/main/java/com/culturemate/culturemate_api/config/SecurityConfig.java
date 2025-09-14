@@ -51,10 +51,13 @@ public class SecurityConfig {
                     "/images/**"
                 ).permitAll()
                 // 보안이 필요한 개인정보 조회는 인증 필요
-                .requestMatchers(HttpMethod.GET, 
-                    "/api/v1/*/my/**",          // 내 정보 관련 (my로 시작하는 모든 경로)
-                    "/api/v1/members/*/detail", // 멤버 상세 정보
-                    "/api/v1/chatroom/**"       // 채팅방 관련
+                .requestMatchers(HttpMethod.GET,
+                    "/api/v1/*/my/**",                    // 내 정보 관련 (my로 시작하는 모든 경로)
+                    "/api/v1/members/*/detail",           // 멤버 상세 정보
+                    "/api/v1/chatroom/**",                // 채팅방 관련
+                    "/api/v1/together/received-applications", // 받은 신청 조회
+                    "/api/v1/together/my-applications",   // 내 신청 조회
+                    "/api/v1/together/my-interests"       // 관심 동행 조회
                 ).authenticated()
                 // 모든 GET 요청은 공개 (읽기 전용)
                 .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()

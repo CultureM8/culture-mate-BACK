@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.repository;
 
 import com.culturemate.culturemate_api.domain.together.Participants;
+import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,7 +33,14 @@ public interface ParticipantsRepository extends JpaRepository<Participants, Long
 //  특정 상태의 참여자만 조회
   @EntityGraph(attributePaths = {"participant"})
   @Query("SELECT p FROM Participants p WHERE p.together.id = :togetherId AND p.status = :status")
-  List<Participants> findByTogetherIdAndStatus(@Param("togetherId") Long togetherId, @Param("status") String status);
+  List<Participants> findByTogetherIdAndStatus(@Param("togetherId") Long togetherId, @Param("status") ParticipationStatus status);
+
+  // 호스트가 받은 신청 목록 조회 (채팅방 정보는 lazy loading으로 처리)
+  @EntityGraph(attributePaths = {"participant", "participant.memberDetail", "together", "together.event"})
+  @Query("SELECT p FROM Participants p WHERE p.together.host.id = :hostId AND p.status IN :statuses ORDER BY p.createdAt DESC")
+  List<Participants> findByTogether_HostIdAndStatusInOrderByCreatedAtDesc(
+      @Param("hostId") Long hostId,
+      @Param("statuses") List<ParticipationStatus> statuses);
 
 //  특정 Together에 대한 모든 참여자 삭제
   void deleteByTogetherId(Long togetherId);

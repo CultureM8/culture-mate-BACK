@@ -4,6 +4,7 @@ import com.culturemate.culturemate_api.domain.Region;
 import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.event.EventType;
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,7 +37,7 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
          "WHERE p.participant = :member " +
          "AND p.status = :status " +
          "ORDER BY p.id DESC")
-  List<Together> findByParticipantAndStatus(@Param("member") Member participant, @Param("status") String status);
+  List<Together> findByParticipantAndStatus(@Param("member") Member participant, @Param("status") ParticipationStatus status);
 
 //  통합 검색
   @EntityGraph(attributePaths = {"event", "host", "region"})

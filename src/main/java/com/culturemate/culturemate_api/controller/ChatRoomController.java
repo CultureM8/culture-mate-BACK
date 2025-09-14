@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -69,19 +71,41 @@ public class ChatRoomController {
 
   // 채팅방 접속 (내가 참여중인 채팅방)
   @GetMapping("/{roomId}")
-  public ResponseEntity<ChatRoomDto.ResponseDetail> getChatRoom(@PathVariable Long roomId) {
+  @Operation(summary = "채팅방 상세 정보 조회", description = "참여 중인 채팅방의 상세 정보를 조회합니다.")
+  public ResponseEntity<ChatRoomDto.ResponseDetail> getChatRoom(
+      @PathVariable Long roomId,
+      @AuthenticationPrincipal AuthenticatedUser user) {
+
+    Member member = memberService.findByLoginId(user.getUsername());
+
+    // 권한 검증: 채팅방 접근 권한 확인
+    if (!chatRoomService.canAccessChatRoom(roomId, member.getId())) {
+      throw new SecurityException("해당 채팅방에 접근 권한이 없습니다.");
+    }
+
     ChatRoom chatRoom = chatRoomService.findById(roomId);
     return ResponseEntity.ok(ChatRoomDto.ResponseDetail.from(chatRoom));
   }
 
   // 이전 대화내역 불러오기
   @GetMapping("/{roomId}/messages")
-  public ResponseEntity<List<ChatMessageDto>> getChatMessages(@PathVariable Long roomId) {
-    List<ChatMessage> messages = chatRoomService.getMessagesByRoomId(roomId);
-    List<ChatMessageDto> messageDtos = messages.stream()
-      .map(ChatMessageDto::from)
-      .collect(Collectors.toList());
-    return ResponseEntity.ok(messageDtos);
+  @Operation(summary = "채팅 메시지 페이징 조회", description = "참여 중인 채팅방의 메시지 목록을 페이징하여 조회합니다. `?page=0&size=20&sort=createdAt,desc`와 같이 사용합니다.")
+  public ResponseEntity<Page<ChatMessageDto>> getChatMessages(
+      @PathVariable Long roomId,
+      @AuthenticationPrincipal AuthenticatedUser user,
+      @Parameter(hidden = true) Pageable pageable) {
+
+    Member member = memberService.findByLoginId(user.getUsername());
+
+    // 권한 검증: 채팅방 접근 권한 확인
+    if (!chatRoomService.canAccessChatRoom(roomId, member.getId())) {
+      throw new SecurityException("해당 채팅방에 접근 권한이 없습니다.");
+    }
+
+    Page<ChatMessage> messagesPage = chatRoomService.getMessagesByRoomId(roomId, pageable);
+    Page<ChatMessageDto> messageDtosPage = messagesPage.map(ChatMessageDto::from);
+    
+    return ResponseEntity.ok(messageDtosPage);
   }
 
   // 채팅방 나가기

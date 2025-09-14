@@ -1,12 +1,13 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.domain.chatting.ChatRoom;
+import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.domain.member.Member;
+import com.culturemate.culturemate_api.domain.together.Participants;
+import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
-import com.culturemate.culturemate_api.dto.AuthenticatedUser;
-import com.culturemate.culturemate_api.dto.MemberDto;
-import com.culturemate.culturemate_api.dto.TogetherDto;
-import com.culturemate.culturemate_api.dto.TogetherSearchDto;
+import com.culturemate.culturemate_api.dto.*;
+import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import com.culturemate.culturemate_api.service.ChatRoomService;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.culturemate.culturemate_api.service.TogetherService;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,17 +35,18 @@ public class TogetherController {
   private final TogetherService togetherService;
   private final MemberService memberService;
   private final ChatRoomService chatRoomService;
+  private final ParticipantsRepository participantsRepository;
 
   @Operation(summary = "전체 모임 조회", description = "모든 모임 목록을 조회합니다")
   @GetMapping
   public ResponseEntity<List<TogetherDto.Response>> getAllTogethers(@AuthenticationPrincipal AuthenticatedUser user) {
     List<Together> togethers = togetherService.findAll();
-    
+
     if (user != null) {
       // 인증된 사용자: 관심 여부 포함
       List<Long> togetherIds = togethers.stream().map(Together::getId).toList();
       Map<Long, Boolean> interestMap = togetherService.getInterestStatusBatch(togetherIds, user.getMemberId());
-      
+
       List<TogetherDto.Response> responseDtos = togethers.stream()
         .map(together -> togetherService.toResponseDto(together, interestMap.getOrDefault(together.getId(), false)))
         .collect(Collectors.toList());
@@ -63,12 +66,12 @@ public class TogetherController {
   public ResponseEntity<TogetherDto.Response> getTogetherById(@Parameter(description = "모임 ID", required = true) @PathVariable Long id,
                                                               @AuthenticationPrincipal AuthenticatedUser user) {
     Together together = togetherService.findById(id);
-    
+
     boolean isInterested = false;
     if (user != null) {
       isInterested = togetherService.isInterested(id, user.getMemberId());
     }
-    
+
     return ResponseEntity.ok().body(togetherService.toResponseDto(together, isInterested));
   }
 
@@ -137,23 +140,29 @@ public class TogetherController {
     return ResponseEntity.noContent().build();
   }
 
-  // 동행 신청 (승인 대기)
+  // 모집글의 채팅방 조회
+  @GetMapping("/{togetherId}/chatroom")
+  @Operation(summary = "모집글 채팅방 조회", description = "해당 모집글의 채팅방 정보를 조회합니다. 호스트이거나 승인된 참여자만 접근 가능합니다.")
+  public ResponseEntity<ChatRoomDto.ResponseDetail> getTogetherChatRoom(@PathVariable Long togetherId,
+                                                                        @AuthenticationPrincipal AuthenticatedUser requester) {
+    Together together = togetherService.findById(togetherId);
+    ChatRoom chatRoom = chatRoomService.findByTogether(together);
+
+    // 권한 검증: 호스트이거나 승인된 참여자만 채팅방 정보 접근 가능
+    if (!chatRoomService.canAccessChatRoom(chatRoom.getId(), requester.getMemberId())) {
+      throw new SecurityException("해당 채팅방에 접근 권한이 없습니다. 동행 호스트이거나 승인된 참여자만 접근할 수 있습니다.");
+    }
+
+    return ResponseEntity.ok(ChatRoomDto.ResponseDetail.from(chatRoom));
+  }
+
+  // 동행 신청 (승인 대기) - 신청용 1:1 채팅방 자동 생성
   @PostMapping("/{togetherId}/apply")
   public ResponseEntity<Void> applyTogether(@PathVariable Long togetherId,
                                             @RequestParam String message,
                                             @AuthenticationPrincipal AuthenticatedUser requester) {
-    // 동행 신청
-    togetherService.applyTogether(togetherId, requester.getMemberId());
-
-    // 신청 채팅방 생성
-    Together together = togetherService.findById(togetherId);
-    ChatRoom newChatRoom =  chatRoomService.createChatRoom(together);
-
-    chatRoomService.addMemberToRoom(newChatRoom.getId(), requester.getMemberId());
-    chatRoomService.addMemberToRoom(newChatRoom.getId(), together.getHost().getId());
-
-    // 신청 메시지 보내기
-    chatRoomService.sendMessage(newChatRoom.getId(), requester.getMemberId(), message);
+    // 동행 신청 및 신청용 채팅방 생성을 통합 처리
+    togetherService.applyTogether(togetherId, requester.getMemberId(), message);
 
     return ResponseEntity.ok().build();
   }
@@ -163,7 +172,11 @@ public class TogetherController {
   public ResponseEntity<Void> approveParticipation(@PathVariable Long togetherId,
                                                    @PathVariable Long participantId,
                                                    @AuthenticationPrincipal AuthenticatedUser requester) {
+    System.out.println("API 호출: 승인 요청 - 동행 ID: " + togetherId + ", 참여자 ID: " + participantId + ", 요청자 ID: " + requester.getMemberId());
+
     togetherService.approveParticipation(togetherId, participantId, requester.getMemberId());
+
+    System.out.println("API 완료: 승인 처리 완료");
     return ResponseEntity.ok().build();
   }
 
@@ -172,7 +185,11 @@ public class TogetherController {
   public ResponseEntity<Void> rejectParticipation(@PathVariable Long togetherId,
                                                   @PathVariable Long participantId,
                                                   @AuthenticationPrincipal AuthenticatedUser requester) {
+    System.out.println("API 호출: 거절 요청 - 동행 ID: " + togetherId + ", 참여자 ID: " + participantId + ", 요청자 ID: " + requester.getMemberId());
+
     togetherService.rejectParticipation(togetherId, participantId, requester.getMemberId());
+
+    System.out.println("API 완료: 거절 처리 완료");
     return ResponseEntity.ok().build();
   }
 
@@ -277,6 +294,83 @@ public class TogetherController {
       .collect(Collectors.toList());
 
     return ResponseEntity.ok(responseDtos);
+  }
+
+  // 받은 신청 목록 조회 (내가 호스트인 동행의 참여 신청 목록)
+  @GetMapping("/received-applications")
+  @Operation(summary = "받은 신청 목록 조회", description = "내가 호스트인 동행들에 대한 참여 신청 목록을 조회합니다")
+  public ResponseEntity<List<ParticipationRequestDto>> getReceivedApplications(
+      @RequestParam(required = false) String status,
+      @AuthenticationPrincipal AuthenticatedUser requester) {
+
+    // 내가 호스트인 동행들의 실제 참여 신청 데이터 조회
+    List<ParticipationRequestDto> receivedApplications = participantsRepository
+        .findByTogether_HostIdAndStatusInOrderByCreatedAtDesc(
+            requester.getMemberId(),
+            status != null ? List.of(ParticipationStatus.valueOf(status.toUpperCase()))
+                          : List.of(ParticipationStatus.PENDING, ParticipationStatus.APPROVED, ParticipationStatus.REJECTED)
+        )
+        .stream()
+        .filter(participant -> !participant.getParticipant().getId().equals(participant.getTogether().getHost().getId())) // 호스트 제외
+        .map(participant -> {
+          Together together = participant.getTogether();
+          Member applicant = participant.getParticipant();
+          Event event = together.getEvent();
+
+          return ParticipationRequestDto.builder()
+              .requestId(participant.getId())
+              .togetherId(together.getId())
+              .togetherTitle(together.getTitle())
+              .applicantId(applicant.getId())
+              .applicantName(applicant.getMemberDetail() != null ?
+                  applicant.getMemberDetail().getNickname() : applicant.getLoginId())
+              .applicantProfileImage(applicant.getMemberDetail() != null ?
+                  applicant.getMemberDetail().getThumbnailImagePath() : null)
+              .hostId(together.getHost().getId())
+              .hostName(together.getHost().getMemberDetail() != null ?
+                  together.getHost().getMemberDetail().getNickname() : together.getHost().getLoginId())
+              .status(participant.getStatus().name())
+              .message(participant.getMessage())
+              .eventName(event != null ? event.getTitle() : "")
+              .eventType(event != null ? event.getEventType().name() : "")
+              .eventImage(event != null ? event.getThumbnailImagePath() : null)
+              .meetingDate(together.getMeetingDate())
+              .createdAt(participant.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime())
+              // 채팅방 정보 추가
+              .applicationChatRoomId(participant.getApplicationChatRoom() != null ?
+                  participant.getApplicationChatRoom().getId() : null)
+              .applicationChatRoomName(participant.getApplicationChatRoom() != null ?
+                  participant.getApplicationChatRoom().getRoomName() : null)
+              .build();
+        })
+        .collect(Collectors.toList());
+
+    return ResponseEntity.ok(receivedApplications);
+  }
+
+  // 임시 디버깅 엔드포인트 - 실제 Participants 데이터 확인
+  @GetMapping("/debug/participants")
+  public ResponseEntity<String> debugParticipants(@AuthenticationPrincipal AuthenticatedUser requester) {
+    List<Participants> allParticipants = participantsRepository.findAll();
+
+    StringBuilder debug = new StringBuilder();
+    debug.append("전체 참여 데이터 개수: ").append(allParticipants.size()).append("\n\n");
+
+    for (Participants p : allParticipants) {
+      debug.append("참여자 ID: ").append(p.getId())
+           .append(", 동행 ID: ").append(p.getTogether() != null ? p.getTogether().getId() : "null")
+           .append(", 호스트 ID: ").append(p.getTogether() != null && p.getTogether().getHost() != null ? p.getTogether().getHost().getId() : "null")
+           .append(", 신청자 ID: ").append(p.getParticipant() != null ? p.getParticipant().getId() : "null")
+           .append(", 상태: ").append(p.getStatus())
+           .append(", 생성일: ").append(p.getCreatedAt())
+           .append(", 메시지: ").append(p.getMessage())
+           .append(", 채팅방 ID: ").append(p.getApplicationChatRoom() != null ? p.getApplicationChatRoom().getId() : "null")
+           .append("\n");
+    }
+
+    debug.append("\n현재 사용자 ID: ").append(requester.getMemberId()).append("\n");
+
+    return ResponseEntity.ok(debug.toString());
   }
 
 }
