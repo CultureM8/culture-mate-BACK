@@ -6,9 +6,9 @@ spring:
       max-file-size: 20MB
       max-request-size: 500MB
   #  session:
-#    store-type: jdbc
+  #    store-type: jdbc
   datasource:
-    url: ${DB_URL}  # env
+    url: ${DB_URL} # env
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: ${DB_DRIVER}
@@ -25,7 +25,7 @@ logging.level:
 # JWT 설정
 jwt:
   secret: Y3VsdHVyZW1hdGVzZWNyZXRrZXkyMDI0MTIzNDU2Nzg5MEFCQ0RFRjAxMjM0NTY3ODkwQUJDREVGdmVyeXNlY3VyZWtleQ==
-  expiration: 86400000  # 24시간 (밀리초)
+  expiration: 86400000 # 24시간 (밀리초)
 
 custom:
   path:
@@ -34,9 +34,10 @@ custom:
 
 # CORS 설정
 cors:
-#  allowed-origins: ${FRONTEND_URL}
+  #  allowed-origins: ${FRONTEND_URL}
   allowed-origins: "http://localhost:3000,http://127.0.0.1:3000"
-  allowed-methods: GET,POST,PUT,DELETE,OPTIONS,HEAD
+  allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+
   allowed-headers: "Content-Type,Authorization,X-Requested-With,Accept,Accept-Language,Origin"
   allow-credentials: true
   max-age: 3600
