@@ -34,4 +34,7 @@ public interface ParticipantsRepository extends JpaRepository<Participants, Long
   @Query("SELECT p FROM Participants p WHERE p.together.id = :togetherId AND p.status = :status")
   List<Participants> findByTogetherIdAndStatus(@Param("togetherId") Long togetherId, @Param("status") String status);
 
+//  특정 Together에 대한 모든 참여자 삭제
+  void deleteByTogetherId(Long togetherId);
+
 }

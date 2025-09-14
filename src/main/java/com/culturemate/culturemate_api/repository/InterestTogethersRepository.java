@@ -38,4 +38,9 @@ public interface InterestTogethersRepository extends JpaRepository<InterestToget
      */
     @Query("SELECT it.together.id FROM InterestTogethers it WHERE it.member.id = :memberId AND it.together.id IN :togetherIds")
     List<Long> findInterestedTogetherIdsByMemberIdAndTogetherIds(@Param("memberId") Long memberId, @Param("togetherIds") List<Long> togetherIds);
+
+    /**
+     * 특정 동행에 대한 모든 관심 등록 삭제
+     */
+    void deleteByTogetherId(Long togetherId);
 }
