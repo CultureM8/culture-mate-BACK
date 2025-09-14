@@ -8,8 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+
+import java.security.Principal;
 
 import java.util.Map;
 
@@ -20,65 +23,101 @@ public class ChatController {
   private final ChatRoomService chatRoomService;
   private final SimpMessagingTemplate messagingTemplate;
 
-  // 클라이언트 → 서버로 메시지 전송
+
+  // 메시지 전송 엔드포인트
   @MessageMapping("/chatroom/{roomId}/send")
-  public void sendMessage(@DestinationVariable Long roomId, 
-                         ChatMessageDto messageDto, 
-                         @AuthenticationPrincipal AuthenticatedUser user) {
+  public void sendMessage(@DestinationVariable Long roomId,
+                                ChatMessageDto messageDto,
+                                Principal principal) {
 
     // LOG: 수신된 메시지 정보 출력
-    System.out.println("[" + java.time.LocalDateTime.now() + "] Received message in /chatroom/" + roomId + "/send");
+    System.out.println("=== [" + java.time.LocalDateTime.now() + "] Received message in /chatroom/" + roomId + "/send ===");
+    System.out.println("  - Room ID (path): " + roomId);
+    System.out.println("  - Principal: " + (principal != null ? principal.getClass().getSimpleName() : "null"));
+
+    // Principal에서 AuthenticatedUser 추출
+    AuthenticatedUser user = null;
+    if (principal instanceof UsernamePasswordAuthenticationToken) {
+      UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) principal;
+      if (auth.getPrincipal() instanceof AuthenticatedUser) {
+        user = (AuthenticatedUser) auth.getPrincipal();
+        System.out.println("  - AuthenticatedUser 추출 성공");
+      } else {
+        System.out.println("  - Principal 타입: " + (auth.getPrincipal() != null ? auth.getPrincipal().getClass().getSimpleName() : "null"));
+      }
+    }
+
     System.out.println("  - User: " + (user != null ? user.getUsername() : "null"));
-    System.out.println("  - Message Content: " + (messageDto != null ? messageDto.getContent() : "null"));
+    System.out.println("  - User ID: " + (user != null ? user.getMemberId() : "null"));
 
-    // 1. 사용자 인증 확인
-    if (user == null) {
-      throw new IllegalArgumentException("인증이 필요합니다");
+    // AuthenticatedUser 상세 정보 출력
+    if (user != null) {
+      System.out.println("  - AuthenticatedUser 상세 정보:");
+      System.out.println("    * memberId: " + user.getMemberId());
+      System.out.println("    * loginId: " + user.getLoginId());
+      System.out.println("    * nickname: " + user.getNickname());
+      System.out.println("    * role: " + user.getRole());
+      System.out.println("    * status: " + user.getStatus());
+      System.out.println("    * username (inherited): " + user.getUsername());
+    } else {
+      System.out.println("  - AuthenticatedUser 객체가 null입니다!");
     }
-    
-    // 2. 채팅방 참여 권한 검증 및 메시지 저장 (서비스에서 처리)
-    ChatMessage savedMessage = chatRoomService.sendMessage(
-        roomId, user.getMemberId(), messageDto.getContent()
-    );
-
-    // 3. 채팅방 구독자들에게 메시지 전송
-    messagingTemplate.convertAndSend(
-      "/topic/chatroom/" + roomId,
-      ChatMessageDto.from(savedMessage)
-    );
-  }
-
-  // 프론트엔드와 호환을 위한 일반적인 메시지 전송 엔드포인트
-  @MessageMapping("/chat.sendMessage")
-  public void sendMessageGeneric(ChatMessageDto messageDto,
-                                @AuthenticationPrincipal AuthenticatedUser user) {
-
-    // LOG: 수신된 메시지 정보 출력
-    System.out.println("[" + java.time.LocalDateTime.now() + "] Received message in /chat.sendMessage");
-    System.out.println("  - User: " + (user != null ? user.getUsername() : "null"));
-    System.out.println("  - Message Content: " + (messageDto != null ? messageDto.getContent() : "null"));
-    System.out.println("  - Room ID: " + (messageDto != null ? messageDto.getRoomId() : "null"));
-
-    // 1. 사용자 인증 확인
-    if (user == null) {
-      throw new IllegalArgumentException("인증이 필요합니다");
+    if (messageDto != null) {
+      System.out.println("  - Message DTO fields:");
+      System.out.println("    * id: " + messageDto.getId());
+      System.out.println("    * roomId: " + messageDto.getRoomId());
+      System.out.println("    * senderId: " + messageDto.getSenderId());
+      System.out.println("    * content: '" + messageDto.getContent() + "'");
+      System.out.println("    * createdAt: " + messageDto.getCreatedAt());
+    } else {
+      System.out.println("  - Message DTO: null");
     }
 
-    // 2. roomId 검증
-    if (messageDto == null || messageDto.getRoomId() == null) {
-      throw new IllegalArgumentException("채팅방 ID가 필요합니다");
+    try {
+      // 1. DTO 검증
+      if (messageDto == null) {
+        throw new IllegalArgumentException("메시지 데이터가 없습니다");
+      }
+
+      if (messageDto.getContent() == null || messageDto.getContent().trim().isEmpty()) {
+        throw new IllegalArgumentException("메시지 내용이 필요합니다");
+      }
+
+      // 2. 사용자 인증 확인
+      if (user == null) {
+        throw new IllegalArgumentException("인증이 필요합니다");
+      }
+
+      Long senderId = user.getMemberId();
+      System.out.println("  - Using authenticated user ID: " + senderId);
+
+      // 3. roomId 일치 검증 (path variable vs DTO)
+      Long effectiveRoomId = roomId;
+      if (messageDto.getRoomId() != null && !messageDto.getRoomId().equals(roomId)) {
+        System.out.println("  - WARNING: roomId mismatch - using path variable: " + roomId);
+      }
+
+      // 4. 채팅방 참여 권한 검증 및 메시지 저장 (서비스에서 처리)
+      ChatMessage savedMessage = chatRoomService.sendMessage(
+          effectiveRoomId, senderId, messageDto.getContent().trim()
+      );
+
+      System.out.println("  - Message saved successfully: " + savedMessage.getId());
+
+      // 5. 채팅방 구독자들에게 메시지 전송
+      ChatMessageDto responseDto = ChatMessageDto.from(savedMessage);
+      messagingTemplate.convertAndSend(
+        "/topic/chatroom/" + effectiveRoomId,
+        responseDto
+      );
+
+      System.out.println("  - Message broadcasted to /topic/chatroom/" + effectiveRoomId);
+
+    } catch (Exception e) {
+      System.err.println("  - ERROR in sendMessage: " + e.getMessage());
+      e.printStackTrace();
+      throw e;
     }
-
-    // 3. 채팅방 참여 권한 검증 및 메시지 저장 (서비스에서 처리)
-    ChatMessage savedMessage = chatRoomService.sendMessage(
-        messageDto.getRoomId(), user.getMemberId(), messageDto.getContent()
-    );
-
-    // 4. 채팅방 구독자들에게 메시지 전송
-    messagingTemplate.convertAndSend(
-      "/topic/chatroom/" + messageDto.getRoomId(),
-      ChatMessageDto.from(savedMessage)
-    );
   }
 
   // 채팅방 입장 알림

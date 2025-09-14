@@ -72,6 +72,7 @@ public class CommentController {
   // 삭제
     @DeleteMapping("/{commentId}")
   public ResponseEntity<Void> deleteComment(@PathVariable Long commentId,
+                                            @PathVariable Long boardId,
                                             Authentication authentication) {
     AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
     Long requesterId = authenticatedUser.getMemberId();
