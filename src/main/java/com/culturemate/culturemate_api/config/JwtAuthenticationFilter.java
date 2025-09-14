@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.service.LoginService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -72,13 +73,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * HTTP 요청에서 JWT 토큰 추출
+   * HTTP 요청에서 JWT 토큰 추출 (Authorization 헤더 또는 Cookie)
    */
   private String getTokenFromRequest(HttpServletRequest request) {
+    // 1. Authorization 헤더에서 토큰 추출 (클라이언트 사이드용)
     String bearerToken = request.getHeader("Authorization");
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
       return bearerToken.substring(7);
     }
+    
+    // 2. Cookie에서 토큰 추출 (서버 사이드용)
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if ("accessToken".equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
+    }
+    
     return null;
   }
 
