@@ -73,6 +73,7 @@ public class TogetherDto {
     private Integer maxParticipants;
     private Integer currentParticipants;
     private Boolean active;
+    private Boolean isInterested; // 관심 등록 여부
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
