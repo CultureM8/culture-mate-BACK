@@ -172,11 +172,7 @@ public class TogetherController {
   public ResponseEntity<Void> approveParticipation(@PathVariable Long togetherId,
                                                    @PathVariable Long participantId,
                                                    @AuthenticationPrincipal AuthenticatedUser requester) {
-    System.out.println("API 호출: 승인 요청 - 동행 ID: " + togetherId + ", 참여자 ID: " + participantId + ", 요청자 ID: " + requester.getMemberId());
-
     togetherService.approveParticipation(togetherId, participantId, requester.getMemberId());
-
-    System.out.println("API 완료: 승인 처리 완료");
     return ResponseEntity.ok().build();
   }
 
@@ -185,11 +181,7 @@ public class TogetherController {
   public ResponseEntity<Void> rejectParticipation(@PathVariable Long togetherId,
                                                   @PathVariable Long participantId,
                                                   @AuthenticationPrincipal AuthenticatedUser requester) {
-    System.out.println("API 호출: 거절 요청 - 동행 ID: " + togetherId + ", 참여자 ID: " + participantId + ", 요청자 ID: " + requester.getMemberId());
-
     togetherService.rejectParticipation(togetherId, participantId, requester.getMemberId());
-
-    System.out.println("API 완료: 거절 처리 완료");
     return ResponseEntity.ok().build();
   }
 
@@ -245,21 +237,54 @@ public class TogetherController {
 
   // 내 신청 목록 조회 (상태별 필터링 가능)
   @GetMapping("/my-applications")
-  public ResponseEntity<List<TogetherDto.Response>> getMyApplications(@RequestParam(required = false) String status,
-                                                                      @AuthenticationPrincipal AuthenticatedUser requester) {
-    Member member = memberService.findById(requester.getMemberId());
-    List<Together> togethers;
-    
-    if (status == null) {
-      togethers = togetherService.findByMemberAll(member);
-    } else {
-      togethers = togetherService.findByMemberAndStatus(member, status);
-    }
-    
-    return ResponseEntity.ok().body(
-      togethers.stream()
-      .map(togetherService::toResponseDto)
-      .collect(Collectors.toList()));
+  @Operation(summary = "보낸 신청 목록 조회", description = "내가 참여 신청한 동행 목록을 조회합니다")
+  public ResponseEntity<List<ParticipationRequestDto>> getMyApplications(
+      @RequestParam(required = false) String status,
+      @AuthenticationPrincipal AuthenticatedUser requester) {
+
+    // 내가 신청한 동행들의 참여 데이터 조회
+    List<ParticipationRequestDto> myApplications = participantsRepository
+        .findByParticipant_IdAndStatusInOrderByCreatedAtDesc(
+            requester.getMemberId(),
+            status != null ? List.of(ParticipationStatus.valueOf(status.toUpperCase()))
+                          : List.of(ParticipationStatus.PENDING, ParticipationStatus.APPROVED, ParticipationStatus.REJECTED)
+        )
+        .stream()
+        .filter(participant -> !participant.getParticipant().getId().equals(participant.getTogether().getHost().getId())) // 내가 호스트인 경우 제외
+        .map(participant -> {
+          Together together = participant.getTogether();
+          Member applicant = participant.getParticipant();
+          Event event = together.getEvent();
+
+          return ParticipationRequestDto.builder()
+              .requestId(participant.getId())
+              .togetherId(together.getId())
+              .togetherTitle(together.getTitle())
+              .applicantId(applicant.getId())
+              .applicantName(applicant.getMemberDetail() != null ?
+                  applicant.getMemberDetail().getNickname() : applicant.getLoginId())
+              .applicantProfileImage(applicant.getMemberDetail() != null ?
+                  applicant.getMemberDetail().getThumbnailImagePath() : null)
+              .hostId(together.getHost().getId())
+              .hostName(together.getHost().getMemberDetail() != null ?
+                  together.getHost().getMemberDetail().getNickname() : together.getHost().getLoginId())
+              .status(participant.getStatus().name())
+              .message(participant.getMessage())
+              .eventName(event != null ? event.getTitle() : "")
+              .eventType(event != null ? event.getEventType().name() : "")
+              .eventImage(event != null ? event.getThumbnailImagePath() : null)
+              .meetingDate(together.getMeetingDate())
+              .createdAt(participant.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime())
+              // 채팅방 정보 추가
+              .applicationChatRoomId(participant.getApplicationChatRoom() != null ?
+                  participant.getApplicationChatRoom().getId() : null)
+              .applicationChatRoomName(participant.getApplicationChatRoom() != null ?
+                  participant.getApplicationChatRoom().getRoomName() : null)
+              .build();
+        })
+        .collect(Collectors.toList());
+
+    return ResponseEntity.ok(myApplications);
   }
 
   // 관심 등록/해제
@@ -348,8 +373,9 @@ public class TogetherController {
     return ResponseEntity.ok(receivedApplications);
   }
 
-  // 임시 디버깅 엔드포인트 - 실제 Participants 데이터 확인
+  // 임시 디버깅 엔드포인트 - 실제 Participants 데이터 확인 (개발 환경 전용)
   @GetMapping("/debug/participants")
+  @org.springframework.context.annotation.Profile("!prod") // 프로덕션 환경에서는 비활성화
   public ResponseEntity<String> debugParticipants(@AuthenticationPrincipal AuthenticatedUser requester) {
     List<Participants> allParticipants = participantsRepository.findAll();
 

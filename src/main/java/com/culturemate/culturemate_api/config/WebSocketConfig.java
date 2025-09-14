@@ -30,11 +30,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   public void registerStompEndpoints(StompEndpointRegistry registry) {
     registry.addEndpoint("/websocket")
       .setAllowedOrigins(allowedOrigins.split(","))
+      .setAllowedOriginPatterns("*")  // 개발 환경에서 모든 오리진 허용
       .withSockJS();
+
+    // 네이티브 WebSocket 엔드포인트도 추가 (SockJS 대안)
+    registry.addEndpoint("/ws")
+      .setAllowedOrigins(allowedOrigins.split(","))
+      .setAllowedOriginPatterns("*");
   }
 
   @Override
   public void configureClientInboundChannel(ChannelRegistration registration) {
+    // JWT 인터셉터 활성화
     registration.interceptors(jwtChannelInterceptor);
   }
 

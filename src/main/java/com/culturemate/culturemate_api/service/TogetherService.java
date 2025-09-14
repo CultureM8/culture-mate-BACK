@@ -308,16 +308,8 @@ public class TogetherService {
       throw new IllegalArgumentException("참여 신청을 찾을 수 없습니다.");
     }
 
-    // 현재 상태 로깅
-    System.out.println("=== 거절 처리 시작 ===");
-    System.out.println("참여자 ID: " + participantId + ", 현재 상태: " + participation.getStatus());
-
     participation.setStatus(ParticipationStatus.REJECTED);
-    Participants saved = participantsRepository.save(participation);
-
-    // 저장 결과 검증
-    System.out.println("저장 후 상태: " + saved.getStatus());
-    System.out.println("=== 거절 처리 완료 ===");
+    participantsRepository.save(participation);
   }
 
   // 동행 참여 승인
@@ -338,23 +330,14 @@ public class TogetherService {
       throw new IllegalArgumentException("참여 신청을 찾을 수 없습니다.");
     }
 
-    // 현재 상태 로깅
-    System.out.println("=== 승인 처리 시작 ===");
-    System.out.println("참여자 ID: " + participantId + ", 현재 상태: " + participation.getStatus());
-
     participation.setStatus(ParticipationStatus.APPROVED);
-    Participants saved = participantsRepository.save(participation);
-
-    // 저장 결과 검증
-    System.out.println("저장 후 상태: " + saved.getStatus());
+    participantsRepository.save(participation);
 
     // 승인 시 참여자 수 증가
     togetherRepository.updateParticipantCount(togetherId, 1);
 
     // 그룹 채팅방 처리: 없으면 생성하고, 승인된 참여자를 추가
     ensureGroupChatRoomAndAddMember(together, participantId);
-
-    System.out.println("=== 승인 처리 완료 ===");
   }
 
   /**
