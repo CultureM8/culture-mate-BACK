@@ -22,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Tag(name = "Together API", description = "그룹 모임 관리 API")
@@ -35,19 +36,40 @@ public class TogetherController {
 
   @Operation(summary = "전체 모임 조회", description = "모든 모임 목록을 조회합니다")
   @GetMapping
-  public ResponseEntity<List<TogetherDto.Response>> getAllTogethers() {
-    return ResponseEntity.ok().body(
-      togetherService.findAll().stream()
-        .map(togetherService::toResponseDto)
-        .collect(Collectors.toList())
-    );
+  public ResponseEntity<List<TogetherDto.Response>> getAllTogethers(@AuthenticationPrincipal AuthenticatedUser user) {
+    List<Together> togethers = togetherService.findAll();
+    
+    if (user != null) {
+      // 인증된 사용자: 관심 여부 포함
+      List<Long> togetherIds = togethers.stream().map(Together::getId).toList();
+      Map<Long, Boolean> interestMap = togetherService.getInterestStatusBatch(togetherIds, user.getMemberId());
+      
+      List<TogetherDto.Response> responseDtos = togethers.stream()
+        .map(together -> togetherService.toResponseDto(together, interestMap.getOrDefault(together.getId(), false)))
+        .collect(Collectors.toList());
+      return ResponseEntity.ok(responseDtos);
+    } else {
+      // 비인증 사용자: 관심 여부 미포함
+      return ResponseEntity.ok().body(
+        togethers.stream()
+          .map(togetherService::toResponseDto)
+          .collect(Collectors.toList())
+      );
+    }
   }
 
   @Operation(summary = "특정 모임 조회", description = "ID로 특정 모임을 조회합니다")
   @GetMapping("/{id}")
-  public ResponseEntity<TogetherDto.Response> getTogetherById(@Parameter(description = "모임 ID", required = true) @PathVariable Long id) {
+  public ResponseEntity<TogetherDto.Response> getTogetherById(@Parameter(description = "모임 ID", required = true) @PathVariable Long id,
+                                                              @AuthenticationPrincipal AuthenticatedUser user) {
     Together together = togetherService.findById(id);
-    return ResponseEntity.ok().body(togetherService.toResponseDto(together));
+    
+    boolean isInterested = false;
+    if (user != null) {
+      isInterested = togetherService.isInterested(id, user.getMemberId());
+    }
+    
+    return ResponseEntity.ok().body(togetherService.toResponseDto(together, isInterested));
   }
 
   @Operation(summary = "호스트별 모임 조회", description = "특정 회원이 호스트인 모임을 조회합니다")
@@ -221,6 +243,40 @@ public class TogetherController {
       togethers.stream()
       .map(togetherService::toResponseDto)
       .collect(Collectors.toList()));
+  }
+
+  // 관심 등록/해제
+  @Operation(summary = "동행 관심 등록/해제", description = "특정 동행에 대한 관심을 등록하거나 해제합니다")
+  @PostMapping("/{togetherId}/interest")
+  public ResponseEntity<String> toggleTogetherInterest(@Parameter(description = "동행 ID", required = true) @PathVariable Long togetherId,
+                                                       @AuthenticationPrincipal AuthenticatedUser user) {
+    if (user == null) {
+      return ResponseEntity.status(401).body("인증이 필요합니다");
+    }
+
+    boolean interest = togetherService.toggleInterest(togetherId, user.getMemberId());
+
+    if (interest) {
+      return ResponseEntity.ok("관심 등록");
+    } else {
+      return ResponseEntity.ok("관심 취소");
+    }
+  }
+
+  // 내가 관심 등록한 동행 목록 조회
+  @Operation(summary = "관심 동행 목록 조회", description = "사용자가 관심 등록한 동행 목록을 조회합니다")
+  @GetMapping("/my-interests")
+  public ResponseEntity<List<TogetherDto.Response>> getMyInterests(@AuthenticationPrincipal AuthenticatedUser user) {
+    if (user == null) {
+      return ResponseEntity.status(401).build();
+    }
+
+    List<Together> interestTogethers = togetherService.getUserInterestTogethers(user.getMemberId());
+    List<TogetherDto.Response> responseDtos = interestTogethers.stream()
+      .map(togetherService::toResponseDto)
+      .collect(Collectors.toList());
+
+    return ResponseEntity.ok(responseDtos);
   }
 
 }

@@ -14,12 +14,16 @@ import java.time.ZoneId;
 import com.culturemate.culturemate_api.exceptions.together.*;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
 import com.culturemate.culturemate_api.repository.TogetherRepository;
+import com.culturemate.culturemate_api.repository.InterestTogethersRepository;
+import com.culturemate.culturemate_api.domain.member.InterestTogethers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +33,7 @@ public class TogetherService {
 
   private final TogetherRepository togetherRepository;
   private final ParticipantsRepository participantsRepository;
+  private final InterestTogethersRepository interestTogethersRepository;
   private final MemberService memberService;
   private final RegionService regionService;
   private final EventService eventService;
@@ -395,8 +400,13 @@ public class TogetherService {
     together.setHostRecruitingEnabled(true);
   }
 
-  // DTO 생성 헬퍼 메서드
+  // DTO 생성 헬퍼 메서드 (관심 여부 미포함)
   public TogetherDto.Response toResponseDto(Together together) {
+    return toResponseDto(together, false);
+  }
+
+  // DTO 생성 헬퍼 메서드 (관심 여부 포함)
+  public TogetherDto.Response toResponseDto(Together together, boolean isInterested) {
     return TogetherDto.Response.builder()
       .id(together.getId())
       .event(EventDto.ResponseCard.from(together.getEvent(), false))
@@ -411,10 +421,67 @@ public class TogetherService {
       .currentParticipants(together.getParticipantCount())
       .content(together.getContent())
       .active(isActive(together)) // 실제 isActive 계산
+      .isInterested(isInterested) // 관심 등록 여부
       .createdAt(together.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
       .updatedAt(together.getUpdatedAt() != null ? 
                  together.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
       .build();
+  }
+
+  // ==================== 관심 등록 관련 메서드 ====================
+
+  /**
+   * 동행 관심 등록/해제 토글
+   */
+  @Transactional
+  public boolean toggleInterest(Long togetherId, Long memberId) {
+    Together together = findById(togetherId);
+    Member member = memberService.findById(memberId);
+    
+    Optional<InterestTogethers> existingInterest = 
+        interestTogethersRepository.findByMemberAndTogether(member, together);
+    
+    if (existingInterest.isPresent()) {
+      // 이미 관심 등록되어 있음 -> 삭제 (관심 해제)
+      interestTogethersRepository.delete(existingInterest.get());
+      return false;
+    } else {
+      // 관심 등록되어 있지 않음 -> 생성 (관심 등록)
+      InterestTogethers newInterest = new InterestTogethers(member, together);
+      interestTogethersRepository.save(newInterest);
+      return true;
+    }
+  }
+
+  /**
+   * 특정 회원이 관심 등록한 동행 목록 조회
+   */
+  public List<Together> getUserInterestTogethers(Long memberId) {
+    Member member = memberService.findById(memberId);
+    return interestTogethersRepository.findTogethersByMember(member);
+  }
+
+  /**
+   * 특정 회원이 특정 동행에 관심 등록했는지 확인
+   */
+  public boolean isInterested(Long togetherId, Long memberId) {
+    Together together = findById(togetherId);
+    Member member = memberService.findById(memberId);
+    return interestTogethersRepository.existsByMemberAndTogether(member, together);
+  }
+
+  /**
+   * 여러 동행에 대한 회원의 관심 상태 배치 조회
+   */
+  public Map<Long, Boolean> getInterestStatusBatch(List<Long> togetherIds, Long memberId) {
+    List<Long> interestedTogetherIds = interestTogethersRepository
+        .findInterestedTogetherIdsByMemberIdAndTogetherIds(memberId, togetherIds);
+    
+    return togetherIds.stream()
+        .collect(Collectors.toMap(
+            id -> id,
+            interestedTogetherIds::contains
+        ));
   }
 
 

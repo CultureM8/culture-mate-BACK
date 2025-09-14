@@ -24,4 +24,8 @@ public class InterestTogethers {
   @JoinColumn(name = "together_id", nullable = false)
   private Together together;
 
+  public InterestTogethers(Member member, Together together) {
+    this.member = member;
+    this.together = together;
+  }
 }
