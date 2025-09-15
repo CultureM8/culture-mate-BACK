@@ -74,6 +74,7 @@ public class EventDto {
     private LocalDate endDate;
     private String description;
     private String thumbnailImagePath;
+    private String mainImagePath;
     private BigDecimal avgRating;
     private Integer reviewCount;
     private Integer interestCount;
@@ -93,6 +94,7 @@ public class EventDto {
         .endDate(event.getEndDate())
         .description(event.getDescription())
         .thumbnailImagePath(event.getThumbnailImagePath())
+        .mainImagePath(event.getMainImagePath())
         .avgRating(event.getAvgRating())
         .reviewCount(event.getReviewCount())
         .interestCount(event.getInterestCount())
@@ -112,6 +114,7 @@ public class EventDto {
     private String title;
     private String description;
     private String thumbnailImagePath;
+    private String mainImagePath;
     private BigDecimal avgRating;
     private Integer reviewCount;
     private Integer interestCount;
@@ -125,6 +128,7 @@ public class EventDto {
         .title(event.getTitle())
         .description(event.getDescription())
         .thumbnailImagePath(event.getThumbnailImagePath())
+        .mainImagePath(event.getMainImagePath())
         .avgRating(event.getAvgRating())
         .reviewCount(event.getReviewCount())
         .interestCount(event.getInterestCount())
