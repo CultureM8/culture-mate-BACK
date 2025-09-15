@@ -247,7 +247,7 @@ public class TogetherController {
         .findByParticipant_IdAndStatusInOrderByCreatedAtDesc(
             requester.getMemberId(),
             status != null ? List.of(ParticipationStatus.valueOf(status.toUpperCase()))
-                          : List.of(ParticipationStatus.PENDING, ParticipationStatus.APPROVED, ParticipationStatus.REJECTED)
+                          : List.of(ParticipationStatus.PENDING, ParticipationStatus.APPROVED, ParticipationStatus.REJECTED, ParticipationStatus.CANCELED)
         )
         .stream()
         .filter(participant -> !participant.getParticipant().getId().equals(participant.getTogether().getHost().getId())) // 내가 호스트인 경우 제외
@@ -329,7 +329,7 @@ public class TogetherController {
         .findByTogether_HostIdAndStatusInOrderByCreatedAtDesc(
             requester.getMemberId(),
             status != null ? List.of(ParticipationStatus.valueOf(status.toUpperCase()))
-                          : List.of(ParticipationStatus.PENDING, ParticipationStatus.APPROVED, ParticipationStatus.REJECTED)
+                          : List.of(ParticipationStatus.PENDING, ParticipationStatus.APPROVED, ParticipationStatus.REJECTED, ParticipationStatus.CANCELED)
         )
         .stream()
         .filter(participant -> !participant.getParticipant().getId().equals(participant.getTogether().getHost().getId())) // 호스트 제외

@@ -378,17 +378,32 @@ public class TogetherService {
   public void leaveTogether(Long togetherId, Long memberId) {
     Participants participation = participantsRepository
         .findByTogetherIdAndParticipantId(togetherId, memberId);
-    
+
     if (participation == null) {
       throw new TogetherNotJoinedException(togetherId, memberId);
     }
-    
+
     Together together = findById(togetherId);
     if(together.getMeetingDate().isBefore(LocalDate.now())) {
       throw new TogetherExpiredException(togetherId, together.getMeetingDate());
     }
-    participantsRepository.delete(participation);
-    togetherRepository.updateParticipantCount(togetherId, -1); // 참여자 수만 감소
+
+    // 이미 취소된 상태인지 확인
+    if (participation.getStatus() == ParticipationStatus.CANCELED) {
+      throw new IllegalStateException("이미 취소된 참여 신청입니다");
+    }
+
+    // 승인된 상태였다면 참여자 수 감소
+    boolean wasApproved = participation.getStatus() == ParticipationStatus.APPROVED;
+
+    // 참여 상태를 CANCELED로 변경
+    participation.setStatus(ParticipationStatus.CANCELED);
+    participantsRepository.save(participation);
+
+    // 승인된 상태였다면 참여자 수 감소
+    if (wasApproved) {
+      togetherRepository.updateParticipantCount(togetherId, -1);
+    }
 
     // 채팅방 나가기
     chatRoomService.removeMemberFromRoomByTogether(together, memberId);
