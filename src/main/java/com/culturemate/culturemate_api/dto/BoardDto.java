@@ -52,6 +52,7 @@ public class BoardDto {
     private MemberDto.ProfileResponse author;
     private EventDto.ResponseCard eventCard;
     private Integer likeCount;
+    private Integer commentCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -63,6 +64,7 @@ public class BoardDto {
         .author(MemberDto.ProfileResponse.from(board.getAuthor()))
         .eventCard(board.getEvent() != null ? EventDto.ResponseCard.from(board.getEvent(), false) : null)
         .likeCount(board.getLikeCount())
+        .commentCount(board.getCommentCount())
         .createdAt(board.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
         .updatedAt(board.getUpdatedAt() != null ?
           board.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
