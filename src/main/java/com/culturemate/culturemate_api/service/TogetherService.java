@@ -337,7 +337,7 @@ public class TogetherService {
     // 승인 시 참여자 수 증가
     togetherRepository.updateParticipantCount(togetherId, 1);
 
-    // 그룹 채팅방 처리: 없으면 생성하고, 승인된 참여자를 추가
+    // 그룹 채팅방 처리: 없으면 생성하고, 승인된 참여자를 추가 (UI는 열지 않음)
     ensureGroupChatRoomAndAddMember(together, participantId);
   }
 
@@ -345,6 +345,7 @@ public class TogetherService {
    * 그룹 채팅방 존재 확인 및 승인된 참여자 추가
    * - 그룹 채팅방이 없으면 생성
    * - 승인된 참여자를 그룹 채팅방에 추가
+   * - UI는 자동으로 열지 않음 (백엔드 로직만)
    */
   private void ensureGroupChatRoomAndAddMember(Together together, Long participantId) {
     try {
