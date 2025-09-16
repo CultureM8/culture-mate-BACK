@@ -90,14 +90,17 @@ public class EventReviewService {
 
   @Transactional
   public void delete(Long reviewId, Long authenticatedUserId) {
+    System.out.println("리뷰 삭제 시도 ID: " + reviewId);
     EventReview eventReview = reviewRepository.findById(reviewId)
-        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+        .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
     
     // 권한 검증: 본인의 리뷰만 삭제 가능
     validationService.validateEventReviewAccess(eventReview, authenticatedUserId);
     
     Long eventId = eventReview.getEvent().getId();
     reviewRepository.delete(eventReview);
+    reviewRepository.flush();// 삭제를 즉시 DB 반영
+
     updateEventAverageRating(eventId, "delete");
   }
 
