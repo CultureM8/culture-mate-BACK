@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "Member Detail API", description = "회원 상세 정보(마이페이지) 관리 API")
 @RestController
@@ -149,4 +150,27 @@ public class MemberDetailController {
     
     return ResponseEntity.noContent().build();
   }
+
+  // ===== 관심사 관리 API =====
+
+  // 관심 이벤트 타입 업데이트 (전체 교체)
+  @PutMapping("/{memberId}/interests/event-types")
+  public ResponseEntity<Void> updateInterestEventTypes(@PathVariable Long memberId,
+                                                       @RequestBody Map<String, List<String>> requestBody,
+                                                       @AuthenticationPrincipal AuthenticatedUser requester) {
+    List<String> eventTypes = requestBody.get("eventTypes");
+    memberDetailService.updateInterestEventTypes(memberId, eventTypes, requester.getMemberId());
+    return ResponseEntity.ok().build();
+  }
+
+  // 관심 태그 업데이트 (전체 교체)
+  @PutMapping("/{memberId}/interests/tags")
+  public ResponseEntity<Void> updateInterestTags(@PathVariable Long memberId,
+                                                 @RequestBody Map<String, List<String>> requestBody,
+                                                 @AuthenticationPrincipal AuthenticatedUser requester) {
+    List<String> tags = requestBody.get("tags");
+    memberDetailService.updateInterestTags(memberId, tags, requester.getMemberId());
+    return ResponseEntity.ok().build();
+  }
+
 }
