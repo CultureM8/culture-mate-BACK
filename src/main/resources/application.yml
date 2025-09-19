@@ -32,7 +32,7 @@ logging.level:
   # org.hibernate.orm.jdbc.bind: trace
 # JWT 설정
 jwt:
-  secret: Y3VsdHVyZW1hdGVzZWNyZXRrZXkyMDI0MTIzNDU2Nzg5MEFCQ0RFRjAxMjM0NTY3ODkwQUJDREVGdmVyeXNlY3VyZWtleQ==
+  secret: ${JWT_SECRET}
   expiration: 86400000 # 24시간 (밀리초)
 
 custom:

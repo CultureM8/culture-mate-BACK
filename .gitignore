@@ -43,6 +43,16 @@ out/
 
 ### env ###
 .env
+.env.*
+!.env.example
+
+### Security ###
+application-prod.yml
+application-production.yml
+*.pem
+*.key
+*.p12
+*.jks
 
 ### AI ###
 /.claude/
