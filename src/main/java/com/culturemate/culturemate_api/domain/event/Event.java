@@ -32,7 +32,6 @@ public class Event {
   @Column(nullable = false)
   private String title;            // 이벤트 이름
 
-  @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "region_id")
   private Region region;           // 지역ID (생성/수정용)

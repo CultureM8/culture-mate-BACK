@@ -15,6 +15,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 public class MemberDto {
 
@@ -30,16 +31,16 @@ public class MemberDto {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Register {
-    
+
     @NotBlank
     @Size(min = 4, max = 20, message = "로그인 아이디는 4자 이상 20자 이하여야 합니다.")
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "로그인 아이디는 영문, 숫자, 언더스코어만 사용 가능합니다.")
     private String loginId;
-    
+
     @NotBlank
     @Size(min = 8, max = 100, message = "비밀번호는 8자 이상이어야 합니다.")
     private String password;
-    
+
     @NotBlank
     private String nickname;
 
@@ -48,6 +49,10 @@ public class MemberDto {
 
     @Email(message = "올바른 이메일 형식이 아닙니다")
     private String email;
+
+    // 관심 이벤트 타입과 태그
+    private List<String> interestEventTypes;  // ["MUSICAL", "CONCERT"]
+    private List<String> interestTags;        // ["서울", "인디밴드", "재즈"]
 
   }
 
@@ -57,10 +62,10 @@ public class MemberDto {
   @AllArgsConstructor
   @Schema(name = "MemberDetailRequest")
   public static class DetailRequest {
-    
+
     @NotBlank(message = "사용자명은 필수입니다")
     private String nickname;
-    
+
     private String intro;
     private String mbti;
 
@@ -68,13 +73,19 @@ public class MemberDto {
     private String email;
 
     private VisibleType visibility;
-    
+
+    // 관심 이벤트 타입과 태그 (선택적)
+    private List<String> interestEventTypes;  // ["MUSICAL", "CONCERT"]
+    private List<String> interestTags;        // ["서울", "인디밴드", "재즈"]
+
     public static DetailRequest from(Register registerRequest) {
       return DetailRequest.builder()
         .nickname(registerRequest.getNickname())
         .intro(registerRequest.getIntro())
         .mbti(registerRequest.getMbti())
         .email(registerRequest.getEmail())
+        .interestEventTypes(registerRequest.getInterestEventTypes())
+        .interestTags(registerRequest.getInterestTags())
         .build();
     }
 

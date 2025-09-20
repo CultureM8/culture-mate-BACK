@@ -1,6 +1,5 @@
 package com.culturemate.culturemate_api.domain.member;
 
-import com.culturemate.culturemate_api.domain.Image;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,6 +34,15 @@ public class MemberDetail {
   private String mbti;
   private Integer togetherScore;
   private String email;
+
+  // 관심 이벤트 타입과 태그
+  @OneToMany(mappedBy = "memberDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<InterestEventTypes> interestEventTypes = new ArrayList<>();
+
+  @OneToMany(mappedBy = "memberDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<InterestTags> interestTags = new ArrayList<>();
 
   @Enumerated(EnumType.STRING)
   private VisibleType visibility;

@@ -1,16 +1,20 @@
 package com.culturemate.culturemate_api.service;
 
 import com.culturemate.culturemate_api.domain.ImageTarget;
-import com.culturemate.culturemate_api.domain.member.Member;
-import com.culturemate.culturemate_api.domain.member.MemberDetail;
-import com.culturemate.culturemate_api.domain.member.Role;
+import com.culturemate.culturemate_api.domain.event.EventType;
+import com.culturemate.culturemate_api.domain.member.*;
+import com.culturemate.culturemate_api.domain.statistics.Tag;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberDetailRepository;
 import com.culturemate.culturemate_api.repository.MemberRepository;
+import com.culturemate.culturemate_api.repository.TagRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,10 +23,11 @@ public class MemberDetailService {
   private final MemberDetailRepository memberDetailRepository;
   private final MemberRepository memberRepository;
   private final ImageService imageService;
+  private final TagRepository tagRepository;
 
-  // 모두 조회
+  // 관심사와 함께 회원 상세 조회 (N+1 방지)
   public MemberDetail findByMemberId(Long memberId) {
-    return memberDetailRepository.findById(memberId)
+    return memberDetailRepository.findByIdWithAllInterests(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
   }
 
@@ -36,23 +41,116 @@ public class MemberDetailService {
       .email(dto.getEmail())
       .build();
 
-    return memberDetailRepository.save(memberDetail);
+    MemberDetail saved = memberDetailRepository.save(memberDetail);
+
+    // 관심사가 있으면 업데이트
+    if (dto.getInterestEventTypes() != null && !dto.getInterestEventTypes().isEmpty()) {
+      updateInterestEventTypes(saved.getId(), dto.getInterestEventTypes(), member.getId());
+    }
+    if (dto.getInterestTags() != null && !dto.getInterestTags().isEmpty()) {
+      updateInterestTags(saved.getId(), dto.getInterestTags(), member.getId());
+    }
+
+    return saved;
   }
+
+
+
+  // ===== 관심사 관리 메서드 (전체 교체 방식) =====
+
+  // 관심 이벤트 타입 업데이트
+  public void updateInterestEventTypes(Long memberId, List<String> eventTypeStrings, Long requesterId) {
+    validateProfileAccess(memberId, requesterId);
+    MemberDetail memberDetail = findByMemberId(memberId);
+
+    // 기존 관심 이벤트 타입 모두 제거
+    memberDetail.getInterestEventTypes().clear();
+
+    // 새로운 관심 이벤트 타입 추가
+    if (eventTypeStrings != null && !eventTypeStrings.isEmpty()) {
+      List<InterestEventTypes> interestEventTypes = eventTypeStrings.stream()
+        .map(eventTypeString -> {
+          try {
+            EventType eventType = EventType.valueOf(eventTypeString.toUpperCase());
+            return InterestEventTypes.builder()
+              .memberDetail(memberDetail)
+              .eventType(eventType)
+              .build();
+          } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("유효하지 않은 이벤트 타입입니다: " + eventTypeString);
+          }
+        })
+        .collect(Collectors.toList());
+
+      memberDetail.getInterestEventTypes().addAll(interestEventTypes);
+    }
+  }
+
+  // 관심 태그 업데이트 (전체 교체 방식)
+  public void updateInterestTags(Long memberId, List<String> newTagNames, Long requesterId) {
+    validateProfileAccess(memberId, requesterId);
+    MemberDetail memberDetail = findByMemberId(memberId);
+
+    // 기존 관심 태그들 모두 제거
+    memberDetail.getInterestTags().clear();
+
+    // 새로운 관심 태그들 추가
+    if (newTagNames != null && !newTagNames.isEmpty()) {
+      // 중복 제거
+      Set<String> uniqueTagNames = new HashSet<>(newTagNames);
+
+      // 배치로 기존 태그들 조회 (N+1 문제 해결)
+      List<Tag> existingTags = tagRepository.findByTagIn(new ArrayList<>(uniqueTagNames));
+      Map<String, Tag> tagMap = existingTags.stream()
+        .collect(Collectors.toMap(Tag::getTag, tag -> tag));
+
+      // 없는 태그들 배치 생성
+      Set<String> missingTagNames = uniqueTagNames.stream()
+        .filter(tagName -> !tagMap.containsKey(tagName))
+        .collect(Collectors.toSet());
+
+      if (!missingTagNames.isEmpty()) {
+        List<Tag> newTags = tagRepository.saveAll(
+          missingTagNames.stream().map(Tag::createNew).collect(Collectors.toList())
+        );
+        newTags.forEach(tag -> tagMap.put(tag.getTag(), tag));
+      }
+
+      // InterestTags 생성
+      List<InterestTags> newInterestTags = uniqueTagNames.stream()
+        .map(tagName -> InterestTags.builder()
+          .memberDetail(memberDetail)
+          .tag(tagMap.get(tagName))
+          .build())
+        .collect(Collectors.toList());
+
+      memberDetail.getInterestTags().addAll(newInterestTags);
+    }
+  }
+
 
   // 수정
   public MemberDetail update(Long memberId, MemberDto.DetailRequest dto, Long requesterId) {
     // 권한 검증: 본인 프로필만 수정 가능
     validateProfileAccess(memberId, requesterId);
-    
+
     MemberDetail memberDetail = memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
 
-    // 필드 업데이트
+    // 기본 필드 업데이트
     memberDetail.setNickname(dto.getNickname());
     memberDetail.setIntro(dto.getIntro());
     memberDetail.setMbti(dto.getMbti());
     memberDetail.setEmail(dto.getEmail());
     memberDetail.setVisibility(dto.getVisibility());
+
+    // 관심사가 포함된 경우 함께 업데이트
+    if (dto.getInterestEventTypes() != null) {
+      updateInterestEventTypes(memberId, dto.getInterestEventTypes(), requesterId);
+    }
+    if (dto.getInterestTags() != null) {
+      updateInterestTags(memberId, dto.getInterestTags(), requesterId);
+    }
 
     return memberDetail;
   }

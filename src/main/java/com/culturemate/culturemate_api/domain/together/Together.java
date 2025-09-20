@@ -54,7 +54,6 @@ public class Together {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "region_id", nullable = false)
-  @Setter
   private Region region;           // 지역ID (생성/수정용)
 
   // 조회 성능 최적화용 지역 스냅샷 (N+1 쿼리 문제 해결)
