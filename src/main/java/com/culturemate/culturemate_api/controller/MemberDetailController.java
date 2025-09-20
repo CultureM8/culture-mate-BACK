@@ -167,7 +167,8 @@ public class MemberDetailController {
                                                        @RequestBody Map<String, List<String>> requestBody,
                                                        @AuthenticationPrincipal AuthenticatedUser requester) {
     List<String> eventTypes = requestBody.get("eventTypes");
-    memberDetailService.updateInterestEventTypes(memberId, eventTypes, requester.getMemberId());
+    authService.validateProfileAccess(memberId, requester.getMemberId());
+    memberDetailService.updateInterestEventTypes(memberId, eventTypes);
     return ResponseEntity.ok().build();
   }
 
@@ -177,7 +178,8 @@ public class MemberDetailController {
                                                  @RequestBody Map<String, List<String>> requestBody,
                                                  @AuthenticationPrincipal AuthenticatedUser requester) {
     List<String> tags = requestBody.get("tags");
-    memberDetailService.updateInterestTags(memberId, tags, requester.getMemberId());
+    authService.validateProfileAccess(memberId, requester.getMemberId());
+    memberDetailService.updateInterestTags(memberId, tags);
     return ResponseEntity.ok().build();
   }
 
