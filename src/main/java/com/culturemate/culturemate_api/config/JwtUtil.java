@@ -19,10 +19,10 @@ import java.util.Map;
 @Slf4j
 public class JwtUtil {
 
-  @Value("${jwt.secret:myDefaultSecretKey123456789012345678901234567890}")
+  @Value("${jwt.secret}")
   private String secret;
 
-  @Value("${jwt.expiration:86400000}") // 24시간 (milliseconds)
+  @Value("${jwt.expiration}") // 24시간 (milliseconds)
   private Long expiration;
 
   private SecretKey getSigningKey() {

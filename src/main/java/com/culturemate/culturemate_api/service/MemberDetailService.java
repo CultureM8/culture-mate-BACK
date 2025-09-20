@@ -6,7 +6,6 @@ import com.culturemate.culturemate_api.domain.member.*;
 import com.culturemate.culturemate_api.domain.statistics.Tag;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberDetailRepository;
-import com.culturemate.culturemate_api.repository.MemberRepository;
 import com.culturemate.culturemate_api.repository.TagRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class MemberDetailService {
   private final MemberDetailRepository memberDetailRepository;
-  private final MemberRepository memberRepository;
   private final ImageService imageService;
   private final TagRepository tagRepository;
 
@@ -45,22 +43,19 @@ public class MemberDetailService {
 
     // 관심사가 있으면 업데이트
     if (dto.getInterestEventTypes() != null && !dto.getInterestEventTypes().isEmpty()) {
-      updateInterestEventTypes(saved.getId(), dto.getInterestEventTypes(), member.getId());
+      updateInterestEventTypes(saved.getId(), dto.getInterestEventTypes());
     }
     if (dto.getInterestTags() != null && !dto.getInterestTags().isEmpty()) {
-      updateInterestTags(saved.getId(), dto.getInterestTags(), member.getId());
+      updateInterestTags(saved.getId(), dto.getInterestTags());
     }
 
     return saved;
   }
 
-
-
   // ===== 관심사 관리 메서드 (전체 교체 방식) =====
 
   // 관심 이벤트 타입 업데이트
-  public void updateInterestEventTypes(Long memberId, List<String> eventTypeStrings, Long requesterId) {
-    validateProfileAccess(memberId, requesterId);
+  public void updateInterestEventTypes(Long memberId, List<String> eventTypeStrings) {
     MemberDetail memberDetail = findByMemberId(memberId);
 
     // 기존 관심 이벤트 타입 모두 제거
@@ -87,8 +82,7 @@ public class MemberDetailService {
   }
 
   // 관심 태그 업데이트 (전체 교체 방식)
-  public void updateInterestTags(Long memberId, List<String> newTagNames, Long requesterId) {
-    validateProfileAccess(memberId, requesterId);
+  public void updateInterestTags(Long memberId, List<String> newTagNames) {
     MemberDetail memberDetail = findByMemberId(memberId);
 
     // 기존 관심 태그들 모두 제거
@@ -128,12 +122,8 @@ public class MemberDetailService {
     }
   }
 
-
   // 수정
-  public MemberDetail update(Long memberId, MemberDto.DetailRequest dto, Long requesterId) {
-    // 권한 검증: 본인 프로필만 수정 가능
-    validateProfileAccess(memberId, requesterId);
-
+  public MemberDetail update(Long memberId, MemberDto.DetailRequest dto) {
     MemberDetail memberDetail = memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
 
@@ -146,114 +136,91 @@ public class MemberDetailService {
 
     // 관심사가 포함된 경우 함께 업데이트
     if (dto.getInterestEventTypes() != null) {
-      updateInterestEventTypes(memberId, dto.getInterestEventTypes(), requesterId);
+      updateInterestEventTypes(memberId, dto.getInterestEventTypes());
     }
     if (dto.getInterestTags() != null) {
-      updateInterestTags(memberId, dto.getInterestTags(), requesterId);
+      updateInterestTags(memberId, dto.getInterestTags());
     }
 
     return memberDetail;
   }
 
   // 삭제
-  public void delete(Long memberId, Long requesterId) {
-    // 권한 검증: 본인 프로필만 삭제 가능
-    validateProfileAccess(memberId, requesterId);
-    
+  public void delete(Long memberId) {
     memberDetailRepository.deleteById(memberId);
   }
 
   // ===== 이미지 관리 =====
-  
+
   // 프로필 이미지 업로드/수정 (썸네일 + 메인)
-  public void updateProfileImage(Long memberId, MultipartFile imageFile, Long requesterId) {
-    validateProfileAccess(memberId, requesterId);
+  public void updateProfileImage(Long memberId, MultipartFile imageFile) {
     MemberDetail memberDetail = findByMemberId(memberId);
-    
+
     try {
       // 기존 이미지 삭제
       if (memberDetail.getThumbnailImagePath() != null || memberDetail.getMainImagePath() != null) {
         imageService.deletePhysicalFiles(memberDetail.getThumbnailImagePath(), memberDetail.getMainImagePath());
       }
-      
+
       // 새 이미지 업로드
       String mainImagePath = imageService.uploadSingleImage(imageFile, ImageTarget.MEMBER_PROFILE, "main");
       String thumbnailImagePath = imageService.uploadThumbnail(imageFile, ImageTarget.MEMBER_PROFILE);
-      
+
       // MemberDetail 업데이트
       memberDetail.setMainImagePath(mainImagePath);
       memberDetail.setThumbnailImagePath(thumbnailImagePath);
-      
+
     } catch (Exception e) {
       throw new RuntimeException("프로필 이미지 업로드 실패: " + e.getMessage(), e);
     }
   }
 
   // 배경 이미지 업로드/수정
-  public void updateBackgroundImage(Long memberId, MultipartFile imageFile, Long requesterId) {
-    validateProfileAccess(memberId, requesterId);
+  public void updateBackgroundImage(Long memberId, MultipartFile imageFile) {
     MemberDetail memberDetail = findByMemberId(memberId);
-    
+
     try {
       // 기존 이미지 삭제
       if (memberDetail.getBackgroundImagePath() != null) {
         imageService.deletePhysicalFiles(memberDetail.getBackgroundImagePath());
       }
-      
+
       // 새 이미지 업로드 (배경은 메인만)
       String backgroundImagePath = imageService.uploadSingleImage(imageFile, ImageTarget.MEMBER_BACKGROUND, null);
-      
+
       // MemberDetail 업데이트
       memberDetail.setBackgroundImagePath(backgroundImagePath);
-      
+
     } catch (Exception e) {
       throw new RuntimeException("배경 이미지 업로드 실패: " + e.getMessage(), e);
     }
   }
 
   // 프로필 이미지 삭제
-  public void deleteProfileImage(Long memberId, Long requesterId) {
-    validateProfileAccess(memberId, requesterId);
+  public void deleteProfileImage(Long memberId) {
     MemberDetail memberDetail = findByMemberId(memberId);
-    
+
     // 물리적 파일 삭제
     if (memberDetail.getThumbnailImagePath() != null || memberDetail.getMainImagePath() != null) {
       imageService.deletePhysicalFiles(memberDetail.getThumbnailImagePath(), memberDetail.getMainImagePath());
     }
-    
+
     // DB 필드 초기화
     memberDetail.setThumbnailImagePath(null);
     memberDetail.setMainImagePath(null);
   }
 
   // 배경 이미지 삭제
-  public void deleteBackgroundImage(Long memberId, Long requesterId) {
-    validateProfileAccess(memberId, requesterId);
+  public void deleteBackgroundImage(Long memberId) {
     MemberDetail memberDetail = findByMemberId(memberId);
-    
+
     // 물리적 파일 삭제
     if (memberDetail.getBackgroundImagePath() != null) {
       imageService.deletePhysicalFiles(memberDetail.getBackgroundImagePath());
     }
-    
+
     // DB 필드 초기화
     memberDetail.setBackgroundImagePath(null);
-  }
-
-  // 권한 검증 메서드 (ADMIN 예외 처리 포함)
-  private void validateProfileAccess(Long profileMemberId, Long requesterId) {
-    Member requester = memberRepository.findById(requesterId)
-        .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
-    
-    // ADMIN은 모든 프로필 수정/삭제 가능
-    if (requester.getRole() == Role.ADMIN) {
-      return;
-    }
-    
-    // 일반 사용자는 본인 프로필만
-    if (!profileMemberId.equals(requesterId)) {
-      throw new IllegalArgumentException("본인의 프로필만 수정/삭제할 수 있습니다");
-    }
   }
 
 }

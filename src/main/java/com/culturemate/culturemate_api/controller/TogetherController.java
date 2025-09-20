@@ -8,6 +8,7 @@ import com.culturemate.culturemate_api.domain.together.ParticipationStatus;
 import com.culturemate.culturemate_api.domain.together.Together;
 import com.culturemate.culturemate_api.dto.*;
 import com.culturemate.culturemate_api.repository.ParticipantsRepository;
+import com.culturemate.culturemate_api.facade.TogetherFacade;
 import com.culturemate.culturemate_api.service.ChatRoomService;
 import com.culturemate.culturemate_api.service.MemberService;
 import com.culturemate.culturemate_api.service.TogetherService;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TogetherController {
   private final TogetherService togetherService;
+  private final TogetherFacade togetherFacade;
   private final MemberService memberService;
   private final ChatRoomService chatRoomService;
   private final ParticipantsRepository participantsRepository;
@@ -119,7 +121,7 @@ public class TogetherController {
   // 모집글 생성
   @PostMapping
   public ResponseEntity<TogetherDto.Response> createTogether(@Valid @RequestBody TogetherDto.Request togetherRequestDto) {
-    Together together = togetherService.create(togetherRequestDto);
+    Together together = togetherFacade.createTogetherWithChatRoom(togetherRequestDto);
     return ResponseEntity.ok().body(togetherService.toResponseDto(together));
   }
 
@@ -136,7 +138,7 @@ public class TogetherController {
   @DeleteMapping("/{togetherId}")
   public ResponseEntity<Void> deleteTogether(@PathVariable Long togetherId,
                                             @AuthenticationPrincipal AuthenticatedUser requester) {
-    togetherService.delete(togetherId, requester.getMemberId());
+    togetherFacade.deleteTogetherWithRelatedData(togetherId, requester.getMemberId());
     return ResponseEntity.noContent().build();
   }
 
@@ -172,7 +174,7 @@ public class TogetherController {
   public ResponseEntity<Void> approveParticipation(@PathVariable Long togetherId,
                                                    @PathVariable Long participantId,
                                                    @AuthenticationPrincipal AuthenticatedUser requester) {
-    togetherService.approveParticipation(togetherId, participantId, requester.getMemberId());
+    togetherFacade.approveParticipationWithChatRoom(togetherId, participantId, requester.getMemberId());
     return ResponseEntity.ok().build();
   }
 
@@ -181,7 +183,7 @@ public class TogetherController {
   public ResponseEntity<Void> rejectParticipation(@PathVariable Long togetherId,
                                                   @PathVariable Long participantId,
                                                   @AuthenticationPrincipal AuthenticatedUser requester) {
-    togetherService.rejectParticipation(togetherId, participantId, requester.getMemberId());
+    togetherFacade.rejectParticipation(togetherId, participantId, requester.getMemberId());
     return ResponseEntity.ok().build();
   }
 

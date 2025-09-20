@@ -44,12 +44,15 @@ public class TogetherService {
   private final ValidationService validationService;
 
 
+  /**
+   * Together 생성 (완전한 Together 생성 - 호스트 참여자 포함)
+   * - Together 엔티티 생성 및 저장
+   * - 호스트를 자동으로 참여자(HOST 상태)로 추가
+   * - 비즈니스 무결성: Together는 항상 호스트가 포함된 완전한 상태로 생성
+   */
   @Transactional
-  public Together create(TogetherDto.Request requestDto) {
-    Event event = eventService.findById(requestDto.getEventId());
-    Member host = memberService.findById(requestDto.getHostId());
-    Region region = regionService.findExact(requestDto.getRegion());
-    
+  public Together create(Event event, Member host, Region region, TogetherDto.Request requestDto) {
+    // 1. Together 엔티티 생성
     Together together = Together.builder()
       .event(event)
       .host(host)
@@ -75,12 +78,9 @@ public class TogetherService {
       .build();
     participantsRepository.save(hostParticipation);
 
-    // 채팅방 생성 및 호스트 추가
-    ChatRoom chatRoom = chatRoomService.createChatRoom(savedTogether);
-    chatRoomService.addMemberToRoom(chatRoom.getId(), host.getId());
-
     return savedTogether;
   }
+
 
   public List<Together> findAll() {
     return togetherRepository.findAll();
@@ -233,6 +233,7 @@ public class TogetherService {
   public boolean isParticipating(Long togetherId, Long memberId) {
     return participantsRepository.existsByTogetherIdAndParticipantId(togetherId, memberId);
   }
+
 
   // 모든 참여자 목록 조회 (상태 무관)
   public List<Member> getAllParticipants(Long togetherId) {

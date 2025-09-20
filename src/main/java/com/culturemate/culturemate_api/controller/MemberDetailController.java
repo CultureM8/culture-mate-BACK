@@ -6,6 +6,7 @@ import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.ImageTarget;
+import com.culturemate.culturemate_api.service.AuthService;
 import com.culturemate.culturemate_api.service.ImageService;
 import com.culturemate.culturemate_api.service.ImagePermissionService;
 import com.culturemate.culturemate_api.service.MemberDetailService;
@@ -29,6 +30,7 @@ public class MemberDetailController {
 
   private final MemberDetailService memberDetailService;
   private final MemberService memberService;
+  private final AuthService authService;
   private final ImageService imageService;
   private final ImagePermissionService imagePermissionService;
 
@@ -53,7 +55,8 @@ public class MemberDetailController {
   public ResponseEntity<MemberDto.DetailResponse> updateMemberDetail(@PathVariable Long memberId,
                                                        @Valid @RequestBody MemberDto.DetailRequest dto,
                                                        @AuthenticationPrincipal AuthenticatedUser requester) {
-    MemberDetail updated = memberDetailService.update(memberId, dto, requester.getMemberId());
+    authService.validateProfileAccess(memberId, requester.getMemberId());
+    MemberDetail updated = memberDetailService.update(memberId, dto);
     return ResponseEntity.ok(MemberDto.DetailResponse.from(updated));  // HTTP 200 OK + 데이터 반환
   }
 
@@ -61,7 +64,8 @@ public class MemberDetailController {
   @DeleteMapping("/{memberId}")
   public ResponseEntity<Void> deleteMemberDetail(@PathVariable Long memberId,
                                                  @AuthenticationPrincipal AuthenticatedUser requester) {
-    memberDetailService.delete(memberId, requester.getMemberId());
+    authService.validateProfileAccess(memberId, requester.getMemberId());
+    memberDetailService.delete(memberId);
     return ResponseEntity.noContent().build();  // HTTP 204 No Content
   }
 
@@ -75,10 +79,12 @@ public class MemberDetailController {
                                           @AuthenticationPrincipal AuthenticatedUser user) {
     switch (imageType.toLowerCase()) {
       case "profile":
-        memberDetailService.updateProfileImage(memberId, imageFile, user.getMemberId());
+        authService.validateProfileAccess(memberId, user.getMemberId());
+        memberDetailService.updateProfileImage(memberId, imageFile);
         break;
       case "background":
-        memberDetailService.updateBackgroundImage(memberId, imageFile, user.getMemberId());
+        authService.validateProfileAccess(memberId, user.getMemberId());
+        memberDetailService.updateBackgroundImage(memberId, imageFile);
         break;
       default:
         throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");
@@ -93,10 +99,12 @@ public class MemberDetailController {
                                           @AuthenticationPrincipal AuthenticatedUser user) {
     switch (imageType.toLowerCase()) {
       case "profile":
-        memberDetailService.deleteProfileImage(memberId, user.getMemberId());
+        authService.validateProfileAccess(memberId, user.getMemberId());
+        memberDetailService.deleteProfileImage(memberId);
         break;
       case "background":
-        memberDetailService.deleteBackgroundImage(memberId, user.getMemberId());
+        authService.validateProfileAccess(memberId, user.getMemberId());
+        memberDetailService.deleteBackgroundImage(memberId);
         break;
       default:
         throw new IllegalArgumentException("지원하지 않는 이미지 타입입니다: " + imageType + " (사용 가능: profile, background)");

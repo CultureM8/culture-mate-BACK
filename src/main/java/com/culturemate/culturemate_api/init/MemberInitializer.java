@@ -4,7 +4,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
-import com.culturemate.culturemate_api.service.MemberService;
+import com.culturemate.culturemate_api.service.AuthService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +17,12 @@ import java.util.Map;
 @Component
 public class MemberInitializer {
 
-  private final MemberService memberService;
+  private final AuthService authService;
   private final MemberRepository memberRepository;
 
   @Autowired
-  public MemberInitializer(MemberService memberService, MemberRepository memberRepository) {
-    this.memberService = memberService;
+  public MemberInitializer(AuthService authService, MemberRepository memberRepository) {
+    this.authService = authService;
     this.memberRepository = memberRepository;
   }
 
@@ -46,7 +46,7 @@ public class MemberInitializer {
             .email(loginId + "@culturemate.com")
             .build();
         
-        Member newMember = memberService.create(registerDto);
+        Member newMember = authService.register(registerDto);
         System.out.println("계정 생성 완료: " + loginId);
       }
       

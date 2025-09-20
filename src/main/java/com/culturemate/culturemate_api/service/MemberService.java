@@ -24,26 +24,6 @@ public class MemberService {
   private final MemberDetailService memberDetailService;
 
 
-  // 회원 가입
-  @Transactional
-  public Member create(MemberDto.Register registerDto) {
-    if (memberRepository.existsByLoginId(registerDto.getLoginId())) {
-      throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
-    }
-
-    var hash = passwordEncoder.encode(registerDto.getPassword());
-
-    Member member = Member.builder()
-      .loginId(registerDto.getLoginId())
-      .password(hash)
-      .build();
-
-    Member savedMember = memberRepository.save(member);
-    memberDetailService.create(savedMember, MemberDto.DetailRequest.from(registerDto));
-
-    return savedMember;
-  }
-
   // 회원 삭제
   @Transactional
   public void delete(Long memberId) {

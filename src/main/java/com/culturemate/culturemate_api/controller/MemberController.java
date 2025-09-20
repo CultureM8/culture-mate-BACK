@@ -27,19 +27,6 @@ import java.util.stream.Collectors;
 public class MemberController {
   private final MemberService memberService;
 
-  @Operation(summary = "회원 가입", description = "새로운 회원을 등록합니다")
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "201", description = "가입 성공"),
-    @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-    @ApiResponse(responseCode = "409", description = "이미 존재하는 회원")
-  })
-  @PostMapping
-  public ResponseEntity<MemberDto.Response> registerMember(
-    @Parameter(description = "회원 가입 정보", required = true) @Valid @RequestBody MemberDto.Register registerDto) {
-    Member savedMember = memberService.create(registerDto);
-    return ResponseEntity.status(201).body(MemberDto.Response.from(savedMember));
-  }
-
   // 회원 삭제
   @DeleteMapping("/{memberId}")
   public ResponseEntity<Void> deleteMember(@PathVariable Long memberId) {

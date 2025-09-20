@@ -2,7 +2,7 @@ package com.culturemate.culturemate_api.config;
 
 import com.culturemate.culturemate_api.domain.member.MemberStatus;
 import com.culturemate.culturemate_api.dto.AuthenticatedUser;
-import com.culturemate.culturemate_api.service.LoginService;
+import com.culturemate.culturemate_api.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +24,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtUtil jwtUtil;
-  private final LoginService loginService;
+  private final AuthService authService;
 
   @Override
   protected void doFilterInternal(
@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       try {
         if (jwtUtil.validateToken(token)) {
           String loginId = jwtUtil.getLoginIdFromToken(token);
-          UserDetails userDetails = loginService.loadUserByUsername(loginId);
+          UserDetails userDetails = authService.loadUserByUsername(loginId);
 
           // MemberStatus 검증 추가
           if (userDetails instanceof AuthenticatedUser) {

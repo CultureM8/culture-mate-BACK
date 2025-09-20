@@ -1,8 +1,11 @@
 package com.culturemate.culturemate_api.controller;
 
 import com.culturemate.culturemate_api.config.JwtUtil;
+import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
+import com.culturemate.culturemate_api.service.AuthService;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,10 +29,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-public class AuthApiController {
+public class AuthController {
 
   private final AuthenticationManager authenticationManager;
   private final JwtUtil jwtUtil;
+  private final AuthService authService;
 
   @Operation(summary = "로그인", description = "회원 로그인을 수행하고 JWT 토큰을 반환합니다")
   @ApiResponses(value = {
@@ -69,5 +73,18 @@ public class AuthApiController {
       errorResponse.put("message", "아이디 또는 비밀번호가 일치하지 않습니다.");
       return ResponseEntity.status(401).body(errorResponse);
     }
+  }
+
+  @Operation(summary = "회원 가입", description = "새로운 회원을 등록합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "201", description = "가입 성공"),
+    @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+    @ApiResponse(responseCode = "409", description = "이미 존재하는 회원")
+  })
+  @PostMapping("/register")
+  public ResponseEntity<MemberDto.Response> register(
+    @Parameter(description = "회원 가입 정보", required = true) @Valid @RequestBody MemberDto.Register registerDto) {
+    Member savedMember = authService.register(registerDto);
+    return ResponseEntity.status(201).body(MemberDto.Response.from(savedMember));
   }
 }
