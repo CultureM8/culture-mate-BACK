@@ -1,14 +1,19 @@
 package com.culturemate.culturemate_api.controller;
 
+import com.culturemate.culturemate_api.domain.inquiry.Inquiry;
+import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.AuthenticatedUser;
+import com.culturemate.culturemate_api.dto.InquiryAnswerDto;
 import com.culturemate.culturemate_api.dto.InquiryDto;
 import com.culturemate.culturemate_api.service.InquiryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,31 +26,63 @@ public class InquiryController {
 
     private final InquiryService inquiryService;
 
-    @PostMapping
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<InquiryDto.Response> createInquiry(
-            @Valid @RequestBody InquiryDto.CreateRequest request,
+            @Valid @RequestPart("inquiry") InquiryDto.CreateRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal AuthenticatedUser user) {
-        
-        var inquiry = inquiryService.createInquiry(request, user.getMemberId());
+
+        Inquiry inquiry = inquiryService.createInquiry(request, images, user.getMemberId());
         return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
     }
 
-    @GetMapping("/my")
-    public ResponseEntity<List<InquiryDto.ListResponse>> getMyInquiries(
-            @AuthenticationPrincipal AuthenticatedUser user) {
-        
-        var inquiries = inquiryService.getMyInquiries(user.getMemberId());
-        return ResponseEntity.ok(inquiries.stream()
-                .map(InquiryDto.ListResponse::from)
-                .collect(Collectors.toList()));
+  @GetMapping("/my")
+  public ResponseEntity<List<InquiryDto.ListResponse>> getMyInquiries(
+    @AuthenticationPrincipal AuthenticatedUser user) {
+
+    List<Inquiry> inquiries;
+    if(user.getRole() == Role.ADMIN) {
+      inquiries = inquiryService.getAllInquiries(user.getMemberId());
+    } else {
+      inquiries = inquiryService.getMyInquiries(user.getMemberId());
     }
 
-    @GetMapping("/{inquiryId}")
-    public ResponseEntity<InquiryDto.Response> getInquiry(
-            @PathVariable Long inquiryId,
-            @AuthenticationPrincipal AuthenticatedUser user) {
-        
-        var inquiry = inquiryService.getInquiry(inquiryId, user.getMemberId());
-        return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
-    }
+    return ResponseEntity.ok(
+      inquiries.stream().map(InquiryDto.ListResponse::from).collect(Collectors.toList())
+    );
+  }
+
+//    @GetMapping("/{inquiryId}")
+//    public ResponseEntity<InquiryDto.Response> getInquiry(
+//            @PathVariable Long inquiryId,
+//            @AuthenticationPrincipal AuthenticatedUser user) {
+//
+//        var inquiry = inquiryService.getInquiry(inquiryId, user.getMemberId());
+//        return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
+//    }
+
+  // 관리자 전용: 전체 문의 조회
+  @GetMapping("/all")
+  public ResponseEntity<List<InquiryDto.ListResponse>> getAllInquiries(
+    @AuthenticationPrincipal AuthenticatedUser user) {
+
+    // InquiryService에서 admin 체크 포함
+    var inquiries = inquiryService.getAllInquiries(user.getMemberId());
+    return ResponseEntity.ok(
+      inquiries.stream()
+        .map(InquiryDto.ListResponse::from)
+        .collect(Collectors.toList())
+    );
+  }
+
+  // 관리자 전용 : 답변
+  @PostMapping("/{inquiryId}/answer")
+  public ResponseEntity<InquiryDto.Response> createOrUpdateAnswer(
+    @PathVariable Long inquiryId,
+    @RequestBody InquiryAnswerDto.CreateRequest dto,
+    @AuthenticationPrincipal AuthenticatedUser user) {
+
+    var inquiry = inquiryService.createOrUpdateAnswer(inquiryId, dto, user.getMemberId());
+    return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
+  }
 }

@@ -1,10 +1,13 @@
 package com.culturemate.culturemate_api.domain.inquiry;
 
+import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -29,6 +32,11 @@ public class Inquiry {
     @Setter
     @Column(nullable = false, length = 3000)
     private String content;
+
+    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "targetId")
+    @Builder.Default
+    private List<Image> images = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

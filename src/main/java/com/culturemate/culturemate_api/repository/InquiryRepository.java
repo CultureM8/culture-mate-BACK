@@ -10,10 +10,17 @@ import java.util.List;
 public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     
     // fetch join을 사용해 Member 정보도 함께 조회하도록 변경
-    @Query("SELECT i FROM Inquiry i JOIN FETCH i.author WHERE i.author = :author ORDER BY i.createdAt DESC")
-    List<Inquiry> findByAuthorOrderByCreatedAtDesc(Member author);
+    @Query("SELECT i FROM Inquiry i " +
+      "JOIN FETCH i.author " +
+      "LEFT JOIN FETCH i.images " +
+      "WHERE i.author = :author " +
+      "ORDER BY i.createdAt DESC")
+    List<Inquiry> findByAuthorWithImages(Member author);
 
     // 관리자용 전체 조회 기능에도 fetch join 추가
-    @Query("SELECT i FROM Inquiry i JOIN FETCH i.author ORDER BY i.createdAt DESC")
-    List<Inquiry> findAllWithAuthor();
+    @Query("SELECT i FROM Inquiry i " +
+      "JOIN FETCH i.author " +
+      "LEFT JOIN FETCH i.images " +
+      "ORDER BY i.createdAt DESC")
+    List<Inquiry> findAllWithAuthorAndImages();
 }

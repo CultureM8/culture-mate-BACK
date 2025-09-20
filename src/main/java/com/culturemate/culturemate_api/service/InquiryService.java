@@ -1,7 +1,9 @@
 package com.culturemate.culturemate_api.service;
 
+import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.domain.inquiry.Inquiry;
 import com.culturemate.culturemate_api.domain.inquiry.InquiryAnswer;
+import com.culturemate.culturemate_api.domain.inquiry.InquiryStatus;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.InquiryAnswerDto;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,12 +26,13 @@ public class InquiryService {
     private final InquiryRepository inquiryRepository;
     private final InquiryAnswerRepository inquiryAnswerRepository;
     private final MemberService memberService;
+    private final ImageService imageService;
 
     /**
      * 문의 생성
      */
     @Transactional
-    public Inquiry createInquiry(InquiryDto.CreateRequest dto, Long memberId) {
+    public Inquiry createInquiry(InquiryDto.CreateRequest dto, List<MultipartFile> images, Long memberId) {
         Member author = memberService.findById(memberId);
         Inquiry inquiry = Inquiry.builder()
                 .title(dto.getTitle())
@@ -36,7 +40,25 @@ public class InquiryService {
                 .category(dto.getCategory())
                 .author(author)
                 .build();
-        return inquiryRepository.save(inquiry);
+
+        inquiryRepository.save(inquiry);
+
+      // 이미지가 있으면 업로드
+      if (images != null && !images.isEmpty()) {
+        // uploadMultipleImages는 문자열 path를 DB에 저장하도록 수정
+        List<String> webPaths = imageService.uploadMultipleImages(
+          images,
+          ImageTarget.INQUIRY,  // Enum
+          inquiry.getId()
+        );
+
+        // 업로드 후 DB에서 이미지 가져와 inquiry 객체에 추가
+        inquiry.getImages().addAll(
+          imageService.getImagesByTargetTypeAndId(ImageTarget.INQUIRY, inquiry.getId())
+        );
+      }
+
+      return inquiry;
     }
 
     /**
@@ -44,7 +66,7 @@ public class InquiryService {
      */
     public List<Inquiry> getMyInquiries(Long memberId) {
         Member author = memberService.findById(memberId);
-        return inquiryRepository.findByAuthorOrderByCreatedAtDesc(author);
+        return inquiryRepository.findByAuthorWithImages(author);
     }
 
     /**
@@ -52,7 +74,7 @@ public class InquiryService {
      */
     public List<Inquiry> getAllInquiries(Long adminId) {
         validateAdmin(adminId);
-        return inquiryRepository.findAllWithAuthor();
+        return inquiryRepository.findAllWithAuthorAndImages();
     }
 
     /**
@@ -74,24 +96,27 @@ public class InquiryService {
      */
     @Transactional
     public Inquiry createOrUpdateAnswer(Long inquiryId, InquiryAnswerDto.CreateRequest dto, Long adminId) {
-        validateAdmin(adminId);
-        Inquiry inquiry = findInquiryById(inquiryId);
-        Member admin = memberService.findById(adminId);
+      validateAdmin(adminId);
+      Inquiry inquiry = findInquiryById(inquiryId);
+      Member admin = memberService.findById(adminId);
 
-        InquiryAnswer answer = inquiry.getAnswer();
-        if (answer != null) {
-            // 기존 답변 수정
-            answer.setContent(dto.getContent());
-        } else {
-            // 새 답변 생성
-            answer = InquiryAnswer.builder()
-                    .content(dto.getContent())
-                    .author(admin)
-                    .build();
-            inquiry.setAnswer(answer);
-        }
-        // InquiryAnswer is saved by cascade from Inquiry
-        return inquiryRepository.save(inquiry);
+      InquiryAnswer answer = inquiry.getAnswer();
+      if (answer != null) {
+        // 기존 답변 수정
+        answer.setContent(dto.getContent());
+      } else {
+        // 새 답변 생성
+        answer = InquiryAnswer.builder()
+          .content(dto.getContent())
+          .author(admin)
+          .build();
+        inquiry.setAnswer(answer);
+
+        // ✅ 상태 변경
+        inquiry.setStatus(InquiryStatus.ANSWERED);
+      }
+
+      return inquiryRepository.save(inquiry);
     }
 
     private Inquiry findInquiryById(Long inquiryId) {
