@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class  Member {
+public class Member {
 
   //=== 필드 ===//
   @Id @GeneratedValue
