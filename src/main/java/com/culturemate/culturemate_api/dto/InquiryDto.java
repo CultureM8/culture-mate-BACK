@@ -1,10 +1,10 @@
 package com.culturemate.culturemate_api.dto;
 
-import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.inquiry.Inquiry;
 import com.culturemate.culturemate_api.domain.inquiry.InquiryCategory;
 import com.culturemate.culturemate_api.domain.inquiry.InquiryStatus;
-import com.culturemate.culturemate_api.domain.member.Role;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,14 +13,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class InquiryDto {
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(name = "InquiryRequest", description = "1:1 문의 생성 요청 DTO")
     public static class CreateRequest {
         @NotBlank(message = "제목을 입력해주세요.")
         private String title;
@@ -34,6 +36,7 @@ public class InquiryDto {
 
     @Getter
     @Builder
+    @Schema(name = "InquiryResponse", description = "1:1 문의 상세 정보 응답 DTO")
     public static class Response {
         private Long inquiryId;
         private String title;
@@ -41,10 +44,9 @@ public class InquiryDto {
         private MemberDto.ProfileResponse author;
         private InquiryCategory category;
         private InquiryStatus status;
-        private Instant createdAt;
+        private LocalDateTime createdAt;
         private InquiryAnswerDto.Response answer;
         private List<String> imageUrls;
-        private Role role;
 
         public static Response from(Inquiry inquiry) {
             return Response.builder()
@@ -52,29 +54,40 @@ public class InquiryDto {
                     .title(inquiry.getTitle())
                     .content(inquiry.getContent())
                     .author(MemberDto.ProfileResponse.from(inquiry.getAuthor()))
-                    .role(inquiry.getAuthor().getRole())
                     .category(inquiry.getCategory())
                     .status(inquiry.getStatus())
-                    .createdAt(inquiry.getCreatedAt())
+                    .createdAt(inquiry.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                     .answer(inquiry.getAnswer() != null ? InquiryAnswerDto.Response.from(inquiry.getAnswer()) : null)
-                    .imageUrls(inquiry.getImages() != null
-                    ? inquiry.getImages().stream().map(Image::getPath).collect(Collectors.toList())
-                    : List.of())
+                    .imageUrls(List.of()) // 기본값, 필요시 withImages 메서드 사용
+                    .build();
+        }
+
+        public static Response from(Inquiry inquiry, List<String> imageUrls) {
+            return Response.builder()
+                    .inquiryId(inquiry.getId())
+                    .title(inquiry.getTitle())
+                    .content(inquiry.getContent())
+                    .author(MemberDto.ProfileResponse.from(inquiry.getAuthor()))
+                    .category(inquiry.getCategory())
+                    .status(inquiry.getStatus())
+                    .createdAt(inquiry.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                    .answer(inquiry.getAnswer() != null ? InquiryAnswerDto.Response.from(inquiry.getAnswer()) : null)
+                    .imageUrls(imageUrls)
                     .build();
         }
     }
     
     @Getter
     @Builder
+    @Schema(name = "InquiryListResponse", description = "1:1 문의 목록 응답 DTO")
     public static class ListResponse {
         private Long inquiryId;
         private String title;
         private String content;
         private MemberDto.ProfileResponse author;
-        private Role role;
         private InquiryCategory category;
         private InquiryStatus status;
-        private Instant createdAt;
+        private LocalDateTime createdAt;
         private InquiryAnswerDto.Response answer;
         private List<String> imageUrls;
 
@@ -84,18 +97,29 @@ public class InquiryDto {
                     .title(inquiry.getTitle())
                     .content(inquiry.getContent())
                     .author(MemberDto.ProfileResponse.from(inquiry.getAuthor()))
-                    .role(inquiry.getAuthor().getRole())
                     .category(inquiry.getCategory())
                     .status(inquiry.getStatus())
-                    .createdAt(inquiry.getCreatedAt())
+                    .createdAt(inquiry.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                     .answer(inquiry.getAnswer() != null
                     ? InquiryAnswerDto.Response.from(inquiry.getAnswer())
                     : null)
-                    .imageUrls(inquiry.getImages() != null
-                    ? inquiry.getImages().stream()
-                    .map(Image::getPath)
-                    .collect(Collectors.toList())
-                    : List.of())
+                    .imageUrls(List.of()) // 기본값, 필요시 withImages 메서드 사용
+                    .build();
+        }
+
+        public static ListResponse from(Inquiry inquiry, List<String> imageUrls) {
+            return ListResponse.builder()
+                    .inquiryId(inquiry.getId())
+                    .title(inquiry.getTitle())
+                    .content(inquiry.getContent())
+                    .author(MemberDto.ProfileResponse.from(inquiry.getAuthor()))
+                    .category(inquiry.getCategory())
+                    .status(inquiry.getStatus())
+                    .createdAt(inquiry.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                    .answer(inquiry.getAnswer() != null
+                    ? InquiryAnswerDto.Response.from(inquiry.getAnswer())
+                    : null)
+                    .imageUrls(imageUrls)
                     .build();
         }
     }

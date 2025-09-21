@@ -3,10 +3,8 @@ package com.culturemate.culturemate_api.service;
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.AuthenticatedUser;
-import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,8 +22,6 @@ import java.util.List;
 public class AuthService implements UserDetailsService {
 
   private final MemberRepository memberRepository;
-  private final PasswordEncoder passwordEncoder;
-  private final MemberDetailService memberDetailService;
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -67,25 +63,6 @@ public class AuthService implements UserDetailsService {
     }
   }
 
-  // 회원 가입
-  @Transactional
-  public Member register(MemberDto.Register registerDto) {
-    if (memberRepository.existsByLoginId(registerDto.getLoginId())) {
-      throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
-    }
-
-    var hash = passwordEncoder.encode(registerDto.getPassword());
-
-    Member member = Member.builder()
-      .loginId(registerDto.getLoginId())
-      .password(hash)
-      .build();
-
-    Member savedMember = memberRepository.save(member);
-    memberDetailService.create(savedMember, MemberDto.DetailRequest.from(registerDto));
-
-    return savedMember;
-  }
 
   // 권한 검증
   public void validateProfileAccess(Long profileMemberId, Long requesterId) {

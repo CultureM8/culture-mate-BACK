@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.service.AuthService;
+import com.culturemate.culturemate_api.service.MemberService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,6 +35,7 @@ public class AuthController {
   private final AuthenticationManager authenticationManager;
   private final JwtUtil jwtUtil;
   private final AuthService authService;
+  private final MemberService memberService;
 
   @Operation(summary = "로그인", description = "회원 로그인을 수행하고 JWT 토큰을 반환합니다")
   @ApiResponses(value = {
@@ -84,7 +86,7 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<MemberDto.Response> register(
     @Parameter(description = "회원 가입 정보", required = true) @Valid @RequestBody MemberDto.Register registerDto) {
-    Member savedMember = authService.register(registerDto);
+    Member savedMember = memberService.register(registerDto);
     return ResponseEntity.status(201).body(MemberDto.Response.from(savedMember));
   }
 }

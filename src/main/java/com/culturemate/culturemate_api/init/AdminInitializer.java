@@ -4,7 +4,7 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
-import com.culturemate.culturemate_api.service.AuthService;
+import com.culturemate.culturemate_api.service.MemberService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +17,12 @@ import java.util.Map;
 @Component
 public class AdminInitializer {
 
-  private final AuthService authService;
+  private final MemberService memberService;
   private final MemberRepository memberRepository;
 
   @Autowired
-  public AdminInitializer(AuthService authService, MemberRepository memberRepository) {
-    this.authService = authService;
+  public AdminInitializer(MemberService memberService, MemberRepository memberRepository) {
+    this.memberService = memberService;
     this.memberRepository = memberRepository;
   }
 
@@ -61,9 +61,8 @@ public class AdminInitializer {
         
         System.out.println("Register 생성 완료: " + loginId);
         
-        Member newAdmin = authService.register(registerDto);
-        // TODO: 권한 설정을 위한 별도 메서드 필요 또는 MemberService 사용
-        // memberService.updateRole(newAdmin.getId(), Role.ADMIN);
+        Member newAdmin = memberService.register(registerDto);
+        memberService.updateRole(newAdmin.getId(), Role.ADMIN);
         System.out.println("관리자 계정 생성 및 권한 설정 완료: " + loginId);
       }
       

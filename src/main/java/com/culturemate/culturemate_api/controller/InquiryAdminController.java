@@ -25,11 +25,16 @@ public class InquiryAdminController {
     @GetMapping
     public ResponseEntity<List<InquiryDto.ListResponse>> getAllInquiries(
             @AuthenticationPrincipal AuthenticatedUser admin) {
-        
+
         var inquiries = inquiryService.getAllInquiries(admin.getMemberId());
-        return ResponseEntity.ok(inquiries.stream()
-                .map(InquiryDto.ListResponse::from)
-                .collect(Collectors.toList()));
+        List<InquiryDto.ListResponse> responses = inquiries.stream()
+          .map(inquiry -> {
+            List<String> imageUrls = inquiryService.getInquiryImagePaths(inquiry.getId());
+            return InquiryDto.ListResponse.from(inquiry, imageUrls);
+          })
+          .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/{inquiryId}/answer")
@@ -37,8 +42,9 @@ public class InquiryAdminController {
             @PathVariable Long inquiryId,
             @Valid @RequestBody InquiryAnswerDto.CreateRequest request,
             @AuthenticationPrincipal AuthenticatedUser admin) {
-        
+
         var inquiry = inquiryService.createOrUpdateAnswer(inquiryId, request, admin.getMemberId());
-        return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
+        List<String> imageUrls = inquiryService.getInquiryImagePaths(inquiry.getId());
+        return ResponseEntity.ok(InquiryDto.Response.from(inquiry, imageUrls));
     }
 }

@@ -1,5 +1,6 @@
 package com.culturemate.culturemate_api.service;
 
+import com.culturemate.culturemate_api.domain.Image;
 import com.culturemate.culturemate_api.domain.ImageTarget;
 import com.culturemate.culturemate_api.domain.inquiry.Inquiry;
 import com.culturemate.culturemate_api.domain.inquiry.InquiryAnswer;
@@ -43,18 +44,12 @@ public class InquiryService {
 
         inquiryRepository.save(inquiry);
 
-      // 이미지가 있으면 업로드
+      // 이미지가 있으면 업로드 (DB 저장은 ImageService에서 처리)
       if (images != null && !images.isEmpty()) {
-        // uploadMultipleImages는 문자열 path를 DB에 저장하도록 수정
-        List<String> webPaths = imageService.uploadMultipleImages(
+        imageService.uploadMultipleImages(
           images,
-          ImageTarget.INQUIRY,  // Enum
+          ImageTarget.INQUIRY,
           inquiry.getId()
-        );
-
-        // 업로드 후 DB에서 이미지 가져와 inquiry 객체에 추가
-        inquiry.getImages().addAll(
-          imageService.getImagesByTargetTypeAndId(ImageTarget.INQUIRY, inquiry.getId())
         );
       }
 
@@ -66,7 +61,7 @@ public class InquiryService {
      */
     public List<Inquiry> getMyInquiries(Long memberId) {
         Member author = memberService.findById(memberId);
-        return inquiryRepository.findByAuthorWithImages(author);
+        return inquiryRepository.findByAuthor(author);
     }
 
     /**
@@ -74,7 +69,7 @@ public class InquiryService {
      */
     public List<Inquiry> getAllInquiries(Long adminId) {
         validateAdmin(adminId);
-        return inquiryRepository.findAllWithAuthorAndImages();
+        return inquiryRepository.findAllWithAuthor();
     }
 
     /**
@@ -110,10 +105,7 @@ public class InquiryService {
           .content(dto.getContent())
           .author(admin)
           .build();
-        inquiry.setAnswer(answer);
-
-        // ✅ 상태 변경
-        inquiry.setStatus(InquiryStatus.ANSWERED);
+        inquiry.setAnswer(answer);  // 상태 변경은 setAnswer()에서 자동 처리
       }
 
       return inquiryRepository.save(inquiry);
@@ -122,6 +114,22 @@ public class InquiryService {
     private Inquiry findInquiryById(Long inquiryId) {
         return inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 문의를 찾을 수 없습니다. ID: " + inquiryId));
+    }
+
+    /**
+     * 문의 이미지 조회 (필요시 사용)
+     */
+    public List<Image> getInquiryImages(Long inquiryId) {
+        return imageService.getImagesByTargetTypeAndId(ImageTarget.INQUIRY, inquiryId);
+    }
+
+    /**
+     * 문의 이미지 경로 목록 조회 (DTO 변환용 헬퍼 메서드)
+     */
+    public List<String> getInquiryImagePaths(Long inquiryId) {
+        return getInquiryImages(inquiryId).stream()
+                .map(Image::getPath)
+                .toList();
     }
 
     private void validateAdmin(Long memberId) {

@@ -33,10 +33,8 @@ public class Inquiry {
     @Column(nullable = false, length = 3000)
     private String content;
 
-    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "targetId")
-    @Builder.Default
-    private List<Image> images = new ArrayList<>();
+    // 이미지는 ImageService를 통해 targetType=INQUIRY, targetId=this.id로 관리
+    // 다른 엔티티들과 동일한 패턴 사용
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

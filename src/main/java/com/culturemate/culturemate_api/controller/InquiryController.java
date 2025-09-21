@@ -33,7 +33,8 @@ public class InquiryController {
             @AuthenticationPrincipal AuthenticatedUser user) {
 
         Inquiry inquiry = inquiryService.createInquiry(request, images, user.getMemberId());
-        return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
+        List<String> imageUrls = inquiryService.getInquiryImagePaths(inquiry.getId());
+        return ResponseEntity.ok(InquiryDto.Response.from(inquiry, imageUrls));
     }
 
   @GetMapping("/my")
@@ -47,9 +48,14 @@ public class InquiryController {
       inquiries = inquiryService.getMyInquiries(user.getMemberId());
     }
 
-    return ResponseEntity.ok(
-      inquiries.stream().map(InquiryDto.ListResponse::from).collect(Collectors.toList())
-    );
+    List<InquiryDto.ListResponse> responses = inquiries.stream()
+      .map(inquiry -> {
+        List<String> imageUrls = inquiryService.getInquiryImagePaths(inquiry.getId());
+        return InquiryDto.ListResponse.from(inquiry, imageUrls);
+      })
+      .collect(Collectors.toList());
+
+    return ResponseEntity.ok(responses);
   }
 
 //    @GetMapping("/{inquiryId}")
@@ -61,28 +67,4 @@ public class InquiryController {
 //        return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
 //    }
 
-  // 관리자 전용: 전체 문의 조회
-  @GetMapping("/all")
-  public ResponseEntity<List<InquiryDto.ListResponse>> getAllInquiries(
-    @AuthenticationPrincipal AuthenticatedUser user) {
-
-    // InquiryService에서 admin 체크 포함
-    var inquiries = inquiryService.getAllInquiries(user.getMemberId());
-    return ResponseEntity.ok(
-      inquiries.stream()
-        .map(InquiryDto.ListResponse::from)
-        .collect(Collectors.toList())
-    );
-  }
-
-  // 관리자 전용 : 답변
-  @PostMapping("/{inquiryId}/answer")
-  public ResponseEntity<InquiryDto.Response> createOrUpdateAnswer(
-    @PathVariable Long inquiryId,
-    @RequestBody InquiryAnswerDto.CreateRequest dto,
-    @AuthenticationPrincipal AuthenticatedUser user) {
-
-    var inquiry = inquiryService.createOrUpdateAnswer(inquiryId, dto, user.getMemberId());
-    return ResponseEntity.ok(InquiryDto.Response.from(inquiry));
-  }
 }
