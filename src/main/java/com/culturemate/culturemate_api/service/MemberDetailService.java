@@ -23,6 +23,11 @@ public class MemberDetailService {
   private final ImageService imageService;
   private final TagRepository tagRepository;
 
+  // 이메일 중복 검증
+  public boolean existsByEmail(String email) {
+    return memberDetailRepository.existsByEmail(email);
+  }
+
   // 관심사와 함께 회원 상세 조회 (N+1 방지)
   public MemberDetail findByMemberId(Long memberId) {
     return memberDetailRepository.findByIdWithAllInterests(memberId)

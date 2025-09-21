@@ -30,6 +30,13 @@ public class MemberService {
       throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
     }
 
+    // 이메일이 있는 경우 중복 검증
+    if (registerDto.getEmail() != null && !registerDto.getEmail().trim().isEmpty()) {
+      if (memberDetailService.existsByEmail(registerDto.getEmail())) {
+        throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+      }
+    }
+
     var hash = passwordEncoder.encode(registerDto.getPassword());
 
     Member member = Member.builder()
@@ -64,6 +71,11 @@ public class MemberService {
   public Member findByLoginId(String loginId) {
     return memberRepository.findByLoginId(loginId)
       .orElseThrow(() -> new IllegalArgumentException("해당 아이디의 회원이 없습니다."));
+  }
+
+  // 로그인 아이디 중복 확인
+  public boolean existsByLoginId(String loginId) {
+    return memberRepository.existsByLoginId(loginId);
   }
 
   // 상태별 회원 조회

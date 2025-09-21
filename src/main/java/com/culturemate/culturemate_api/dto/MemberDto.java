@@ -38,7 +38,9 @@ public class MemberDto {
     private String loginId;
 
     @NotBlank
-    @Size(min = 8, max = 100, message = "비밀번호는 8자 이상이어야 합니다.")
+    @Size(min = 8, max = 100, message = "비밀번호는 8자 이상 100자 이하여야 합니다.")
+    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=.,?])[a-zA-Z\\d!@#$%^&*()_+\\-=.,?]+$",
+             message = "비밀번호는 영문, 숫자, 특수문자(!@#$%^&*()_+-=.,?)를 각각 1개 이상 포함해야 합니다.")
     private String password;
 
     @NotBlank

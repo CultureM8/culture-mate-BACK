@@ -6,6 +6,7 @@ import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.service.AuthService;
 import com.culturemate.culturemate_api.service.MemberService;
+import com.culturemate.culturemate_api.service.MemberDetailService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +22,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -36,6 +39,7 @@ public class AuthController {
   private final JwtUtil jwtUtil;
   private final AuthService authService;
   private final MemberService memberService;
+  private final MemberDetailService memberDetailService;
 
   @Operation(summary = "로그인", description = "회원 로그인을 수행하고 JWT 토큰을 반환합니다")
   @ApiResponses(value = {
@@ -88,5 +92,41 @@ public class AuthController {
     @Parameter(description = "회원 가입 정보", required = true) @Valid @RequestBody MemberDto.Register registerDto) {
     Member savedMember = memberService.register(registerDto);
     return ResponseEntity.status(201).body(MemberDto.Response.from(savedMember));
+  }
+
+  @Operation(summary = "아이디 중복 확인", description = "로그인 아이디 중복 여부를 확인합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "중복 확인 완료"),
+    @ApiResponse(responseCode = "400", description = "잘못된 요청")
+  })
+  @GetMapping("/check-login-id")
+  public ResponseEntity<Map<String, Object>> checkLoginIdDuplicate(
+    @Parameter(description = "확인할 로그인 아이디", required = true) @RequestParam String loginId) {
+
+    boolean isDuplicate = memberService.existsByLoginId(loginId);
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("isDuplicate", isDuplicate);
+    response.put("message", isDuplicate ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다.");
+
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(summary = "이메일 중복 확인", description = "이메일 중복 여부를 확인합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "중복 확인 완료"),
+    @ApiResponse(responseCode = "400", description = "잘못된 요청")
+  })
+  @GetMapping("/check-email")
+  public ResponseEntity<Map<String, Object>> checkEmailDuplicate(
+    @Parameter(description = "확인할 이메일", required = true) @RequestParam String email) {
+
+    boolean isDuplicate = memberDetailService.existsByEmail(email);
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("isDuplicate", isDuplicate);
+    response.put("message", isDuplicate ? "이미 사용 중인 이메일입니다." : "사용 가능한 이메일입니다.");
+
+    return ResponseEntity.ok(response);
   }
 }

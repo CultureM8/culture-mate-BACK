@@ -9,6 +9,9 @@ import java.util.Optional;
 
 public interface MemberDetailRepository extends JpaRepository<MemberDetail, Long> {
 
+  // 이메일 중복 검증
+  boolean existsByEmail(String email);
+
   // N+1 문제 해결: 관심 이벤트 타입과 태그를 한 번에 조회
   @Query("""
       SELECT DISTINCT md
