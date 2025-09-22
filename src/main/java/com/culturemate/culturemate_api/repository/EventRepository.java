@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
@@ -60,5 +61,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   @Modifying
   @Query("UPDATE Event e SET e.reviewCount = e.reviewCount + :increment WHERE e.id = :eventId")
   void updateReviewCount(@Param("eventId") Long eventId, @Param("increment") int increment);
+
+  // 최신 활성 이벤트 조회 (메인 페이지용)
+  @EntityGraph(attributePaths = {"region", "ticketPrice"})
+  @Query("""
+    SELECT e FROM Event e
+    WHERE e.endDate >= :today
+    ORDER BY e.createdAt DESC
+    """)
+  List<Event> findRecentActiveWithLimit(@Param("today") LocalDate today, Pageable pageable);
 
 }

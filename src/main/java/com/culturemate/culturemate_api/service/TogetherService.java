@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -574,6 +576,16 @@ public class TogetherService {
             id -> id,
             interestedTogetherIds::contains
         ));
+  }
+
+  /**
+   * 최신 활성 모임 조회 (메인 페이지용)
+   * 모집 중이고, 날짜가 유효하고, 정원이 남은 모임을 최신 순으로 조회
+   */
+  public List<Together> findRecentActive(int limit) {
+    LocalDate today = LocalDate.now();
+    Pageable pageable = PageRequest.of(0, limit);
+    return togetherRepository.findRecentActiveWithLimit(today, pageable);
   }
 
 

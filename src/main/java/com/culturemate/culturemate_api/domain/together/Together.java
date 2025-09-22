@@ -34,12 +34,12 @@ public class Together {
   @Column(name = "together_id")
   private long id;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "event_id", nullable = false)
   @Setter
   private Event event;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "host_id", nullable = false)
   private Member host;
 

@@ -196,4 +196,33 @@ public ResponseEntity<String> toggleEventInterest(
   // - 내용 이미지 추가: imagesToAdd 파라미터
   // - 이미지 삭제: eventRequestDto.imagesToDelete 필드
 
+  // 최신 활성 이벤트 조회 (메인 페이지용)
+  @Operation(summary = "최신 이벤트 조회", description = "현재 진행 중인 최신 이벤트를 조회합니다")
+  @GetMapping("/recent")
+  public ResponseEntity<List<EventDto.Response>> getRecentEvents(
+      @RequestParam(defaultValue = "4") int limit,
+      @AuthenticationPrincipal AuthenticatedUser user) {
+
+    List<Event> events = eventService.findRecentActive(limit);
+
+    if (user != null) {
+      // 인증된 사용자: 관심 여부 포함
+      List<Long> eventIds = events.stream().map(Event::getId).toList();
+      Map<Long, Boolean> interestMap = eventService.getInterestStatusBatch(eventIds, user.getMemberId());
+
+      return ResponseEntity.ok(
+          events.stream()
+              .map(e -> EventDto.Response.from(e, interestMap.getOrDefault(e.getId(), false)))
+              .toList()
+      );
+    }
+
+    // 비인증 사용자: 관심 여부 미포함
+    return ResponseEntity.ok(
+        events.stream()
+            .map(e -> EventDto.Response.from(e, false))
+            .toList()
+    );
+  }
+
 }

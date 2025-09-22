@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -394,10 +396,20 @@ public class EventService {
   // ADMIN 권한 검증 메서드
   private void validateAdminAccess(Long requesterId) {
     Member requester = memberService.findById(requesterId);
-    
+
     if (requester.getRole() != Role.ADMIN) {
       throw new IllegalArgumentException("이벤트 수정/삭제는 관리자만 가능합니다");
     }
+  }
+
+  /**
+   * 최신 활성 이벤트 조회 (메인 페이지용)
+   * 종료일이 지나지 않은 이벤트를 최신 순으로 조회
+   */
+  public List<Event> findRecentActive(int limit) {
+    LocalDate today = LocalDate.now();
+    Pageable pageable = PageRequest.of(0, limit);
+    return eventRepository.findRecentActiveWithLimit(today, pageable);
   }
 
 }

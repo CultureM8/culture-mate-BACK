@@ -86,6 +86,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
    * MemberStatus 허용 여부 검증
    */
   private boolean isAllowedStatus(MemberStatus status) {
+    if (status == null) {
+      return true;  // null인 경우 기본적으로 허용 (기존 데이터 호환성)
+    }
     return switch (status) {
       case ACTIVE -> true;          // 정상 - 전체 기능 허용
       case DORMANT -> true;         // 휴면 - 기본 기능만 허용 (추후 세분화 가능)

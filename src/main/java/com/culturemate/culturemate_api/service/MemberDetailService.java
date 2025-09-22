@@ -28,9 +28,9 @@ public class MemberDetailService {
     return memberDetailRepository.existsByEmail(email);
   }
 
-  // 관심사와 함께 회원 상세 조회 (N+1 방지)
+  // 회원 상세 조회 (관심사는 LAZY 로딩)
   public MemberDetail findByMemberId(Long memberId) {
-    return memberDetailRepository.findByIdWithAllInterests(memberId)
+    return memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
   }
 

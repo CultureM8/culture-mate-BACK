@@ -2,7 +2,8 @@ package com.culturemate.culturemate_api.config;
 
 import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.dto.AuthenticatedUser;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +41,11 @@ public class JwtUtil {
     claims.put("status", user.getStatus().name());
 
     return Jwts.builder()
-      .setClaims(claims)
-      .setSubject(user.getMemberId().toString())
-      .setIssuedAt(new Date())
-      .setExpiration(new Date(System.currentTimeMillis() + expiration))
-      .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+      .claims(claims)
+      .subject(user.getMemberId().toString())
+      .issuedAt(new Date())
+      .expiration(new Date(System.currentTimeMillis() + expiration))
+      .signWith(getSigningKey())
       .compact();
   }
 
@@ -58,11 +59,11 @@ public class JwtUtil {
     claims.put("status", member.getStatus().name());
 
     return Jwts.builder()
-      .setClaims(claims)
-      .setSubject(member.getId().toString())
-      .setIssuedAt(new Date())
-      .setExpiration(new Date(System.currentTimeMillis() + expiration))
-      .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+      .claims(claims)
+      .subject(member.getId().toString())
+      .issuedAt(new Date())
+      .expiration(new Date(System.currentTimeMillis() + expiration))
+      .signWith(getSigningKey())
       .compact();
   }
 

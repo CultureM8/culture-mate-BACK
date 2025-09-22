@@ -36,11 +36,11 @@ public class MemberDetail {
   private String email;
 
   // 관심 이벤트 타입과 태그
-  @OneToMany(mappedBy = "memberDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "memberDetail", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @Builder.Default
   private List<InterestEventTypes> interestEventTypes = new ArrayList<>();
 
-  @OneToMany(mappedBy = "memberDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "memberDetail", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @Builder.Default
   private List<InterestTags> interestTags = new ArrayList<>();
 

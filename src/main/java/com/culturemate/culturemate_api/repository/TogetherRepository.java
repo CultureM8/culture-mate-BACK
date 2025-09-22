@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface TogetherRepository extends JpaRepository<Together, Long> {
@@ -86,5 +87,16 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   @Modifying
   @Query("UPDATE Together t SET t.interestCount = t.interestCount + :increment WHERE t.id = :togetherId")
   void updateInterestCount(@Param("togetherId") Long togetherId, @Param("increment") int increment);
+
+  // 최신 활성 모임 조회 (메인 페이지용)
+  @EntityGraph(attributePaths = {"event", "host", "regionSnapshot"})
+  @Query("""
+    SELECT t FROM Together t
+    WHERE t.hostRecruitingEnabled = true
+    AND t.meetingDate > :today
+    AND t.participantCount < t.maxParticipants
+    ORDER BY t.createdAt DESC
+    """)
+  List<Together> findRecentActiveWithLimit(@Param("today") LocalDate today, Pageable pageable);
 
 }

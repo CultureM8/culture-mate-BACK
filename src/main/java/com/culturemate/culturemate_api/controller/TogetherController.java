@@ -397,4 +397,33 @@ public class TogetherController {
     return ResponseEntity.ok(debug.toString());
   }
 
+  // 최신 활성 모임 조회 (메인 페이지용)
+  @Operation(summary = "최신 활성 모임 조회", description = "모집 중인 최신 모임을 조회합니다")
+  @GetMapping("/recent")
+  public ResponseEntity<List<TogetherDto.Response>> getRecentTogethers(
+      @RequestParam(defaultValue = "4") int limit,
+      @AuthenticationPrincipal AuthenticatedUser user) {
+
+    List<Together> togethers = togetherService.findRecentActive(limit);
+
+    if (user != null) {
+      // 인증된 사용자: 관심 여부 포함
+      List<Long> togetherIds = togethers.stream().map(Together::getId).toList();
+      Map<Long, Boolean> interestMap = togetherService.getInterestStatusBatch(togetherIds, user.getMemberId());
+
+      return ResponseEntity.ok(
+          togethers.stream()
+              .map(t -> togetherService.toResponseDto(t, interestMap.getOrDefault(t.getId(), false)))
+              .collect(Collectors.toList())
+      );
+    }
+
+    // 비인증 사용자: 관심 여부 미포함
+    return ResponseEntity.ok(
+        togethers.stream()
+            .map(togetherService::toResponseDto)
+            .collect(Collectors.toList())
+    );
+  }
+
 }

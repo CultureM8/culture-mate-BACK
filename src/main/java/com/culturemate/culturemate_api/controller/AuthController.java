@@ -63,6 +63,7 @@ public class AuthController {
         .id(authenticatedUser.getMemberId())
         .loginId(authenticatedUser.getUsername())
         .role(authenticatedUser.getRole())
+        .status(authenticatedUser.getStatus())
         .build();
 
       // 토큰과 사용자 정보 함께 반환
