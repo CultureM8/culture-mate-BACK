@@ -245,10 +245,21 @@ public class TogetherService {
       .collect(Collectors.toList());
   }
   
-  // 특정 상태 참여자 목록 조회
+  // 특정 상태 참여자 목록 조회 (APPROVED 요청시 HOST도 포함)
   public List<Member> getParticipantsByStatus(Long togetherId, String status) {
     ParticipationStatus participationStatus = ParticipationStatus.valueOf(status.toUpperCase());
-    List<Participants> participantsList = participantsRepository.findByTogetherIdAndStatus(togetherId, participationStatus);
+
+    // APPROVED 요청시 HOST도 함께 조회 (채팅방 참여 권한)
+    List<ParticipationStatus> statusList;
+    if (participationStatus == ParticipationStatus.APPROVED) {
+      statusList = List.of(ParticipationStatus.APPROVED, ParticipationStatus.HOST);
+    } else {
+      statusList = List.of(participationStatus);
+    }
+
+    // 여러 상태를 한번에 조회
+    List<Participants> participantsList = participantsRepository.findByTogetherIdAndStatusIn(togetherId, statusList);
+
     return participantsList.stream()
       .map(Participants::getParticipant)
       .collect(Collectors.toList());

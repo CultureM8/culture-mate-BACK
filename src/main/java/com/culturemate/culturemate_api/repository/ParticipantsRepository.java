@@ -36,6 +36,11 @@ public interface ParticipantsRepository extends JpaRepository<Participants, Long
   @Query("SELECT p FROM Participants p WHERE p.together.id = :togetherId AND p.status = :status")
   List<Participants> findByTogetherIdAndStatus(@Param("togetherId") Long togetherId, @Param("status") ParticipationStatus status);
 
+//  여러 상태의 참여자 조회 (예: APPROVED + HOST)
+  @EntityGraph(attributePaths = {"participant", "participant.memberDetail"})
+  @Query("SELECT p FROM Participants p WHERE p.together.id = :togetherId AND p.status IN :statuses")
+  List<Participants> findByTogetherIdAndStatusIn(@Param("togetherId") Long togetherId, @Param("statuses") List<ParticipationStatus> statuses);
+
   // 호스트가 받은 신청 목록 조회 (채팅방 정보는 lazy loading으로 처리)
   @EntityGraph(attributePaths = {"participant", "participant.memberDetail", "together", "together.event"})
   @Query("SELECT p FROM Participants p WHERE p.together.host.id = :hostId AND p.status IN :statuses ORDER BY p.createdAt DESC")
