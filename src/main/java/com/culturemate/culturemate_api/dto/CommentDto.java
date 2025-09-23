@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 public class CommentDto {
@@ -45,10 +45,10 @@ public class CommentDto {
     private Long boardId;
     private MemberDto.ProfileResponse author;
     private String content;
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH24:mm:ss")
-    private LocalDate createdAt;
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH24:mm:ss")
-    private LocalDate updatedAt;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
     private Integer likeCount;
     private Integer replyCount; // 대댓글 수
 
@@ -58,8 +58,8 @@ public class CommentDto {
         .boardId(comment.getBoard().getId())
         .author(MemberDto.ProfileResponse.from(comment.getAuthor()))
         .content(comment.getContent())
-        .createdAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
-        .updatedAt(comment.getUpdatedAt() != null ? comment.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate() : null)
+        .createdAt(comment.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime())
+        .updatedAt(comment.getUpdatedAt() != null ? comment.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime() : null)
         .likeCount(comment.getLikeCount())
         .replyCount(comment.getReplyCount())
         .build();
