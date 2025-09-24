@@ -19,6 +19,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +42,7 @@ public class AuthController {
   private final AuthService authService;
   private final MemberService memberService;
   private final MemberDetailService memberDetailService;
+  private final PasswordEncoder passwordEncoder;
 
   @Operation(summary = "로그인", description = "회원 로그인을 수행하고 JWT 토큰을 반환합니다")
   @ApiResponses(value = {
@@ -129,5 +132,37 @@ public class AuthController {
     response.put("message", isDuplicate ? "이미 사용 중인 이메일입니다." : "사용 가능한 이메일입니다.");
 
     return ResponseEntity.ok(response);
+  }
+
+  @Operation(summary = "현재 비밀번호 확인", description = "현재 비밀번호의 일치 여부를 확인합니다")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "비밀번호 확인 완료"),
+    @ApiResponse(responseCode = "400", description = "비밀번호 불일치"),
+    @ApiResponse(responseCode = "401", description = "인증 실패")
+  })
+  @PostMapping("/verify-current-password")
+  public ResponseEntity<Map<String, Object>> verifyCurrentPassword(
+    @Parameter(description = "현재 비밀번호", required = true) @Valid @RequestBody MemberDto.VerifyPasswordRequest request,
+    @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+
+    try {
+      // 현재 사용자의 Member 엔티티 조회
+      Member member = memberService.findById(authenticatedUser.getMemberId());
+
+      // 입력받은 비밀번호와 저장된 암호화된 비밀번호 비교
+      boolean isPasswordValid = passwordEncoder.matches(request.getCurrentPassword(), member.getPassword());
+
+      Map<String, Object> response = new HashMap<>();
+      response.put("isValid", isPasswordValid);
+      response.put("message", isPasswordValid ? "비밀번호가 확인되었습니다." : "현재 비밀번호가 일치하지 않습니다.");
+
+      return ResponseEntity.ok(response);
+
+    } catch (Exception e) {
+      Map<String, Object> response = new HashMap<>();
+      response.put("isValid", false);
+      response.put("message", "비밀번호 확인 중 오류가 발생했습니다.");
+      return ResponseEntity.status(500).body(response);
+    }
   }
 }

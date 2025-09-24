@@ -11,6 +11,7 @@ import com.culturemate.culturemate_api.service.ImageService;
 import com.culturemate.culturemate_api.service.ImagePermissionService;
 import com.culturemate.culturemate_api.service.MemberDetailService;
 import com.culturemate.culturemate_api.service.MemberService;
+import com.culturemate.culturemate_api.service.TagService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,12 +34,20 @@ public class MemberDetailController {
   private final AuthService authService;
   private final ImageService imageService;
   private final ImagePermissionService imagePermissionService;
+  private final TagService tagService;
 
-  // 상세 조회
+  // ID 없이 호출 시 자신의 정보 조회 (관심사 포함)
+  @GetMapping("")
+  public ResponseEntity<MemberDto.DetailResponse> getMemberDetail(@AuthenticationPrincipal AuthenticatedUser user) {
+    MemberDto.DetailResponse response = memberDetailService.findByMemberIdWithInterests(user.getMemberId());
+    return ResponseEntity.ok(response);
+  }
+
+  // ID와 함께 호출 시 해당 회원 정보 조회 (관심사 포함)
   @GetMapping("/{memberId}")
   public ResponseEntity<MemberDto.DetailResponse> getMemberDetail(@PathVariable Long memberId) {
-    MemberDetail memberDetail = memberDetailService.findByMemberId(memberId);
-    return ResponseEntity.ok(MemberDto.DetailResponse.from(memberDetail));
+    MemberDto.DetailResponse response = memberDetailService.findByMemberIdWithInterests(memberId);
+    return ResponseEntity.ok(response);
   }
 
   // 생성
@@ -70,7 +79,19 @@ public class MemberDetailController {
   }
 
   // =========================== 이미지 관련 API ===========================
-  
+
+  // 회원 정보와 이미지 통합 업데이트
+  @PutMapping("/{memberId}/with-images")
+  public ResponseEntity<Void> updateMemberWithImages(@PathVariable Long memberId,
+                                                     @RequestPart("data") String jsonData,
+                                                     @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+                                                     @RequestPart(value = "backgroundImage", required = false) MultipartFile backgroundImage,
+                                                     @AuthenticationPrincipal AuthenticatedUser user) {
+    authService.validateProfileAccess(memberId, user.getMemberId());
+    memberDetailService.updateWithImages(memberId, jsonData, profileImage, backgroundImage);
+    return ResponseEntity.ok().build();
+  }
+
   // 통합 이미지 업로드/수정 (프로필, 배경)
   @PatchMapping("/{memberId}/image")
   public ResponseEntity<Void> updateMemberImage(@PathVariable Long memberId,

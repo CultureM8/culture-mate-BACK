@@ -35,7 +35,9 @@ public class ImageService {
   // 단일 이미지 업로드 (메인 이미지)
   public String uploadSingleImage(MultipartFile file, ImageTarget imageTarget, String subPath) throws IOException {
     String baseDir = getUploadDirectory(imageTarget);
-    String uploadDir = Paths.get(baseDir, subPath).toString();
+    String uploadDir = (subPath != null && !subPath.trim().isEmpty())
+        ? Paths.get(baseDir, subPath).toString()
+        : baseDir;
     String fileName = generateUniqueFileName(file.getOriginalFilename());
     
     // 파일 저장

@@ -6,7 +6,10 @@ import com.culturemate.culturemate_api.domain.member.*;
 import com.culturemate.culturemate_api.domain.statistics.Tag;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberDetailRepository;
+import com.culturemate.culturemate_api.repository.InterestEventTypesRepository;
+import com.culturemate.culturemate_api.repository.InterestTagsRepository;
 import com.culturemate.culturemate_api.repository.TagRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,8 +23,11 @@ import java.util.stream.Collectors;
 @Transactional
 public class MemberDetailService {
   private final MemberDetailRepository memberDetailRepository;
+  private final InterestEventTypesRepository interestEventTypesRepository;
+  private final InterestTagsRepository interestTagsRepository;
   private final ImageService imageService;
   private final TagRepository tagRepository;
+  private final ObjectMapper objectMapper;
 
   // 이메일 중복 검증
   public boolean existsByEmail(String email) {
@@ -32,6 +38,57 @@ public class MemberDetailService {
   public MemberDetail findByMemberId(Long memberId) {
     return memberDetailRepository.findById(memberId)
       .orElseThrow(() -> new IllegalArgumentException("회원 상세 정보가 존재하지 않습니다."));
+  }
+
+  // 관심사 포함 상세 조회 (3-쿼리 안전 접근법)
+  public MemberDto.DetailResponse findByMemberIdWithInterests(Long memberId) {
+    // 1. MemberDetail 기본 정보 조회
+    MemberDetail memberDetail = findByMemberId(memberId);
+
+    // 2. InterestEventTypes 별도 조회
+    List<InterestEventTypes> eventTypes = interestEventTypesRepository.findByMemberDetailId(memberId);
+
+    // 3. InterestTags 별도 조회 (Tag도 함께 페치)
+    List<InterestTags> tags = interestTagsRepository.findByMemberDetailIdWithTag(memberId);
+
+    // 4. DetailResponse 생성 (관심사 데이터 포함)
+    return createDetailResponseWithInterests(memberDetail, eventTypes, tags);
+  }
+
+  // DetailResponse 생성 헬퍼 메서드
+  private MemberDto.DetailResponse createDetailResponseWithInterests(
+      MemberDetail memberDetail,
+      List<InterestEventTypes> eventTypes,
+      List<InterestTags> tags) {
+
+    // 관심 이벤트 타입 매핑
+    List<String> eventTypeNames = eventTypes.stream()
+        .map(interest -> interest.getEventType().name())
+        .toList();
+
+    // 관심 태그 매핑
+    List<String> tagNames = tags.stream()
+        .map(interest -> interest.getTag().getTag())
+        .collect(java.util.stream.Collectors.toList());
+
+    // DetailResponse 생성 (from 메서드 대신 직접 빌더 사용)
+    return MemberDto.DetailResponse.builder()
+        .id(memberDetail.getId())
+        .nickname(memberDetail.getNickname())
+        .profileImagePath(memberDetail.getMainImagePath())
+        .backgroundImagePath(memberDetail.getBackgroundImagePath())
+        .intro(memberDetail.getIntro())
+        .mbti(memberDetail.getMbti())
+        .togetherScore(memberDetail.getTogetherScore())
+        .email(memberDetail.getEmail())
+        .visibility(memberDetail.getVisibility())
+        .interestEventTypes(eventTypeNames)
+        .interestTags(tagNames)
+        .createdAt(memberDetail.getCreatedAt() != null ?
+                   memberDetail.getCreatedAt().atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
+        .updatedAt(memberDetail.getUpdatedAt() != null ?
+                   memberDetail.getUpdatedAt().atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
+        .build();
   }
 
   // 생성 (Member 객체와 DTO 사용) - @MapsId 활용
@@ -226,6 +283,33 @@ public class MemberDetailService {
 
     // DB 필드 초기화
     memberDetail.setBackgroundImagePath(null);
+  }
+
+  // ===== 통합 업데이트 (텍스트 데이터 + 이미지) =====
+
+  // 회원 정보와 이미지 통합 업데이트
+  public void updateWithImages(Long memberId, String jsonData,
+                              MultipartFile profileImage, MultipartFile backgroundImage) {
+    try {
+      // 1. JSON 데이터 파싱
+      MemberDto.DetailRequest dto = objectMapper.readValue(jsonData, MemberDto.DetailRequest.class);
+
+      // 2. 텍스트 데이터 업데이트
+      update(memberId, dto);
+
+      // 3. 프로필 이미지 업데이트 (파일이 있는 경우에만)
+      if (profileImage != null && !profileImage.isEmpty()) {
+        updateProfileImage(memberId, profileImage);
+      }
+
+      // 4. 배경 이미지 업데이트 (파일이 있는 경우에만)
+      if (backgroundImage != null && !backgroundImage.isEmpty()) {
+        updateBackgroundImage(memberId, backgroundImage);
+      }
+
+    } catch (Exception e) {
+      throw new RuntimeException("회원 정보 통합 업데이트 실패: " + e.getMessage(), e);
+    }
   }
 
 }

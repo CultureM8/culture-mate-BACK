@@ -33,6 +33,15 @@ public interface InterestTagsRepository extends JpaRepository<InterestTags, Long
       """, nativeQuery = true)
   List<Object[]> findTopTagsWithCount(@Param("limit") int limit);
 
+  // 특정 멤버의 관심 태그들 조회 (N+1 방지: Tag도 함께 페치)
+  @Query("""
+      SELECT DISTINCT it
+      FROM InterestTags it
+      LEFT JOIN FETCH it.tag
+      WHERE it.memberDetail.id = :memberDetailId
+      """)
+  List<InterestTags> findByMemberDetailIdWithTag(@Param("memberDetailId") Long memberDetailId);
+
   // 특정 멤버의 관심 태그들 삭제
   void deleteByMemberDetailId(Long memberDetailId);
 }

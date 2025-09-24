@@ -15,6 +15,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MemberDto {
@@ -24,6 +25,16 @@ public class MemberDto {
   public static class Login {
     private String loginId;
     private String password;
+  }
+
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Schema(name = "VerifyPasswordRequest", description = "현재 비밀번호 확인 요청 DTO")
+  public static class VerifyPasswordRequest {
+    @NotBlank(message = "현재 비밀번호를 입력해주세요.")
+    private String currentPassword;
   }
 
   @Getter
@@ -168,10 +179,26 @@ public class MemberDto {
     private Integer togetherScore;
     private String email;
     private VisibleType visibility;
+    private List<String> interestEventTypes;
+    private List<String> interestTags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static DetailResponse from(MemberDetail memberDetail) {
+      // 관심 이벤트 타입 매핑 (N+1 방지: 이미 로딩된 컬렉션 사용)
+      List<String> eventTypes = memberDetail.getInterestEventTypes() != null
+        ? memberDetail.getInterestEventTypes().stream()
+            .map(interest -> interest.getEventType().name())
+            .toList()
+        : new ArrayList<>();
+
+      // 관심 태그 매핑 (N+1 주의: Tag 엔티티 접근)
+      List<String> tags = memberDetail.getInterestTags() != null
+        ? memberDetail.getInterestTags().stream()
+            .map(interest -> interest.getTag().getTag())
+            .collect(java.util.stream.Collectors.toList())
+        : new ArrayList<>();
+
       return DetailResponse.builder()
         .id(memberDetail.getId())
         .nickname(memberDetail.getNickname())
@@ -182,9 +209,11 @@ public class MemberDto {
         .togetherScore(memberDetail.getTogetherScore())
         .email(memberDetail.getEmail())
         .visibility(memberDetail.getVisibility())
-        .createdAt(memberDetail.getCreatedAt() != null ? 
+        .interestEventTypes(eventTypes)
+        .interestTags(tags)
+        .createdAt(memberDetail.getCreatedAt() != null ?
                    memberDetail.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
-        .updatedAt(memberDetail.getUpdatedAt() != null ? 
+        .updatedAt(memberDetail.getUpdatedAt() != null ?
                    memberDetail.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime() : null)
         .build();
     }

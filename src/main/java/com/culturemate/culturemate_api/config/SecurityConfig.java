@@ -44,6 +44,9 @@ public class SecurityConfig {
                 .requestMatchers(
                     // 인증 API
                     "/api/v1/auth/login",
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/check-login-id",
+                    "/api/v1/auth/check-email",
                     // WebSocket 연결 허용
                     "/websocket/**", "/ws/**",
                     // 문서/개발 도구

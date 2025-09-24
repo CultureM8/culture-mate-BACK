@@ -1,0 +1,183 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :compileJava UP-TO-DATE
+> Task :processResources
+> Task :classes
+> Task :resolveMainClassName
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.5)
+
+2025-09-24T16:00:59.727+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] c.c.c.CultureMateApiApplication          : Starting CultureMateApiApplication using Java 21.0.7 with PID 8672 (C:\Users\USER\CULTURE-MATE\culture-mate-BACK\build\classes\java\main started by KKH in C:\Users\USER\CULTURE-MATE\culture-mate-BACK)
+2025-09-24T16:00:59.736+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] c.c.c.CultureMateApiApplication          : No active profile set, falling back to 1 default profile: "default"
+2025-09-24T16:00:59.955+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\USER\.gradle\caches\modules-2\files-2.1\com.oracle.database.jdbc\ojdbc11\23.7.0.25.01\665f52abef9122ce003b5cfc1d9d44f7302e2cfe\ojdbc11-23.7.0.25.01.jar referenced one or more files that do not exist: file:/C:/Users/USER/.gradle/caches/modules-2/files-2.1/com.oracle.database.jdbc/ojdbc11/23.7.0.25.01/665f52abef9122ce003b5cfc1d9d44f7302e2cfe/oraclepki.jar
+2025-09-24T16:00:59.957+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-09-24T16:00:59.958+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-09-24T16:01:04.552+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-24T16:01:04.787+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 220 ms. Found 22 JPA repository interfaces.
+2025-09-24T16:01:05.926+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-09-24T16:01:05.954+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-09-24T16:01:05.955+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.44]
+2025-09-24T16:01:06.039+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-09-24T16:01:06.040+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 6078 ms
+2025-09-24T16:01:06.592+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-24T16:01:06.741+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.26.Final
+2025-09-24T16:01:06.822+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-09-24T16:01:07.461+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-24T16:01:07.530+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-09-24T16:01:08.407+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection oracle.jdbc.driver.T4CConnection@58969cce
+2025-09-24T16:01:08.410+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-09-24T16:01:08.964+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 19.24
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-09-24T16:01:13.729+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_chat_message(rn_ number(10, 0) not null, created_at timestamp(6) with time zone, member_id number(19, 0), message_id number(19, 0), room_id number(19, 0), content varchar2(1000 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_chat_message(rn_ number(10, 0) not null, created_at timestamp(6) with time zone, member_id number(19, 0), message_id number(19, 0), room_id number(19, 0), content varchar2(1000 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.748+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_board_like(rn_ number(10, 0) not null, board_id number(19, 0), board_like_id number(19, 0), member_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_board_like(rn_ number(10, 0) not null, board_id number(19, 0), board_like_id number(19, 0), member_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.771+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_member(rn_ number(10, 0) not null, joined_at timestamp(6) with time zone, member_id number(19, 0), updated_at timestamp(6) with time zone, login_id varchar2(255 char), password varchar2(255 char), role varchar2(255 char), status varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_member(rn_ number(10, 0) not null, joined_at timestamp(6) with time zone, member_id number(19, 0), updated_at timestamp(6) with time zone, login_id varchar2(255 char), password varchar2(255 char), role varchar2(255 char), status varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.787+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_board(like_count number(10, 0), rn_ number(10, 0) not null, board_id number(19, 0), created_at timestamp(6) with time zone, event_id number(19, 0), member_id number(19, 0), updated_at timestamp(6) with time zone, content varchar2(2000 char), event_type varchar2(255 char), title varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_board(like_count number(10, 0), rn_ number(10, 0) not null, board_id number(19, 0), created_at timestamp(6) with time zone, event_id number(19, 0), member_id number(19, 0), updated_at timestamp(6) with time zone, content varchar2(2000 char), event_type varchar2(255 char), title varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.803+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_ticket_price(price number(10, 0), rn_ number(10, 0) not null, event_id number(19, 0), ticket_price_id number(19, 0), ticket_type varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_ticket_price(price number(10, 0), rn_ number(10, 0) not null, event_id number(19, 0), ticket_price_id number(19, 0), ticket_type varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.818+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_interest_events(rn_ number(10, 0) not null, event_id number(19, 0), interest_event_id number(19, 0), member_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_interest_events(rn_ number(10, 0) not null, event_id number(19, 0), interest_event_id number(19, 0), member_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.834+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_comments(like_count number(10, 0), rn_ number(10, 0) not null, board_id number(19, 0), comment_id number(19, 0), created_at timestamp(6) with time zone, member_id number(19, 0), parent_id number(19, 0), updated_at timestamp(6) with time zone, content varchar2(2000 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_comments(like_count number(10, 0), rn_ number(10, 0) not null, board_id number(19, 0), comment_id number(19, 0), created_at timestamp(6) with time zone, member_id number(19, 0), parent_id number(19, 0), updated_at timestamp(6) with time zone, content varchar2(2000 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.850+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_chat_room(rn_ number(10, 0) not null, applicant_id number(19, 0), created_at timestamp(6) with time zone, room_id number(19, 0), together_id number(19, 0), room_name varchar2(255 char), type varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_chat_room(rn_ number(10, 0) not null, applicant_id number(19, 0), created_at timestamp(6) with time zone, room_id number(19, 0), together_id number(19, 0), room_name varchar2(255 char), type varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.865+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_image(rn_ number(10, 0) not null, created_at timestamp(6) with time zone, image_id number(19, 0), target_id number(19, 0), path varchar2(255 char), target_type varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_image(rn_ number(10, 0) not null, created_at timestamp(6) with time zone, image_id number(19, 0), target_id number(19, 0), path varchar2(255 char), target_type varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.883+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_interest_togethers(rn_ number(10, 0) not null, interest_together_id number(19, 0), member_id number(19, 0), together_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_interest_togethers(rn_ number(10, 0) not null, interest_together_id number(19, 0), member_id number(19, 0), together_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.898+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_region(rn_ number(10, 0) not null, id number(19, 0), parent_id number(19, 0), region_name varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_region(rn_ number(10, 0) not null, id number(19, 0), parent_id number(19, 0), region_name varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.914+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_comment_like(rn_ number(10, 0) not null, comment_id number(19, 0), comment_like_id number(19, 0), member_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_comment_like(rn_ number(10, 0) not null, comment_id number(19, 0), comment_like_id number(19, 0), member_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.931+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_participants(rn_ number(10, 0) not null, application_chat_room_id number(19, 0), created_at timestamp(6) with time zone, member_id number(19, 0), participant_id number(19, 0), together_id number(19, 0), updated_at timestamp(6) with time zone, message varchar2(255 char), status varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_participants(rn_ number(10, 0) not null, application_chat_room_id number(19, 0), created_at timestamp(6) with time zone, member_id number(19, 0), participant_id number(19, 0), together_id number(19, 0), updated_at timestamp(6) with time zone, message varchar2(255 char), status varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.947+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_chat_member(rn_ number(10, 0) not null, chat_member_id number(19, 0), member_id number(19, 0), room_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_chat_member(rn_ number(10, 0) not null, chat_member_id number(19, 0), member_id number(19, 0), room_id number(19, 0), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.962+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_event_review(rating number(10, 0), rn_ number(10, 0) not null, author_id number(19, 0), created_at timestamp(6) with time zone, event_id number(19, 0), review_id number(19, 0), updated_at timestamp(6) with time zone, content varchar2(2000 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_event_review(rating number(10, 0), rn_ number(10, 0) not null, author_id number(19, 0), created_at timestamp(6) with time zone, event_id number(19, 0), review_id number(19, 0), updated_at timestamp(6) with time zone, content varchar2(2000 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:13.983+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_event(avg_rating number(38, 2), duration_min number(10, 0), end_date date, interest_count number(10, 0), min_age number(10, 0), review_count number(10, 0), rn_ number(10, 0) not null, start_date date, created_at timestamp(6) with time zone, event_id number(19, 0), region_id number(19, 0), region_snapshot_id number(19, 0), updated_at timestamp(6) with time zone, region_level1 varchar2(50 char), region_level2 varchar2(50 char), region_level3 varchar2(50 char), address varchar2(255 char), address_detail varchar2(255 char), description varchar2(255 char), event_location varchar2(255 char), event_type varchar2(255 char), main_image_path varchar2(255 char), thumbnail_image_path varchar2(255 char), title varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_event(avg_rating number(38, 2), duration_min number(10, 0), end_date date, interest_count number(10, 0), min_age number(10, 0), review_count number(10, 0), rn_ number(10, 0) not null, start_date date, created_at timestamp(6) with time zone, event_id number(19, 0), region_id number(19, 0), region_snapshot_id number(19, 0), updated_at timestamp(6) with time zone, region_level1 varchar2(50 char), region_level2 varchar2(50 char), region_level3 varchar2(50 char), address varchar2(255 char), address_detail varchar2(255 char), description varchar2(255 char), event_location varchar2(255 char), event_type varchar2(255 char), main_image_path varchar2(255 char), thumbnail_image_path varchar2(255 char), title varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:14.002+09:00 DEBUG 8672 --- [CultureMate API] [  restartedMain] org.hibernate.SQL                        : 
+    create global temporary table HTE_together(host_recruiting_enabled number(1, 0), interest_count number(10, 0), max_participants number(10, 0), meeting_date date, participant_count number(10, 0), rn_ number(10, 0) not null, created_at timestamp(6) with time zone, event_id number(19, 0), host_id number(19, 0), region_id number(19, 0), region_snapshot_id number(19, 0), together_id number(19, 0), updated_at timestamp(6) with time zone, region_level1 varchar2(50 char), region_level2 varchar2(50 char), region_level3 varchar2(50 char), content varchar2(2000 char), main_image_path varchar2(255 char), meeting_location varchar2(255 char), thumbnail_image_path varchar2(255 char), title varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+Hibernate: 
+    create global temporary table HTE_together(host_recruiting_enabled number(1, 0), interest_count number(10, 0), max_participants number(10, 0), meeting_date date, participant_count number(10, 0), rn_ number(10, 0) not null, created_at timestamp(6) with time zone, event_id number(19, 0), host_id number(19, 0), region_id number(19, 0), region_snapshot_id number(19, 0), together_id number(19, 0), updated_at timestamp(6) with time zone, region_level1 varchar2(50 char), region_level2 varchar2(50 char), region_level3 varchar2(50 char), content varchar2(2000 char), main_image_path varchar2(255 char), meeting_location varchar2(255 char), thumbnail_image_path varchar2(255 char), title varchar2(255 char), primary key (rn_)) 
+        on commit delete rows
+2025-09-24T16:01:14.797+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-24T16:01:17.756+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-24T16:01:18.170+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-24T16:01:19.690+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name authService
+2025-09-24T16:01:22.911+09:00  WARN 8672 --- [CultureMate API] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-24T16:01:24.130+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:oracle:thin:@//kafolio.kr:2444/orcl'
+2025-09-24T16:01:24.596+09:00  WARN 8672 --- [CultureMate API] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
+2025-09-24T16:01:24.645+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2025-09-24T16:01:24.647+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@54a992a2]]
+2025-09-24T16:01:24.648+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2025-09-24T16:01:24.655+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2025-09-24T16:01:24.656+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@54a992a2]]
+2025-09-24T16:01:24.656+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2025-09-24T16:01:24.656+09:00  WARN 8672 --- [CultureMate API] [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2025-09-24T16:01:24.667+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-24T16:01:24.671+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-09-24T16:01:24.737+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-09-24T16:01:24.762+09:00  INFO 8672 --- [CultureMate API] [  restartedMain] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-09-24T16:01:24.795+09:00 ERROR 8672 --- [CultureMate API] [  restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+
+
+BUILD SUCCESSFUL in 1m 18s
+4 actionable tasks: 3 executed, 1 up-to-date
