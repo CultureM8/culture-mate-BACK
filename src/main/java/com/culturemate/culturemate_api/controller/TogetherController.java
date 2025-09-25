@@ -41,8 +41,16 @@ public class TogetherController {
 
   @Operation(summary = "전체 모임 조회", description = "모든 모임 목록을 조회합니다")
   @GetMapping
-  public ResponseEntity<List<TogetherDto.Response>> getAllTogethers(@AuthenticationPrincipal AuthenticatedUser user) {
-    List<Together> togethers = togetherService.findAll();
+  public ResponseEntity<List<TogetherDto.Response>> getAllTogethers(
+      @RequestParam(required = false) Integer limit,
+      @RequestParam(required = false) Integer offset,
+      @AuthenticationPrincipal AuthenticatedUser user) {
+    List<Together> togethers;
+    if (limit != null) {
+      togethers = togetherService.findAll(limit, offset != null ? offset : 0);
+    } else {
+      togethers = togetherService.findAll();
+    }
 
     if (user != null) {
       // 인증된 사용자: 관심 여부 포함
@@ -102,20 +110,29 @@ public class TogetherController {
 
   // 모집글 통합 검색
   @GetMapping("/search")
-  public ResponseEntity<List<TogetherDto.Response>> searchTogethers(TogetherSearchDto searchDto) {
+  public ResponseEntity<List<TogetherDto.Response>> searchTogethers(
+      TogetherSearchDto searchDto,
+      @RequestParam(required = false) Integer limit,
+      @RequestParam(required = false) Integer offset,
+      @RequestParam(required = false, defaultValue = "latest") String sortBy) {
+
+    SearchResult<Together> searchResult;
+    // 심플한 통합 호출 - Service에서 limit 기반 분기 처리
     if (searchDto.isEmpty()) {
-      List<Together> togethers = togetherService.findAll();
-      return ResponseEntity.ok().body(
-        togethers.stream()
-        .map(togetherService::toResponseDto)
-        .collect(Collectors.toList()));
+      // 전체 조회인 경우에도 SearchResult로 래핑 필요
+      List<Together> togethers = togetherService.findAll(limit, offset != null ? offset : 0, sortBy);
+      searchResult = new SearchResult<>(togethers, togethers.size()); // 임시로 전체 개수는 결과 개수와 동일
+    } else {
+      searchResult = togetherService.search(searchDto, limit, offset != null ? offset : 0, sortBy);
     }
 
-    List<Together> togethers = togetherService.search(searchDto);
-    return ResponseEntity.ok().body(
-      togethers.stream()
+    List<TogetherDto.Response> responseDtos = searchResult.getContent().stream()
       .map(togetherService::toResponseDto)
-      .collect(Collectors.toList()));
+      .collect(Collectors.toList());
+
+    return ResponseEntity.ok()
+      .header("Total-Count", String.valueOf(searchResult.getTotalCount()))
+      .body(responseDtos);
   }
 
   // 모집글 생성
@@ -397,33 +414,6 @@ public class TogetherController {
     return ResponseEntity.ok(debug.toString());
   }
 
-  // 최신 활성 모임 조회 (메인 페이지용)
-  @Operation(summary = "최신 활성 모임 조회", description = "모집 중인 최신 모임을 조회합니다")
-  @GetMapping("/recent")
-  public ResponseEntity<List<TogetherDto.Response>> getRecentTogethers(
-      @RequestParam(defaultValue = "4") int limit,
-      @AuthenticationPrincipal AuthenticatedUser user) {
-
-    List<Together> togethers = togetherService.findRecentActive(limit);
-
-    if (user != null) {
-      // 인증된 사용자: 관심 여부 포함
-      List<Long> togetherIds = togethers.stream().map(Together::getId).toList();
-      Map<Long, Boolean> interestMap = togetherService.getInterestStatusBatch(togetherIds, user.getMemberId());
-
-      return ResponseEntity.ok(
-          togethers.stream()
-              .map(t -> togetherService.toResponseDto(t, interestMap.getOrDefault(t.getId(), false)))
-              .collect(Collectors.toList())
-      );
-    }
-
-    // 비인증 사용자: 관심 여부 미포함
-    return ResponseEntity.ok(
-        togethers.stream()
-            .map(togetherService::toResponseDto)
-            .collect(Collectors.toList())
-    );
-  }
+  // /recent 엔드포인트 제거됨 - 대신 /search?limit=4&sortBy=latest 사용 권장
 
 }

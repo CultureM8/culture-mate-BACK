@@ -5,6 +5,7 @@ import com.culturemate.culturemate_api.domain.event.Event;
 import com.culturemate.culturemate_api.dto.AuthenticatedUser;
 import com.culturemate.culturemate_api.dto.EventDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
+import com.culturemate.culturemate_api.dto.SearchResult;
 import com.culturemate.culturemate_api.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,8 +35,15 @@ public class EventController {
   })
   @GetMapping
   public ResponseEntity<List<EventDto.Response>> getAllEvents(
+      @RequestParam(required = false) Integer limit,
+      @RequestParam(required = false) Integer offset,
       @AuthenticationPrincipal AuthenticatedUser user) {
-    List<Event> events = eventService.findAll();
+    List<Event> events;
+    if (limit != null) {
+      events = eventService.findAll(limit, offset != null ? offset : 0);
+    } else {
+      events = eventService.findAll();
+    }
     
     if (user != null) {
       // 인증된 사용자: 관심 여부 포함
@@ -76,7 +84,9 @@ public class EventController {
   @GetMapping("/search")
   public ResponseEntity<List<EventDto.Response>> searchEvents(
       EventSearchDto searchDto,
-      @AuthenticationPrincipal AuthenticatedUser user) {
+      @RequestParam(required = false) Integer limit,
+      @RequestParam(required = false) Integer offset,
+      @RequestParam(required = false, defaultValue = "latest") String sortBy) {
     // 디버깅용 로그
     System.out.println("=== 검색 파라미터 ===");
     System.out.println("keyword: " + searchDto.getKeyword());
@@ -85,31 +95,25 @@ public class EventController {
     System.out.println("isEmpty(): " + searchDto.isEmpty());
     System.out.println("hasKeyword(): " + searchDto.hasKeyword());
     System.out.println("==================");
-    
-    List<Event> events;
-    // 검색 조건이 비어있으면 전체 조회
+
+    SearchResult<Event> searchResult;
+    // 심플한 통합 호출 - Service에서 limit 기반 분기 처리
     if (searchDto.isEmpty()) {
-      events = eventService.findAll();
+      // 전체 조회인 경우에도 SearchResult로 래핑 필요
+      List<Event> events = eventService.findAll(limit, offset != null ? offset : 0, sortBy);
+      searchResult = new SearchResult<>(events, events.size()); // 임시로 전체 개수는 결과 개수와 동일
     } else {
-      events = eventService.search(searchDto);
+      searchResult = eventService.search(searchDto, limit, offset != null ? offset : 0, sortBy);
     }
-    
-    if (user != null) {
-      // 인증된 사용자: 관심 여부 포함
-      List<Long> eventIds = events.stream().map(Event::getId).toList();
-      Map<Long, Boolean> interestMap = eventService.getInterestStatusBatch(eventIds, user.getMemberId());
-      
-      List<EventDto.Response> responseDtos = events.stream()
-        .map(event -> EventDto.Response.from(event, interestMap.getOrDefault(event.getId(), false)))
-        .toList();
-      return ResponseEntity.ok(responseDtos);
-    } else {
-      // 비인증 사용자: 기본값 false
-      List<EventDto.Response> responseDtos = events.stream()
-        .map(event -> EventDto.Response.from(event, false))
-        .toList();
-      return ResponseEntity.ok(responseDtos);
-    }
+
+    // 검색은 인증 불필요, 관심 여부 없이 기본 정보만 반환
+    List<EventDto.Response> responseDtos = searchResult.getContent().stream()
+      .map(event -> EventDto.Response.from(event, false))
+      .toList();
+
+    return ResponseEntity.ok()
+      .header("Total-Count", String.valueOf(searchResult.getTotalCount()))
+      .body(responseDtos);
   }
 
   // 이벤트 등록
@@ -197,32 +201,6 @@ public ResponseEntity<String> toggleEventInterest(
   // - 이미지 삭제: eventRequestDto.imagesToDelete 필드
 
   // 최신 활성 이벤트 조회 (메인 페이지용)
-  @Operation(summary = "최신 이벤트 조회", description = "현재 진행 중인 최신 이벤트를 조회합니다")
-  @GetMapping("/recent")
-  public ResponseEntity<List<EventDto.Response>> getRecentEvents(
-      @RequestParam(defaultValue = "4") int limit,
-      @AuthenticationPrincipal AuthenticatedUser user) {
-
-    List<Event> events = eventService.findRecentActive(limit);
-
-    if (user != null) {
-      // 인증된 사용자: 관심 여부 포함
-      List<Long> eventIds = events.stream().map(Event::getId).toList();
-      Map<Long, Boolean> interestMap = eventService.getInterestStatusBatch(eventIds, user.getMemberId());
-
-      return ResponseEntity.ok(
-          events.stream()
-              .map(e -> EventDto.Response.from(e, interestMap.getOrDefault(e.getId(), false)))
-              .toList()
-      );
-    }
-
-    // 비인증 사용자: 관심 여부 미포함
-    return ResponseEntity.ok(
-        events.stream()
-            .map(e -> EventDto.Response.from(e, false))
-            .toList()
-    );
-  }
+  // /recent 엔드포인트 제거됨 - 대신 /search?limit=4&sortBy=latest 사용 권장
 
 }

@@ -29,6 +29,7 @@ public class CorsConfig implements WebMvcConfigurer {
       .allowedOrigins(allowedOrigins.split(","))
       .allowedMethods(allowedMethods.split(","))
       .allowedHeaders(allowedHeaders.equals("*") ? new String[]{"*"} : allowedHeaders.split(","))
+      .exposedHeaders("Total-Count") // Total-Count 헤더를 프론트엔드에서 읽을 수 있도록 노출
       .allowCredentials(allowCredentials)
       .maxAge(maxAge);
   }

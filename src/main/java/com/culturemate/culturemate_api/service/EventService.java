@@ -11,12 +11,16 @@ import com.culturemate.culturemate_api.domain.member.Member;
 import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.EventDto;
 import com.culturemate.culturemate_api.dto.EventSearchDto;
+import com.culturemate.culturemate_api.dto.SearchResult;
 import com.culturemate.culturemate_api.dto.TicketPriceDto;
 import com.culturemate.culturemate_api.repository.EventRepository;
 import com.culturemate.culturemate_api.repository.InterestEventsRepository;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import com.culturemate.culturemate_api.repository.TicketPriceRepository;
 import jakarta.persistence.EntityManager;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -126,12 +131,42 @@ public class EventService {
     return findById(eventId);
   }
 
+  // 기존 호환성 유지
   public List<Event> findAll() {
     return eventRepository.findAll();
   }
 
-  // 새로운 통합 검색 메서드
-  public List<Event> search(EventSearchDto searchDto) {
+  // 페이지네이션과 정렬을 지원하는 전체 조회 (메인 메서드) - null 체크 추가
+  public List<Event> findAll(Integer limit, Integer offset, String sortBy) {
+    Sort sort = createEventSort(sortBy);
+
+    // limit가 null이면 전체 조회 (기존 호환성 유지)
+    if (limit == null) {
+      return eventRepository.findAll(sort);
+    }
+
+    // 페이지네이션 적용
+    int validOffset = offset != null ? offset : 0;
+    Pageable pageable = PageRequest.of(validOffset / limit, limit, sort);
+    return eventRepository.findAll(pageable).getContent();
+  }
+
+  // 오버로딩: 기본 정렬(latest) 사용
+  public List<Event> findAll(Integer limit, Integer offset) {
+    return findAll(limit, offset, "latest");
+  }
+
+  // Event 정렬 옵션 생성
+  private Sort createEventSort(String sortBy) {
+    return switch (sortBy) {
+      case "popular" -> Sort.by("interestCount").descending();
+      case "date" -> Sort.by("startDate").ascending();
+      default -> Sort.by("createdAt").descending(); // "latest" 기본값
+    };
+  }
+
+  // 통합 검색 메서드 (페이지네이션 + 정렬 지원)
+  public SearchResult<Event> search(EventSearchDto searchDto, Integer limit, Integer offset, String sortBy) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
       try {
@@ -145,7 +180,7 @@ public class EventService {
         regions = null;
       }
     }
-    
+
     EventType eventType = null;
     if (searchDto.hasEventType()) {
       try {
@@ -155,7 +190,7 @@ public class EventService {
         eventType = null;
       }
     }
-    
+
     // 디버깅용 로그
     System.out.println("=== EventService 검색 파라미터 ===");
     System.out.println("keyword: " + (searchDto.hasKeyword() ? searchDto.getKeyword() : "null"));
@@ -163,27 +198,90 @@ public class EventService {
     System.out.println("startDate: " + searchDto.getStartDate());
     System.out.println("endDate: " + searchDto.getEndDate());
     System.out.println("eventType: " + eventType);
+    System.out.println("limit: " + limit + ", offset: " + offset + ", sortBy: " + sortBy);
     System.out.println("=================================");
-    
-    // 지역 조건에 따라 다른 Repository 메서드 사용
-    if (regions == null || regions.isEmpty()) {
-      // 지역 조건 없는 검색
-      return eventRepository.findBySearchWithoutRegion(
-        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-        searchDto.getStartDate(),
-        searchDto.getEndDate(),
-        eventType
-      );
+
+    // 페이지네이션 및 정렬 적용 여부 결정
+    if (limit != null && limit > 0) {
+      Sort sort = createEventSort(sortBy);
+      Pageable pageable = PageRequest.of(offset / limit, limit, sort);
+
+      // 데이터 조회 (페이지네이션 적용)
+      List<Event> events;
+      long totalCount;
+
+      if (regions == null || regions.isEmpty()) {
+        // 지역 조건 없음
+        events = eventRepository.findBySearchWithoutRegion(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          pageable
+        );
+
+        // 전체 개수 조회 (동일한 조건)
+        totalCount = eventRepository.countBySearchWithoutRegion(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType
+        );
+      } else {
+        // 지역 조건 포함
+        events = eventRepository.findBySearch(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          regions,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          pageable
+        );
+
+        // 전체 개수 조회 (동일한 조건)
+        totalCount = eventRepository.countBySearch(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          regions,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType
+        );
+      }
+
+      return new SearchResult<>(events, totalCount);
     } else {
-      // 지역 조건 있는 검색
-      return eventRepository.findBySearch(
-        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-        regions,
-        searchDto.getStartDate(),
-        searchDto.getEndDate(),
-        eventType
-      );
+      // 기존 방식: 전체 조회 (SearchResult로 래핑)
+      List<Event> events;
+      if (regions == null || regions.isEmpty()) {
+        events = eventRepository.findBySearchWithoutRegion(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType
+        );
+      } else {
+        events = eventRepository.findBySearch(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          regions,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType
+        );
+      }
+
+      // limit/offset이 없는 경우 전체 개수는 실제 결과 개수와 동일
+      return new SearchResult<>(events, events.size());
     }
+  }
+
+  // 기존 호출 호환용 오버로딩
+  public List<Event> search(EventSearchDto searchDto) {
+    return search(searchDto, null, null, "latest").getContent();
+  }
+
+  // 페이지네이션만 사용하는 오버로딩
+  public List<Event> search(EventSearchDto searchDto, int limit, int offset) {
+    return search(searchDto, limit, offset, "latest").getContent();
   }
 
   @Transactional
@@ -402,14 +500,6 @@ public class EventService {
     }
   }
 
-  /**
-   * 최신 활성 이벤트 조회 (메인 페이지용)
-   * 종료일이 지나지 않은 이벤트를 최신 순으로 조회
-   */
-  public List<Event> findRecentActive(int limit) {
-    LocalDate today = LocalDate.now();
-    Pageable pageable = PageRequest.of(0, limit);
-    return eventRepository.findRecentActiveWithLimit(today, pageable);
-  }
+  // findRecentActive 메서드 제거됨 - 대신 search(empty, limit, 0, "latest") 사용
 
 }

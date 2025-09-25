@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
@@ -84,6 +85,24 @@ public class TogetherService {
   }
 
 
+  // 전체 조회 (페이지네이션 + 정렬 지원) - offset null 체크 추가
+  public List<Together> findAll(Integer limit, Integer offset, String sortBy) {
+    if (limit != null && limit > 0) {
+      Sort sort = createTogetherSort(sortBy);
+      int validOffset = offset != null ? offset : 0;
+      Pageable pageable = PageRequest.of(validOffset / limit, limit, sort);
+      return togetherRepository.findAll(pageable).getContent();
+    } else {
+      return togetherRepository.findAll(createTogetherSort(sortBy != null ? sortBy : "latest"));
+    }
+  }
+
+  // 페이지네이션만 사용하는 오버로딩 (기본 정렬)
+  public List<Together> findAll(Integer limit, Integer offset) {
+    return findAll(limit, offset, "latest");
+  }
+
+  // 기존 호환성 유지용
   public List<Together> findAll() {
     return togetherRepository.findAll();
   }
@@ -108,8 +127,8 @@ public class TogetherService {
     return togetherRepository.findByParticipantAndStatus(member, participationStatus);
   }
 
-  // 통합 검색 기능
-  public List<Together> search(TogetherSearchDto searchDto) {
+  // 통합 검색 기능 (페이지네이션 + 정렬 지원) - SearchResult 패턴 적용
+  public SearchResult<Together> search(TogetherSearchDto searchDto, Integer limit, Integer offset, String sortBy) {
     List<Region> regions = null;
     if (searchDto.hasRegion()) {
       try {
@@ -133,27 +152,78 @@ public class TogetherService {
       }
     }
 
-    // 지역 조건에 따라 다른 Repository 메서드 사용
+    // 페이지네이션 및 정렬 적용 여부 결정
     List<Together> results;
-    if (regions == null || regions.isEmpty()) {
-      // 지역 조건 없는 검색
-      results = togetherRepository.findBySearchWithoutRegion(
-        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-        searchDto.getStartDate(),
-        searchDto.getEndDate(),
-        eventType,
-        searchDto.getEventId()
-      );
+    if (limit != null && limit > 0) {
+      Sort sort = createTogetherSort(sortBy);
+      int validOffset = offset != null ? offset : 0;
+      Pageable pageable = PageRequest.of(validOffset / limit, limit, sort);
+
+      // 지역 조건에 따라 다른 Repository 메서드 사용 (Pageable 버전)
+      if (regions == null || regions.isEmpty()) {
+        results = togetherRepository.findBySearchWithoutRegion(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          searchDto.getEventId(),
+          pageable
+        );
+      } else {
+        results = togetherRepository.findBySearch(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          regions,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          searchDto.getEventId(),
+          pageable
+        );
+      }
     } else {
-      // 지역 조건 있는 검색
-      results = togetherRepository.findBySearch(
-        searchDto.hasKeyword() ? searchDto.getKeyword() : null,
-        regions,
-        searchDto.getStartDate(),
-        searchDto.getEndDate(),
-        eventType,
-        searchDto.getEventId()
-      );
+      // 기존 방식: 전체 조회
+      if (regions == null || regions.isEmpty()) {
+        results = togetherRepository.findBySearchWithoutRegion(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          searchDto.getEventId()
+        );
+      } else {
+        results = togetherRepository.findBySearch(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          regions,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          searchDto.getEventId()
+        );
+      }
+    }
+
+    // 페이지네이션 사용 시에만 카운트 조회
+    long totalCount = 0;
+    if (limit != null && limit > 0) {
+      // 지역 조건에 따라 다른 카운트 쿼리 사용
+      if (regions == null || regions.isEmpty()) {
+        totalCount = togetherRepository.countBySearchWithoutRegion(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          searchDto.getEventId()
+        );
+      } else {
+        totalCount = togetherRepository.countBySearch(
+          searchDto.hasKeyword() ? searchDto.getKeyword() : null,
+          regions,
+          searchDto.getStartDate(),
+          searchDto.getEndDate(),
+          eventType,
+          searchDto.getEventId()
+        );
+      }
     }
 
     // isActive 필터링 (Service에서 처리)
@@ -164,7 +234,26 @@ public class TogetherService {
         .collect(Collectors.toList());
     }
 
-    return results;
+    return new SearchResult<>(results, totalCount);
+  }
+
+  // 기존 호출 호환용 오버로딩
+  public List<Together> search(TogetherSearchDto searchDto) {
+    return search(searchDto, null, null, "latest").getContent();
+  }
+
+  // 페이지네이션만 사용하는 오버로딩
+  public List<Together> search(TogetherSearchDto searchDto, int limit, int offset) {
+    return search(searchDto, limit, offset, "latest").getContent();
+  }
+
+  // Together 정렬 옵션 생성
+  private Sort createTogetherSort(String sortBy) {
+    return switch (sortBy) {
+      case "popular" -> Sort.by("interestCount").descending();
+      case "date" -> Sort.by("meetingDate").ascending();
+      default -> Sort.by("createdAt").descending(); // "latest" 기본값
+    };
   }
 
   // 수정
@@ -589,15 +678,7 @@ public class TogetherService {
         ));
   }
 
-  /**
-   * 최신 활성 모임 조회 (메인 페이지용)
-   * 모집 중이고, 날짜가 유효하고, 정원이 남은 모임을 최신 순으로 조회
-   */
-  public List<Together> findRecentActive(int limit) {
-    LocalDate today = LocalDate.now();
-    Pageable pageable = PageRequest.of(0, limit);
-    return togetherRepository.findRecentActiveWithLimit(today, pageable);
-  }
+  // findRecentActive 메서드 제거됨 - 대신 search(empty, limit, 0, "latest") 사용
 
 
 }

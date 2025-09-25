@@ -78,6 +78,46 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
                               @Param("eventType") EventType eventType,
                               @Param("eventId") Long eventId);
 
+  // 통합 검색 (Pageable 지원) - 오버로딩
+  @EntityGraph(attributePaths = {"event", "host", "region", "chatRooms"})
+  @Query("""
+  SELECT t
+  FROM Together t
+  JOIN t.event e
+  WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND (:startDate IS NULL OR t.meetingDate >= :startDate)
+    AND (:endDate   IS NULL OR t.meetingDate <= :endDate)
+    AND (:eventType IS NULL OR e.eventType = :eventType)
+    AND (:eventId   IS NULL OR e.id = :eventId)
+    AND t.region IN :regions
+    """)
+  List<Together> findBySearch(@Param("keyword") String keyword,
+                              @Param("regions") List<Region> regions,
+                              @Param("startDate") LocalDate startDate,
+                              @Param("endDate") LocalDate endDate,
+                              @Param("eventType") EventType eventType,
+                              @Param("eventId") Long eventId,
+                              Pageable pageable);
+
+  // 지역 조건 없는 검색 (Pageable 지원) - 오버로딩
+  @EntityGraph(attributePaths = {"event", "host"})
+  @Query("""
+  SELECT t
+  FROM Together t
+  JOIN t.event e
+  WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND (:startDate IS NULL OR t.meetingDate >= :startDate)
+    AND (:endDate   IS NULL OR t.meetingDate <= :endDate)
+    AND (:eventType IS NULL OR e.eventType = :eventType)
+    AND (:eventId   IS NULL OR e.id = :eventId)
+    """)
+  List<Together> findBySearchWithoutRegion(@Param("keyword") String keyword,
+                              @Param("startDate") LocalDate startDate,
+                              @Param("endDate") LocalDate endDate,
+                              @Param("eventType") EventType eventType,
+                              @Param("eventId") Long eventId,
+                              Pageable pageable);
+
   // 원자적 참여자 수 카운트 업데이트 (단순)
   @Modifying
   @Query("UPDATE Together t SET t.participantCount = t.participantCount + :increment WHERE t.id = :togetherId")
@@ -87,6 +127,42 @@ public interface TogetherRepository extends JpaRepository<Together, Long> {
   @Modifying
   @Query("UPDATE Together t SET t.interestCount = t.interestCount + :increment WHERE t.id = :togetherId")
   void updateInterestCount(@Param("togetherId") Long togetherId, @Param("increment") int increment);
+
+  // 검색 조건에 해당하는 전체 개수 조회 (지역 조건 포함)
+  @Query("""
+  SELECT COUNT(t)
+  FROM Together t
+  JOIN t.event e
+  WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND (:startDate IS NULL OR t.meetingDate >= :startDate)
+    AND (:endDate   IS NULL OR t.meetingDate <= :endDate)
+    AND (:eventType IS NULL OR e.eventType = :eventType)
+    AND (:eventId   IS NULL OR e.id = :eventId)
+    AND t.region IN :regions
+    """)
+  long countBySearch(@Param("keyword") String keyword,
+                     @Param("regions") List<Region> regions,
+                     @Param("startDate") LocalDate startDate,
+                     @Param("endDate") LocalDate endDate,
+                     @Param("eventType") EventType eventType,
+                     @Param("eventId") Long eventId);
+
+  // 검색 조건에 해당하는 전체 개수 조회 (지역 조건 없음)
+  @Query("""
+  SELECT COUNT(t)
+  FROM Together t
+  JOIN t.event e
+  WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND (:startDate IS NULL OR t.meetingDate >= :startDate)
+    AND (:endDate   IS NULL OR t.meetingDate <= :endDate)
+    AND (:eventType IS NULL OR e.eventType = :eventType)
+    AND (:eventId   IS NULL OR e.id = :eventId)
+    """)
+  long countBySearchWithoutRegion(@Param("keyword") String keyword,
+                                  @Param("startDate") LocalDate startDate,
+                                  @Param("endDate") LocalDate endDate,
+                                  @Param("eventType") EventType eventType,
+                                  @Param("eventId") Long eventId);
 
   // 최신 활성 모임 조회 (메인 페이지용)
   @EntityGraph(attributePaths = {"event", "host", "regionSnapshot"})
