@@ -73,6 +73,7 @@ public class TogetherDto {
     private LocalDate meetingDate;
     private Integer maxParticipants;
     private Integer currentParticipants;
+    private Integer interestCount; // 관심수
     private Boolean active;
     private Boolean isInterested; // 관심 등록 여부
     private Long roomId; // 채팅방 ID (Together의 채팅방)

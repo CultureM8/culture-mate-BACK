@@ -86,7 +86,8 @@ public class EventController {
       EventSearchDto searchDto,
       @RequestParam(required = false) Integer limit,
       @RequestParam(required = false) Integer offset,
-      @RequestParam(required = false, defaultValue = "latest") String sortBy) {
+      @RequestParam(required = false, defaultValue = "latest") String sortBy,
+      @AuthenticationPrincipal AuthenticatedUser user) {
     // 디버깅용 로그
     System.out.println("=== 검색 파라미터 ===");
     System.out.println("keyword: " + searchDto.getKeyword());
@@ -106,10 +107,21 @@ public class EventController {
       searchResult = eventService.search(searchDto, limit, offset != null ? offset : 0, sortBy);
     }
 
-    // 검색은 인증 불필요, 관심 여부 없이 기본 정보만 반환
-    List<EventDto.Response> responseDtos = searchResult.getContent().stream()
-      .map(event -> EventDto.Response.from(event, false))
-      .toList();
+    List<EventDto.Response> responseDtos;
+    if (user != null) {
+      // 인증된 사용자: 관심 여부 포함
+      List<Long> eventIds = searchResult.getContent().stream().map(Event::getId).toList();
+      Map<Long, Boolean> interestMap = eventService.getInterestStatusBatch(eventIds, user.getMemberId());
+
+      responseDtos = searchResult.getContent().stream()
+        .map(event -> EventDto.Response.from(event, interestMap.getOrDefault(event.getId(), false)))
+        .toList();
+    } else {
+      // 비인증 사용자: 기본값 false
+      responseDtos = searchResult.getContent().stream()
+        .map(event -> EventDto.Response.from(event, false))
+        .toList();
+    }
 
     return ResponseEntity.ok()
       .header("Total-Count", String.valueOf(searchResult.getTotalCount()))

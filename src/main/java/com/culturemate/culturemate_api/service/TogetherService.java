@@ -612,6 +612,7 @@ public class TogetherService {
       .meetingDate(together.getMeetingDate())
       .maxParticipants(together.getMaxParticipants())
       .currentParticipants(together.getParticipantCount())
+      .interestCount(together.getInterestCount()) // 관심수 추가
       .content(together.getContent())
       .active(isActive(together)) // 실제 isActive 계산
       .isInterested(isInterested) // 관심 등록 여부

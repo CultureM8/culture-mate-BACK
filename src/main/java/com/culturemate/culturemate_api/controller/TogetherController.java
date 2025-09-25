@@ -114,7 +114,8 @@ public class TogetherController {
       TogetherSearchDto searchDto,
       @RequestParam(required = false) Integer limit,
       @RequestParam(required = false) Integer offset,
-      @RequestParam(required = false, defaultValue = "latest") String sortBy) {
+      @RequestParam(required = false, defaultValue = "latest") String sortBy,
+      @AuthenticationPrincipal AuthenticatedUser user) {
 
     SearchResult<Together> searchResult;
     // 심플한 통합 호출 - Service에서 limit 기반 분기 처리
@@ -126,9 +127,21 @@ public class TogetherController {
       searchResult = togetherService.search(searchDto, limit, offset != null ? offset : 0, sortBy);
     }
 
-    List<TogetherDto.Response> responseDtos = searchResult.getContent().stream()
-      .map(togetherService::toResponseDto)
-      .collect(Collectors.toList());
+    List<TogetherDto.Response> responseDtos;
+    if (user != null) {
+      // 인증된 사용자: 관심 여부 포함
+      List<Long> togetherIds = searchResult.getContent().stream().map(Together::getId).toList();
+      Map<Long, Boolean> interestMap = togetherService.getInterestStatusBatch(togetherIds, user.getMemberId());
+
+      responseDtos = searchResult.getContent().stream()
+        .map(together -> togetherService.toResponseDto(together, interestMap.getOrDefault(together.getId(), false)))
+        .collect(Collectors.toList());
+    } else {
+      // 비인증 사용자: 기본값 false
+      responseDtos = searchResult.getContent().stream()
+        .map(togetherService::toResponseDto)
+        .collect(Collectors.toList());
+    }
 
     return ResponseEntity.ok()
       .header("Total-Count", String.valueOf(searchResult.getTotalCount()))
