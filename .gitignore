@@ -41,6 +41,10 @@ out/
 *.trace.db
 *.lock.db
 
+### Logs ###
+logs/
+*.log
+
 ### env ###
 .env
 .env.*

@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "Auth API", description = "인증 및 인가 관리 API")
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -52,16 +54,19 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<?> login(
     @Parameter(description = "로그인 정보", required = true) @RequestBody MemberDto.Login loginRequest) {
+    String loginId = loginRequest.getLoginId();
+    log.info("로그인 시도: {}", loginId);
+
     try {
       Authentication authentication = authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword())
+        new UsernamePasswordAuthenticationToken(loginId, loginRequest.getPassword())
       );
 
       AuthenticatedUser authenticatedUser = (AuthenticatedUser) authentication.getPrincipal();
-      
+
       // JWT 토큰 생성
       String token = jwtUtil.generateToken(authenticatedUser);
-      
+
       MemberDto.Response userResponse = MemberDto.Response.builder()
         .id(authenticatedUser.getMemberId())
         .loginId(authenticatedUser.getUsername())
@@ -75,9 +80,12 @@ public class AuthController {
       response.put("user", userResponse);
       response.put("message", "로그인 성공");
 
+      log.info("로그인 성공: {} (Role: {})", loginId, authenticatedUser.getRole());
       return ResponseEntity.ok(response);
 
     } catch (AuthenticationException e) {
+      log.warn("로그인 실패: {} - {}", loginId, e.getClass().getSimpleName());
+
       Map<String, Object> errorResponse = new HashMap<>();
       errorResponse.put("status", "error");
       errorResponse.put("message", "아이디 또는 비밀번호가 일치하지 않습니다.");
@@ -94,8 +102,16 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<MemberDto.Response> register(
     @Parameter(description = "회원 가입 정보", required = true) @Valid @RequestBody MemberDto.Register registerDto) {
-    Member savedMember = memberService.register(registerDto);
-    return ResponseEntity.status(201).body(MemberDto.Response.from(savedMember));
+    log.info("회원가입 API 호출: {}", registerDto.getLoginId());
+
+    try {
+      Member savedMember = memberService.register(registerDto);
+      log.info("회원가입 API 성공: {} (ID: {})", savedMember.getLoginId(), savedMember.getId());
+      return ResponseEntity.status(201).body(MemberDto.Response.from(savedMember));
+    } catch (Exception e) {
+      log.warn("회원가입 API 실패: {} - {}", registerDto.getLoginId(), e.getMessage());
+      throw e;
+    }
   }
 
   @Operation(summary = "아이디 중복 확인", description = "로그인 아이디 중복 여부를 확인합니다")

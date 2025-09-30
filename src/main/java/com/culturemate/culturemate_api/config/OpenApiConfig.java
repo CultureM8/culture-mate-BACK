@@ -10,6 +10,7 @@ import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.media.Schema;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,6 +18,12 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
+
+  @Value("${custom.swagger.server-url:http://localhost:8080}")
+  private String serverUrl;
+
+  @Value("${custom.swagger.server-description:개발 서버}")
+  private String serverDescription;
 
   @Bean
   public OpenAPI customOpenAPI() {
@@ -43,8 +50,7 @@ public class OpenApiConfig {
 //                .url("https://opensource.org/licenses/MIT"))
                 )
         .servers(List.of(
-            new Server().url("http://localhost:8080").description("개발 서버")
-//            new Server().url("https://api.culturemate.com").description("프로덕션 서버")
+            new Server().url(serverUrl).description(serverDescription)
             ))
         .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
         .components(new Components()

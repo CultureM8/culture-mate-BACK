@@ -7,6 +7,7 @@ import com.culturemate.culturemate_api.domain.member.Role;
 import com.culturemate.culturemate_api.dto.MemberDto;
 import com.culturemate.culturemate_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,13 +28,17 @@ public class MemberService {
   // 회원 가입
   @Transactional
   public Member register(MemberDto.Register registerDto) {
+    log.info("회원가입 시도: {}", registerDto.getLoginId());
+
     if (memberRepository.existsByLoginId(registerDto.getLoginId())) {
+      log.warn("중복 아이디로 회원가입 시도: {}", registerDto.getLoginId());
       throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
     }
 
     // 이메일이 있는 경우 중복 검증
     if (registerDto.getEmail() != null && !registerDto.getEmail().trim().isEmpty()) {
       if (memberDetailService.existsByEmail(registerDto.getEmail())) {
+        log.warn("중복 이메일로 회원가입 시도: {} - {}", registerDto.getLoginId(), registerDto.getEmail());
         throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
       }
     }
@@ -47,13 +53,17 @@ public class MemberService {
     Member savedMember = memberRepository.save(member);
     memberDetailService.create(savedMember, MemberDto.DetailRequest.from(registerDto));
 
+    log.info("회원가입 완료: {} (ID: {})", savedMember.getLoginId(), savedMember.getId());
     return savedMember;
   }
 
   // 회원 삭제
   @Transactional
   public void delete(Long memberId) {
+    Member member = findById(memberId);
+    log.warn("회원 삭제 실행: {} (ID: {})", member.getLoginId(), memberId);
     memberRepository.deleteById(memberId);
+    log.info("회원 삭제 완료: ID={}", memberId);
   }
 
   // 전체 회원 조회
