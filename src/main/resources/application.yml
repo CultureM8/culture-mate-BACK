@@ -14,11 +14,8 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
 
-# 이미지 업로드 경로
+# Swagger 설정
 custom:
-  path:
-    upload:
-      default: src/main/resources/static/images
   swagger:
     server-url: http://localhost:8080
     server-description: 개발 서버
