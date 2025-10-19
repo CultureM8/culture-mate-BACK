@@ -53,6 +53,12 @@ logging:
     max-history: 7
     total-size-cap: 100MB
 
+# 이미지 업로드 경로
+custom:
+  path:
+    upload:
+      default: src/main/resources/static/images  # 개발 환경: 프로젝트 경로
+
 # CORS 설정 (개발 환경: 로컬호스트 허용)
 cors:
   allowed-origins: "http://localhost:3000,http://127.0.0.1:3000"
