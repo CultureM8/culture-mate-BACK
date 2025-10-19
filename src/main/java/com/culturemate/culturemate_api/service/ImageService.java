@@ -209,9 +209,11 @@ public class ImageService {
   private void deletePhysicalFile(String webPath) {
     try {
       // 웹 경로를 실제 파일 경로로 변환
-      String relativePath = webPath.substring(1); // 앞의 "/" 제거
-      Path filePath = Paths.get("src/main/resources/static", relativePath);
-      
+      // webPath 형식: /images/event/main/filename.jpg
+      // uploadDefaultDir 기준 상대 경로로 변환
+      String relativePath = webPath.replace("/images/", "");
+      Path filePath = Paths.get(uploadDefaultDir, relativePath);
+
       if (Files.exists(filePath)) {
         Files.delete(filePath);
         System.out.println("파일 삭제 성공: " + filePath);
