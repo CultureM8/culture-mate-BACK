@@ -34,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     String token = getTokenFromRequest(request);
 
+    // 토큰이 있고 아직 인증되지 않은 경우에만 처리
     if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
       try {
         if (jwtUtil.validateToken(token)) {
@@ -43,9 +44,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           // MemberStatus 검증 추가
           if (userDetails instanceof AuthenticatedUser) {
             AuthenticatedUser authenticatedUser = (AuthenticatedUser) userDetails;
-            
+
             if (!isAllowedStatus(authenticatedUser.getStatus())) {
-              log.warn("비활성 상태 사용자의 접근 시도: {} (상태: {})", 
+              log.warn("비활성 상태 사용자의 접근 시도: {} (상태: {})",
                       loginId, authenticatedUser.getStatus());
               response.setStatus(HttpServletResponse.SC_FORBIDDEN);
               response.getWriter().write("{\"error\": \"계정이 비활성 상태입니다.\"}");
@@ -61,10 +62,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           SecurityContextHolder.getContext().setAuthentication(authentication);
 
           log.debug("JWT 인증 성공: {}", loginId);
+        } else {
+          log.debug("유효하지 않은 JWT 토큰 - 인증 없이 계속 진행");
         }
       } catch (Exception e) {
-        log.error("JWT 토큰 처리 중 오류 발생", e);
+        log.debug("JWT 토큰 파싱 실패: {} - 인증 없이 계속 진행", e.getMessage());
         // 토큰 검증 실패 시 로그만 남기고 계속 진행 (인증되지 않은 상태로)
+        // SecurityConfig의 permitAll() 설정에 따라 접근 허용 여부가 결정됨
       }
     }
 

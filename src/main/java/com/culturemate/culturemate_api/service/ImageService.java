@@ -39,7 +39,10 @@ public class ImageService {
         ? Paths.get(baseDir, subPath).toString()
         : baseDir;
     String fileName = generateUniqueFileName(file.getOriginalFilename());
-    
+
+    // 디렉토리 자동 생성
+    createDirectoryIfNotExists(uploadDir);
+
     // 파일 저장
     Path filePath = Paths.get(uploadDir, fileName);
     Files.write(filePath, file.getBytes());
@@ -58,7 +61,10 @@ public class ImageService {
     String baseDir = getUploadDirectory(imageTarget);
     String uploadDir = Paths.get(baseDir, "thumbnail").toString();
     String fileName = generateUniqueFileName(file.getOriginalFilename());
-    
+
+    // 디렉토리 자동 생성
+    createDirectoryIfNotExists(uploadDir);
+
     // 썸네일 생성 및 저장
     createThumbnail(file, Paths.get(uploadDir, fileName));
     
@@ -175,10 +181,10 @@ public class ImageService {
 
   private void createThumbnail(MultipartFile originalFile, Path thumbnailPath) throws IOException {
     BufferedImage originalImage = ImageIO.read(originalFile.getInputStream());
-    
-    // 썸네일 크기 설정 (최대 200x200)
-    int thumbnailWidth = 200;
-    int thumbnailHeight = 200;
+
+    // 썸네일 크기 설정 (최대 400x400)
+    int thumbnailWidth = 400;
+    int thumbnailHeight = 400;
     
     // 비율 유지하면서 리사이즈
     double scaleX = (double) thumbnailWidth / originalImage.getWidth();
