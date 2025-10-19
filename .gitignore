@@ -51,8 +51,6 @@ logs/
 !.env.example
 
 ### Security ###
-application-prod.yml
-application-production.yml
 *.pem
 *.key
 *.p12
