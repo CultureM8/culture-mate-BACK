@@ -8,6 +8,10 @@ group = 'com.culturemate'
 version = '1.0.0-SNAPSHOT'
 description = 'CultureMate 플랫폼의 백엔드 API 서버'
 
+jar {
+    enabled = false
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
