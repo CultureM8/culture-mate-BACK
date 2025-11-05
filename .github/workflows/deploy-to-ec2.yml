@@ -28,6 +28,16 @@ jobs:
     - name: Build with Gradle Wrapper
       run: ./gradlew build -x test
 
+    - name: Clean old jar files (Free up space)
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        script: |
+          cd /home/ubuntu/culturemate-be
+          rm -f *.jar
+
     - name: Upload jar to EC2
       uses: appleboy/scp-action@v1
       with:
@@ -47,8 +57,7 @@ jobs:
         script: |
           export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v22.16.0/bin
           cd /home/ubuntu/culturemate-be
-          rm -f app.jar
-          mv *.jar app.jar
+          mv $(ls -t *.jar | grep -v "^app.jar$" | head -n 1) app.jar
           pm2 restart culturemate-be || pm2 start "java -jar app.jar" --interpreter none --name culturemate-be
 
 
