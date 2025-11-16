@@ -3,7 +3,7 @@ version: '3.8'
 services:
   backend:
     image: jhgfjhgfjhgf/culturemate-backend:latest
-    container_name: culturemate-test
+    container_name: culturemate-backend
     ports:
       - "8080:8080"
     env_file:
@@ -11,6 +11,6 @@ services:
     environment:
       SPRING_PROFILE: prod
     volumes:
-      - ~/culturemate-test/images:/app/images
-      - ~/culturemate-test/logs:/app/logs
+      - ../images:/app/images
+      - ../logs:/app/logs
     restart: unless-stopped
