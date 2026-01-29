@@ -32,12 +32,11 @@ RUN mkdir -p /app/logs /app/images && \
 # 사용자 전환
 USER spring:spring
 
-# 기존 이미지 파일 복사 (src/main/resources/static/images → /app/images)
-# Docker 이미지 빌드 시에만 실행됨 (컨테이너 시작마다 실행되지 않음)
-COPY --from=builder --chown=spring:spring /app/src/main/resources/static/images/ /app/images/
-
 # 빌드 단계에서 생성된 실행 가능한 jar 파일만 복사
 COPY --from=builder --chown=spring:spring /app/build/libs/*-SNAPSHOT.jar app.jar
+
+# 기존 이미지 파일이 있다면 복사 (선택적)
+# 이미지는 볼륨 마운트로 관리하므로 여기서는 스킵
 
 # 업로드 이미지와 로그를 위한 볼륨 선언
 VOLUME ["/app/images", "/app/logs"]
