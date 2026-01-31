@@ -1,6 +1,7 @@
 package com.culturemate.culturemate_api.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -20,6 +24,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+  @Value("${cors.allowed-origins}")
+  private String allowedOrigins;
+
+  @Value("${cors.allowed-methods}")
+  private String allowedMethods;
+
+  @Value("${cors.allowed-headers}")
+  private String allowedHeaders;
+
+  @Value("${cors.allow-credentials}")
+  private boolean allowCredentials;
+
+  @Value("${cors.max-age}")
+  private long maxAge;
 
   @Bean
   PasswordEncoder passwordEncoder() {
@@ -34,7 +53,8 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
-        .sessionManagement(session -> 
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .sessionManagement(session ->
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize ->
             authorize
@@ -72,5 +92,33 @@ public class SecurityConfig {
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
+  }
+
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+
+    // YML에서 가져온 설정값 사용
+    String[] origins = allowedOrigins.split(",");
+    for (String origin : origins) {
+      configuration.addAllowedOrigin(origin.trim());
+    }
+
+    String[] methods = allowedMethods.split(",");
+    for (String method : methods) {
+      configuration.addAllowedMethod(method.trim());
+    }
+
+    String[] headers = allowedHeaders.split(",");
+    for (String header : headers) {
+      configuration.addAllowedHeader(header.trim());
+    }
+
+    configuration.setAllowCredentials(allowCredentials);
+    configuration.setMaxAge(maxAge);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/api/**", configuration);
+    return source;
   }
 }
